@@ -16,4 +16,73 @@ body {
 #page-content {
   flex-grow: 1;
   background-color: #f8f9fa;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden; /* Prevents unwanted scrollbars */
+}
+
+/* Box Styling */
+.content-box {
+  width: 100%;
+  max-width: 1000px;
+  height: 250px;
+  background-color: #ffffff;
+  border: 3px solid;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+}
+
+/* Colored Borders */
+.border-blue {
+  border-color: #0d6efd; /* Bootstrap Primary Blue */
+}
+
+.border-green {
+  border-color: #198754; /* Bootstrap Success Green */
+}
+
+.custom-box {
+  width: 80%;
+  height: 200px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.custom-box:hover {
+  transform: scale(1.02);
+}
+
+.box-title {
+  font-size: 2rem;
+  font-weight: bold;
+  margin: 0;
+}
+
+.border-consumable {
+  border: 3px solid #28a745;
+}
+
+.border-ics {
+  border: 3px solid #dc3545;
+}
+
+a.custom-box {
+  width: 80% !important;
+  height: 200px !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  text-decoration: none;
+  color: inherit;
 }

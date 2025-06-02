@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Consumable Items</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="css/consumable.css" />
+  <link rel="icon" type="image/png" href="images/favicon-32x32.png">
+</head>
+<body>
+  <div class="d-flex" id="wrapper">
+    <!-- Sidebar -->
+    <div class="bg-primary text-white p-3 vh-100" id="sidebar">
+      <h4 class="mb-4">WRUS Asset Tracking System</h4>
+      <ul class="nav flex-column">
+        <li class="nav-item mb-2">
+          <a href="dashboard.html" class="nav-link text-white">Dashboard</a>
+        </li>
+        <li class="nav-item mb-2">
+          <a href="consumable.html" class="nav-link text-white">Consumables</a>
+        </li>
+        <li class="nav-item mb-2">
+          <a href="#" class="nav-link text-white">ICS</a>
+        </li>
+      </ul>
+      <button id="logoutBtn" class="btn btn-light mt-auto">Logout</button>
+    </div>
+
+    <!-- Page Content -->
+    <div class="container-fluid p-4" id="page-content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Consumable Items</h2>
+        <div class="input-group w-50">
+          <span class="input-group-text">Search Item</span>
+          <input type="text" id="searchInput" class="form-control" placeholder="Enter item name..." />
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table id="consumableTable" class="table table-bordered table-hover text-center align-middle">
+          <thead class="table-success">
+            <tr>
+              <th>CID</th>
+              <th>Specification</th>
+              <th>Qty</th>
+              <th>Unit</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td>Battery Dry-Cell, Size AA 4pc/Pack</td>
+              <td>12</td>
+              <td>Pack</td>
+              <td>
+                <button class="btn btn-outline-success btn-sm me-1 toggle-btn">+</button>
+                <button class="btn btn-outline-danger btn-sm toggle-btn">−</button>
+                <input type="number" class="form-control mt-2 action-input d-none" placeholder="Enter amount">
+              </td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>Ethyl Alcohol</td>
+              <td>20</td>
+              <td>Bottle</td>
+              <td>
+                <button class="btn btn-outline-success btn-sm me-1 toggle-btn">+</button>
+                <button class="btn btn-outline-danger btn-sm toggle-btn">−</button>
+                <input type="number" class="form-control mt-2 action-input d-none" placeholder="Enter amount">
+              </td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td>Copy Paper A4</td>
+              <td>15</td>
+              <td>Bundle</td>
+              <td>
+                <button class="btn btn-outline-success btn-sm me-1 toggle-btn">+</button>
+                <button class="btn btn-outline-danger btn-sm toggle-btn">−</button>
+                <input type="number" class="form-control mt-2 action-input d-none" placeholder="Enter amount">
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Add Item Section -->
+      <div class="text-center mt-4">
+        <button id="showAddFormBtn" class="btn btn-success btn-lg">Add Item</button>
+      </div>
+
+      <div id="addItemForm" class="container mt-4 d-none">
+        <div class="row g-3 justify-content-center">
+          <div class="col-md-4">
+            <input type="text" class="form-control" placeholder="Specification" id="newSpec" />
+          </div>
+          <div class="col-md-2">
+            <input type="number" class="form-control" placeholder="Qty" id="newQty" />
+          </div>
+          <div class="col-md-2">
+            <input type="text" class="form-control" placeholder="Unit" id="newUnit" />
+          </div>
+          <div class="col-md-2">
+            <button class="btn btn-primary w-100" id="addItemBtn">Add</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase + Bootstrap -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="module" src="js/consumable-data.js"></script>
+  <script src="js/consumable-ui.js"></script>
+</body>
+</html>

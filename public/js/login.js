@@ -4,6 +4,9 @@ import {
   getDoc
 } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
 
+// ✅ Import bcrypt from esm.sh
+import bcrypt from "https://esm.sh/bcryptjs@2.4.3";
+
 document.addEventListener("DOMContentLoaded", () => {
   const loginForm = document.getElementById("loginForm");
 
@@ -20,10 +23,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (docSnap.exists()) {
           const userData = docSnap.data();
+          const hashedPassword = userData.password;
 
-          if (userData.password === password) {
+          const isMatch = bcrypt.compareSync(password, hashedPassword);
+
+          if (isMatch) {
             console.log("Login successful!");
-            // Optionally store user info in localStorage
             localStorage.setItem("loggedInUser", username);
             window.location.href = "dashboard.html";
           } else {
