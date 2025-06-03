@@ -1,0 +1,16 @@
+#wrapper {
+  height: 100vh;
+}
+
+#sidebar {
+  width: 250px;
+  flex-shrink: 0;
+}
+
+#page-content {
+  flex-grow: 1;
+}
+
+#addUserForm input {
+  max-width: 100%;
+}

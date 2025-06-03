@@ -1,10 +1,11 @@
 import { db } from "./firebaseConfig.js";
 import {
-  doc,
-  getDoc
+  collection,
+  query,
+  where,
+  getDocs
 } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
 
-// ✅ Import bcrypt from esm.sh
 import bcrypt from "https://esm.sh/bcryptjs@2.4.3";
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -18,19 +19,28 @@ document.addEventListener("DOMContentLoaded", () => {
       const password = document.getElementById("password").value.trim();
 
       try {
-        const docRef = doc(db, "users", username);
-        const docSnap = await getDoc(docRef);
+        const q = query(collection(db, "users"), where("username", "==", username));
+        const querySnapshot = await getDocs(q);
 
-        if (docSnap.exists()) {
+        if (!querySnapshot.empty) {
+          const docSnap = querySnapshot.docs[0];
           const userData = docSnap.data();
           const hashedPassword = userData.password;
+          const userRole = userData.role;
 
           const isMatch = bcrypt.compareSync(password, hashedPassword);
 
           if (isMatch) {
-            console.log("Login successful!");
-            localStorage.setItem("loggedInUser", username);
-            window.location.href = "dashboard.html";
+            // Store the document ID (e.g., "admin"), not the username field (e.g., "adminUser")
+            localStorage.setItem("loggedInUser", docSnap.id);
+            localStorage.setItem("userRole", userRole);
+
+            // Redirect based on role
+            if (userRole === "admin") {
+              window.location.href = "admin-dashboard.html";
+            } else {
+              window.location.href = "dashboard.html";
+            }
           } else {
             alert("Incorrect password.");
           }
