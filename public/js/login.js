@@ -31,22 +31,19 @@ document.addEventListener("DOMContentLoaded", () => {
           const isMatch = bcrypt.compareSync(password, hashedPassword);
 
           if (isMatch) {
-            // Store the document ID (e.g., "admin"), not the username field (e.g., "adminUser")
+            const fullName = `${userData.firstName} ${userData.middleInitial}. ${userData.lastName}`;
+            localStorage.setItem("userFullName", fullName);
             localStorage.setItem("loggedInUser", docSnap.id);
             localStorage.setItem("userRole", userRole);
 
-            // Redirect based on role
-            if (userRole === "admin") {
-              window.location.href = "admin-dashboard.html";
-            } else {
-              window.location.href = "dashboard.html";
-            }
+            window.location.href = userRole === "admin" ? "admin-dashboard.html" : "dashboard.html";
           } else {
             alert("Incorrect password.");
           }
         } else {
           alert("User not found.");
         }
+
       } catch (error) {
         console.error("Login error:", error);
         alert("Something went wrong. Please try again.");

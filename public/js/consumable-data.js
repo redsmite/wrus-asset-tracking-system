@@ -1,83 +1,73 @@
 import { db } from "./firebaseConfig.js";
 import {
   collection,
-  getDocs
+  query,
+  getDocs,
+  updateDoc, 
+  doc,
+  orderBy,
+  setDoc,
+  where,
 } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
 
-document.addEventListener("DOMContentLoaded", async () => {
-  // Redirect to login if not authenticated
-  const user = localStorage.getItem("loggedInUser");
-  if (!user) {
-    window.location.href = "index.html";
-    return;
-  }
+// ✅ Named export
+export async function generateConsumableID() {
+  const year = new Date().getFullYear();
+  const prefix = `${year}-`;
 
-  const tableBody = document.getElementById("consumableTableBody");
-  const searchInput = document.getElementById("searchInput");
+  const q = query(
+    collection(db, "consumable"),
+    where("__name__", ">=", prefix),
+    where("__name__", "<", `${year + 1}-`)
+  );
 
-  async function loadData() {
-    const querySnapshot = await getDocs(collection(db, "consumables"));
-    const data = [];
+  const snapshot = await getDocs(q);
+  const count = snapshot.size + 1;
 
-    querySnapshot.forEach((doc) => {
-      const item = doc.data();
-      data.push(item);
+  const padded = String(count).padStart(3, "0");
+  return `${year}-${padded}`;
+}
+
+// ✅ Named export
+export async function addConsumable(spec, qty, unit, addedBy) {
+  const id = await generateConsumableID();
+
+  const newItem = {
+    specification: spec,
+    qty: Number(qty),
+    unit,
+    addedBy,
+    timestamp: new Date()
+  };
+
+  const docRef = doc(db, "consumable", id);
+  await setDoc(docRef, newItem);
+
+  return id;
+}
+
+export async function fetchConsumables() {
+  const consumablesRef = collection(db, "consumable");
+  const q = query(consumablesRef, orderBy("timestamp", "desc"));
+  const snapshot = await getDocs(q);
+
+  const items = [];
+  snapshot.forEach(doc => {
+    const data = doc.data();
+    items.push({
+      id: doc.id, // CID
+      specification: data.specification,
+      qty: data.qty,
+      unit: data.unit,
+      addedBy: data.addedBy,
+      timestamp: data.timestamp?.toDate().toLocaleString() || "N/A"
     });
-
-    renderTable(data);
-
-    searchInput.addEventListener("input", () => {
-      const searchTerm = searchInput.value.toLowerCase();
-      const filtered = data.filter(item =>
-        item.specification?.toLowerCase().includes(searchTerm)
-      );
-      renderTable(filtered);
-    });
-  }
-
-  function renderTable(items) {
-    tableBody.innerHTML = "";
-    items.forEach(item => {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${item.cid || ""}</td>
-        <td>${item.specification || ""}</td>
-        <td>${item.qty || 0}</td>
-        <td>${item.unit || ""}</td>
-        <td>
-          <button class="btn btn-outline-success btn-sm me-1 toggle-btn">+</button>
-          <button class="btn btn-outline-danger btn-sm toggle-btn">−</button>
-          <input type="number" class="form-control mt-2 action-input d-none" placeholder="Enter amount">
-        </td>
-      `;
-      tableBody.appendChild(row);
-    });
-
-    // Add toggle behavior after rendering
-    document.querySelectorAll(".toggle-btn").forEach(button => {
-      button.addEventListener("click", (e) => {
-        const currentRow = e.target.closest("tr");
-        const input = currentRow.querySelector(".action-input");
-
-        // Hide all other inputs
-        document.querySelectorAll(".action-input").forEach(i => {
-          if (i !== input) i.classList.add("d-none");
-        });
-
-        // Toggle this input
-        input.classList.toggle("d-none");
-        if (!input.classList.contains("d-none")) {
-          input.focus();
-        }
-      });
-    });
-  }
-
-  loadData();
-
-  // Logout
-  document.getElementById("logoutBtn").addEventListener("click", () => {
-    localStorage.removeItem("loggedInUser");
-    window.location.href = "index.html";
   });
-});
+
+  return items;
+}
+
+export async function updateConsumable(cid, updatedData) {
+  const docRef = doc(db, "consumable", cid);
+  await updateDoc(docRef, updatedData);
+}

@@ -1,4 +1,3 @@
-// Protect dashboard
 document.addEventListener("DOMContentLoaded", () => {
   const user = localStorage.getItem("loggedInUser");
 
@@ -13,10 +12,18 @@ document.addEventListener("DOMContentLoaded", () => {
   if (logoutBtn) {
     logoutBtn.addEventListener("click", () => {
       localStorage.removeItem("loggedInUser");
+      localStorage.removeItem("userFullName"); // optional cleanup
       window.location.href = "index.html";
     });
   }
 
-  // 🔄 Optional: display data from Firestore
-  // import and fetch your Firestore data here
+  // ✅ Load full name from localStorage and display it
+  const welcomeText = document.getElementById("welcomeText");
+  const userFullName = localStorage.getItem("userFullName");
+
+  console.log("Loaded full name:", userFullName);
+
+  if (welcomeText && userFullName) {
+    welcomeText.textContent = `Welcome ${userFullName}`;
+  }
 });
