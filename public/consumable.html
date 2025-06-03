@@ -141,6 +141,34 @@
     </div>
   </div>
 
+  <!-- Assign Modal -->
+  <div class="modal fade" id="assignModal" tabindex="-1" aria-labelledby="assignModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Assign Consumable</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="assignForm">
+            <div class="mb-3">
+              <label for="assignQty" class="form-label">Quantity</label>
+              <input type="number" class="form-control" id="assignQty" min="1" required>
+            </div>
+            <div class="mb-3">
+              <label for="assignTo" class="form-label">Assign to</label>
+              <select class="form-select" id="userSelect" required></select>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="confirmAssignBtn" class="btn btn-primary">Assign</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
   <!-- Firebase + Bootstrap -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script type="module" src="js/consumable-data.js"></script>

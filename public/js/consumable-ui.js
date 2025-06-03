@@ -1,4 +1,7 @@
-import { fetchConsumables,addConsumable,updateConsumable, addStock } from "./consumable-data.js";
+import { fetchConsumables,addConsumable,updateConsumable, addStock, populateUserSelect, handleAssignConsumable } from "./consumable-data.js";
+
+let selectedCID = null;
+let currentQty = 0;
 
 document.addEventListener("DOMContentLoaded", () => {
   const showFormBtn = document.getElementById("showAddFormBtn");
@@ -28,6 +31,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+
+const logoutBtn = document.getElementById("logoutBtn");
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", () => {
+      localStorage.removeItem("loggedInUser");
+      localStorage.removeItem("userFullName"); // optional cleanup
+      window.location.href = "index.html";
+    });
+  }
 
 async function renderConsumableTable() {
   const tbody = document.getElementById("consumableBody");
@@ -84,7 +96,6 @@ document.getElementById("saveEditBtn").addEventListener("click", async () => {
   }
 });
 
-let selectedCID = null;
 
 document.addEventListener("click", (e) => {
   // Detect clicks on the Action button
@@ -109,12 +120,11 @@ document.getElementById("viewLedgerBtn").addEventListener("click", () => {
   // TODO: Show ledger page/modal
 });
 
-let currentQty = 0;
-
 document.addEventListener("click", (e) => {
   if (e.target.classList.contains("action-btn")) {
     selectedCID = e.target.dataset.id;
     currentQty = parseInt(e.target.dataset.qty || "0");
+    console.log(selectedCID);
   }
 });
 
@@ -141,6 +151,18 @@ document.getElementById("confirmAddStockBtn").addEventListener("click", async ()
   }
 });
 
+//display Assign Item modal
+document.getElementById("assignItemBtn").addEventListener("click", async () => {
+  if (selectedCID) {
+    await populateUserSelect(); // Load users into dropdown
+    const assignModal = new bootstrap.Modal(document.getElementById("assignModal"));
+    assignModal.show();
+  } else {
+    console.warn("No CID selected.");
+  }
+});
 
-
-
+document.getElementById("confirmAssignBtn").addEventListener("click", async () => {
+  await handleAssignConsumable(selectedCID);
+  renderConsumableTable();
+});
