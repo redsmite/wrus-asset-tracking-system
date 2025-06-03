@@ -11,8 +11,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   const tableBody = document.getElementById("usersTableBody");
   const searchInput = document.getElementById("searchInput");
   const editUserForm = document.getElementById("editUserForm");
+  const paginationControls = document.getElementById("paginationControls");
 
   let users = [];
+  let filteredUsers = [];
+  let currentPage = 1;
+  const rowsPerPage = 10;
 
   // Fetch all users
   const fetchUsers = async () => {
@@ -21,13 +25,19 @@ document.addEventListener("DOMContentLoaded", async () => {
       id: doc.id,
       ...doc.data(),
     }));
-    renderTable(users);
+    filteredUsers = [...users]; // initially show all
+    currentPage = 1;
+    renderTable();
+    renderPagination();
   };
 
-  // Render table
-  const renderTable = (data) => {
+  // Render paginated table
+  const renderTable = () => {
     tableBody.innerHTML = "";
-    data.forEach(user => {
+    const start = (currentPage - 1) * rowsPerPage;
+    const paginatedUsers = filteredUsers.slice(start, start + rowsPerPage);
+
+    paginatedUsers.forEach(user => {
       const row = document.createElement("tr");
       row.innerHTML = `
         <td>${user.username || ""}</td>
@@ -38,7 +48,42 @@ document.addEventListener("DOMContentLoaded", async () => {
       `;
       tableBody.appendChild(row);
     });
-    attachEditHandlers(); // Bind event handlers
+    attachEditHandlers();
+  };
+
+  // Render pagination controls
+  const renderPagination = () => {
+    const totalPages = Math.ceil(filteredUsers.length / rowsPerPage);
+    paginationControls.innerHTML = "";
+
+    if (totalPages <= 1) return;
+
+    const prevBtn = document.createElement("button");
+    prevBtn.className = "btn btn-sm btn-secondary me-2";
+    prevBtn.textContent = "Previous";
+    prevBtn.disabled = currentPage === 1;
+    prevBtn.onclick = () => {
+      currentPage--;
+      renderTable();
+      renderPagination();
+    };
+
+    const nextBtn = document.createElement("button");
+    nextBtn.className = "btn btn-sm btn-secondary ms-2";
+    nextBtn.textContent = "Next";
+    nextBtn.disabled = currentPage === totalPages;
+    nextBtn.onclick = () => {
+      currentPage++;
+      renderTable();
+      renderPagination();
+    };
+
+    const pageInfo = document.createElement("span");
+    pageInfo.textContent = ` Page ${currentPage} of ${totalPages} `;
+
+    paginationControls.appendChild(prevBtn);
+    paginationControls.appendChild(pageInfo);
+    paginationControls.appendChild(nextBtn);
   };
 
   // Attach edit button click listeners
@@ -80,11 +125,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       const userRef = doc(db, "users", userId);
       await updateDoc(userRef, updatedUser);
 
-      // Hide modal
       bootstrap.Modal.getInstance(document.getElementById("editUserModal")).hide();
-
-      // Refresh data
-      await fetchUsers();
+      await fetchUsers(); // reload full list
       alert("User updated successfully.");
     } catch (error) {
       console.error("Update failed:", error);
@@ -95,12 +137,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Search filter
   searchInput.addEventListener("input", () => {
     const value = searchInput.value.toLowerCase().trim();
-    const filtered = users.filter(user =>
+    filteredUsers = users.filter(user =>
       (user.username || "").toLowerCase().includes(value) ||
       (user.firstName || "").toLowerCase().includes(value) ||
       (user.lastName || "").toLowerCase().includes(value)
     );
-    renderTable(filtered);
+    currentPage = 1;
+    renderTable();
+    renderPagination();
   });
 
   // Initial load
