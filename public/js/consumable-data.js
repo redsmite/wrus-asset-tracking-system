@@ -8,6 +8,9 @@ import {
   orderBy,
   setDoc,
   where,
+  serverTimestamp,
+  addDoc,
+  getDoc
 } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
 
 // ✅ Named export
@@ -70,4 +73,53 @@ export async function fetchConsumables() {
 export async function updateConsumable(cid, updatedData) {
   const docRef = doc(db, "consumable", cid);
   await updateDoc(docRef, updatedData);
+}
+
+// document.getElementById("confirmAddStockBtn").addEventListener("click", async () => {
+//   const amount = parseInt(document.getElementById("stockAmount").value);
+//   if (!amount || amount <= 0 || !selectedCID) return alert("Invalid amount.");
+
+//   const consumableRef = doc(db, "consumables", selectedCID);
+//   const snapshot = await getDoc(consumableRef);
+//   if (!snapshot.exists()) return alert("Item not found.");
+
+//   const newQty = (snapshot.data().qty || 0) + amount;
+//   await updateDoc(consumableRef, { qty: newQty });
+
+//   const year = new Date().getFullYear();
+//   const ledgerRef = collection(db, "ledger");
+//   await addDoc(ledgerRef, {
+//     LID: `${year}-${Math.floor(100 + Math.random() * 900)}`, // Format: 2025-XXX
+//     cid: selectedCID,
+//     modifiedBy: localStorage.getItem("userFullName") || "Unknown",
+//     dateModified: serverTimestamp(),
+//     action: "Add Stock",
+//     assignedTo: "",
+//     amount: amount,
+//   });
+
+//   const modal = bootstrap.Modal.getInstance(document.getElementById("addStockModal"));
+//   modal.hide();
+//   renderConsumableTable();
+// });
+
+export async function addStock(cid, amount) {
+  const consumableRef = doc(db, "consumable", cid); // ✅ correct collection name
+
+  const snapshot = await getDoc(consumableRef);
+  if (!snapshot.exists()) throw new Error("Item not found");
+
+  const newQty = (snapshot.data().qty || 0) + amount;
+  await updateDoc(consumableRef, { qty: newQty });
+
+  const year = new Date().getFullYear();
+  await addDoc(collection(db, "ledger"), {
+    LID: `${year}-${Math.floor(100 + Math.random() * 900)}`,
+    cid: cid,
+    modifiedBy: localStorage.getItem("userFullName") || "Unknown",
+    dateModified: serverTimestamp(),
+    action: "Add Stock",
+    assignedTo: "",
+    amount: amount,
+  });
 }

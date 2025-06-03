@@ -1,4 +1,4 @@
-import { fetchConsumables,addConsumable,updateConsumable } from "./consumable-data.js";
+import { fetchConsumables,addConsumable,updateConsumable, addStock } from "./consumable-data.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   const showFormBtn = document.getElementById("showAddFormBtn");
@@ -48,7 +48,7 @@ async function renderConsumableTable() {
     <button class="btn btn-warning btn-sm edit-btn" data-id="${item.id}" data-spec="${item.specification}" data-unit="${item.unit}" data-bs-toggle="modal" data-bs-target="#editModal">Edit</button>
   </td>
   <td>
-    <button class="btn btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#placeholderModal">Action</button>
+    <button class="btn btn-secondary btn-sm action-btn" data-id="${item.id}" data-qty="${item.qty}" data-bs-toggle="modal" data-bs-target="#actionModal">Action</button>
   </td>
     `;
     tbody.appendChild(row);
@@ -83,5 +83,64 @@ document.getElementById("saveEditBtn").addEventListener("click", async () => {
     renderConsumableTable();
   }
 });
+
+let selectedCID = null;
+
+document.addEventListener("click", (e) => {
+  // Detect clicks on the Action button
+  if (e.target.classList.contains("action-btn")) {
+    selectedCID = e.target.dataset.id;
+  }
+});
+
+// Modal button handlers
+document.getElementById("addStockBtn").addEventListener("click", () => {
+  //alert("Add stock to CID: " + selectedCID);
+  // TODO: Open add stock form/modal
+});
+
+document.getElementById("assignItemBtn").addEventListener("click", () => {
+  //alert("Assign item from CID: " + selectedCID);
+  // TODO: Open assign item form/modal
+});
+
+document.getElementById("viewLedgerBtn").addEventListener("click", () => {
+  //alert("View ledger for CID: " + selectedCID);
+  // TODO: Show ledger page/modal
+});
+
+let currentQty = 0;
+
+document.addEventListener("click", (e) => {
+  if (e.target.classList.contains("action-btn")) {
+    selectedCID = e.target.dataset.id;
+    currentQty = parseInt(e.target.dataset.qty || "0");
+  }
+});
+
+document.getElementById("addStockBtn").addEventListener("click", () => {
+  const actionModal = bootstrap.Modal.getInstance(document.getElementById("actionModal"));
+  actionModal.hide();
+  const addStockModal = new bootstrap.Modal(document.getElementById("addStockModal"));
+  document.getElementById("stockAmount").value = "";
+  addStockModal.show();
+});
+
+document.getElementById("confirmAddStockBtn").addEventListener("click", async () => {
+  const amount = parseInt(document.getElementById("stockAmount").value);
+  if (!amount || amount <= 0 || !selectedCID) return alert("Invalid amount.");
+
+  try {
+    await addStock(selectedCID, amount);
+    const modal = bootstrap.Modal.getInstance(document.getElementById("addStockModal"));
+    modal.hide();
+    renderConsumableTable();
+  } catch (err) {
+    console.error("Error adding stock:", err.message);
+    alert("Something went wrong. Please try again.");
+  }
+});
+
+
 
 

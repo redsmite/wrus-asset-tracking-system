@@ -105,21 +105,37 @@
       </div>
     </div>
   </div>
-  <!-- View Modal -->
-  <div class="modal fade" id="viewModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
+  <!-- Action Modal -->
+  <div class="modal fade" id="actionModal" tabindex="-1" aria-labelledby="actionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content rounded-3">
         <div class="modal-header">
-          <h5 class="modal-title">View Item</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          <h5 class="modal-title" id="actionModalLabel">Choose Action</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <div class="modal-body" id="viewModalBody">
-          <p><strong>CID:</strong> <span id="viewCID"></span></p>
-          <p><strong>Specification:</strong> <span id="viewSpec"></span></p>
-          <p><strong>Quantity:</strong> <span id="viewQty"></span></p>
-          <p><strong>Unit:</strong> <span id="viewUnit"></span></p>
-          <p><strong>Date Added:</strong> <span id="viewDate"></span></p>
-          <p><strong>Added By:</strong> <span id="viewBy"></span></p>
+        <div class="modal-body d-grid gap-2">
+          <button id="addStockBtn" class="btn btn-success">➕ Add Stock</button>
+          <button id="assignItemBtn" class="btn btn-warning">➖ Assign Item</button>
+          <button id="viewLedgerBtn" class="btn btn-info">📖 View Ledger</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Stock Modal -->
+  <div class="modal fade" id="addStockModal" tabindex="-1" aria-labelledby="addStockModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content rounded-3">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addStockModalLabel">Add Stock</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <label for="stockAmount" class="form-label">Enter quantity to add:</label>
+          <input type="number" id="stockAmount" class="form-control" min="1" required>
+        </div>
+        <div class="modal-footer">
+          <button id="confirmAddStockBtn" class="btn btn-success">Confirm</button>
         </div>
       </div>
     </div>
