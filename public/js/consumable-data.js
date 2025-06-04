@@ -210,3 +210,71 @@ export async function handleAssignConsumable(selectedCID) {
     alert("An error occurred. Please try again.");
   }
 }
+
+export async function renderLedgerTable(selectedCID) {
+  const tableBody = document.getElementById("ledgerTableBody");
+  const totalQtyDisplay = document.getElementById("totalQtyDisplay");
+
+  // Reset UI placeholders
+  tableBody.innerHTML = "<tr><td colspan='5'>Loading...</td></tr>";
+  totalQtyDisplay.textContent = "Loading...";
+
+  try {
+    // Fetch total quantity from consumable
+    const consumableSnap = await getDoc(doc(db, "consumable", selectedCID));
+    if (consumableSnap.exists()) {
+      const consumableData = consumableSnap.data();
+      totalQtyDisplay.textContent = consumableData.qty ?? 0;
+    } else {
+      totalQtyDisplay.textContent = "Not found";
+    }
+
+    // Fetch ledger entries
+    const q = query(collection(db, "ledger"), where("cid", "==", selectedCID));
+    const ledgerSnapshot = await getDocs(q);
+
+    const ledgerEntries = [];
+    const userIds = new Set();
+
+    ledgerSnapshot.forEach(doc => {
+      const data = doc.data();
+      ledgerEntries.push({ id: doc.id, ...data });
+      if (data.assignedTo) userIds.add(data.assignedTo);
+    });
+
+    const userMap = {};
+    await Promise.all(
+      Array.from(userIds).map(async userId => {
+        try {
+          const userDoc = await getDoc(doc(db, "users", userId));
+          if (userDoc.exists()) {
+            const u = userDoc.data();
+            userMap[userId] = `${u.lastName}, ${u.firstName} ${u.middleInitial}.`;
+          } else {
+            userMap[userId] = "Unknown User";
+          }
+        } catch (e) {
+          userMap[userId] = "Error";
+        }
+      })
+    );
+
+    tableBody.innerHTML = "";
+    ledgerEntries.forEach(entry => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${entry.action}</td>
+        <td>${entry.amount}</td>
+        <td>${userMap[entry.assignedTo] || "—"}</td>
+        <td>${entry.modifiedBy || "—"}</td>
+        <td>${entry.dateModified?.toDate().toLocaleString() || "—"}</td>
+      `;
+      tableBody.appendChild(row);
+    });
+
+  } catch (error) {
+    console.error("Failed to load ledger or total qty:", error);
+    tableBody.innerHTML = "<tr><td colspan='5'>Error loading data.</td></tr>";
+    totalQtyDisplay.textContent = "Error";
+  }
+}

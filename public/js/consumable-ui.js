@@ -1,4 +1,4 @@
-import { fetchConsumables,addConsumable,updateConsumable, addStock, populateUserSelect, handleAssignConsumable } from "./consumable-data.js";
+import { fetchConsumables,addConsumable,updateConsumable, addStock, populateUserSelect, handleAssignConsumable, renderLedgerTable } from "./consumable-data.js";
 
 let selectedCID = null;
 let currentQty = 0;
@@ -165,4 +165,10 @@ document.getElementById("assignItemBtn").addEventListener("click", async () => {
 document.getElementById("confirmAssignBtn").addEventListener("click", async () => {
   await handleAssignConsumable(selectedCID);
   renderConsumableTable();
+});
+
+document.getElementById("viewLedgerBtn").addEventListener("click", async () => {
+  await renderLedgerTable(selectedCID);
+  const ledgerModal = new bootstrap.Modal(document.getElementById("ledgerModal"));
+  ledgerModal.show();
 });
