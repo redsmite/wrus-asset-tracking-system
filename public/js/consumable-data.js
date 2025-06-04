@@ -229,8 +229,12 @@ export async function renderLedgerTable(selectedCID) {
       totalQtyDisplay.textContent = "Not found";
     }
 
-    // Fetch ledger entries
-    const q = query(collection(db, "ledger"), where("cid", "==", selectedCID));
+    // Fetch ledger entries ordered by dateModified descending
+    const q = query(
+      collection(db, "ledger"),
+      where("cid", "==", selectedCID),
+      orderBy("dateModified", "desc")
+    );
     const ledgerSnapshot = await getDocs(q);
 
     const ledgerEntries = [];
@@ -239,10 +243,16 @@ export async function renderLedgerTable(selectedCID) {
     ledgerSnapshot.forEach(doc => {
       const data = doc.data();
       ledgerEntries.push({ id: doc.id, ...data });
-      if (data.assignedTo) userIds.add(data.assignedTo);
+
+      if (data.assignedTo && data.assignedTo !== '4OSFVxSwP1ytiZU1bIqV') {
+        userIds.add(data.assignedTo);
+      }
     });
 
-    const userMap = {};
+    const userMap = {
+      '4OSFVxSwP1ytiZU1bIqV': 'For General Use'
+    };
+
     await Promise.all(
       Array.from(userIds).map(async userId => {
         try {
@@ -259,6 +269,7 @@ export async function renderLedgerTable(selectedCID) {
       })
     );
 
+    // Render rows
     tableBody.innerHTML = "";
     ledgerEntries.forEach(entry => {
       const row = document.createElement("tr");
