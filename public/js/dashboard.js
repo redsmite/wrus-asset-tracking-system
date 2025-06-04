@@ -6,13 +6,20 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  console.log("User logged in:", user);
-
-  const logoutBtn = document.getElementById("logoutBtn");
+ const logoutBtn = document.getElementById("logoutBtn");
   if (logoutBtn) {
     logoutBtn.addEventListener("click", () => {
       localStorage.removeItem("loggedInUser");
-      localStorage.removeItem("userFullName"); // optional cleanup
+      localStorage.removeItem("userFullName");
+      window.location.href = "index.html";
+    });
+  }
+
+  const logoutBtnMobile = document.getElementById("logoutBtnMobile");
+  if (logoutBtnMobile) {
+    logoutBtnMobile.addEventListener("click", () => {
+      localStorage.removeItem("loggedInUser");
+      localStorage.removeItem("userFullName");
       window.location.href = "index.html";
     });
   }

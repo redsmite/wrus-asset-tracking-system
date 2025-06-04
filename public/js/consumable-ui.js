@@ -5,7 +5,7 @@ let currentQty = 0;
 let currentItems = [];     // all fetched items
 let filteredItems = [];    // filtered items after search
 let currentPage = 1;
-const pageSize = 15;
+const pageSize = 10;
 
 document.addEventListener("DOMContentLoaded", () => {
   const showFormBtn = document.getElementById("showAddFormBtn");
@@ -40,7 +40,16 @@ const logoutBtn = document.getElementById("logoutBtn");
   if (logoutBtn) {
     logoutBtn.addEventListener("click", () => {
       localStorage.removeItem("loggedInUser");
-      localStorage.removeItem("userFullName"); // optional cleanup
+      localStorage.removeItem("userFullName");
+      window.location.href = "index.html";
+    });
+  }
+
+  const logoutBtnMobile = document.getElementById("logoutBtnMobile");
+  if (logoutBtnMobile) {
+    logoutBtnMobile.addEventListener("click", () => {
+      localStorage.removeItem("loggedInUser");
+      localStorage.removeItem("userFullName");
       window.location.href = "index.html";
     });
   }
