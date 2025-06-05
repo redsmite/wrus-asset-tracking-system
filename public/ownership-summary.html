@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ownership Summary</title>
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png" />
+  <link rel="stylesheet" href="css/dashboard.css" />
+  <link rel="stylesheet" href="css/ownership-summary.css" />
+</head>
+<body>
+  <!-- Toggle Button for Small Screens -->
+  <button
+    class="btn btn-primary m-2 d-md-none"
+    type="button"
+    data-bs-toggle="offcanvas"
+    data-bs-target="#offcanvasSidebar"
+    aria-controls="offcanvasSidebar"
+  >
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="d-flex" id="wrapper">
+    <!-- Sidebar for md and up -->
+    <div class="bg-primary text-white p-3 vh-100 d-none d-md-block" id="sidebar">
+      <h4 class="mb-4">WRUS Asset Tracking System</h4>
+      <ul class="nav flex-column">
+        <li class="nav-item mb-2">
+          <a href="#" class="nav-link text-white">Dashboard</a>
+        </li>
+        <li class="nav-item mb-2">
+          <a href="consumable.html" class="nav-link text-white">Consumable</a>
+        </li>
+        <li class="nav-item mb-2">
+          <a href="#" class="nav-link text-white">ICS</a>
+        </li>
+        <li class="nav-item mb-2">
+          <a href="ownership-summary.html" class="nav-link text-white">Ownership Summary</a>
+        </li>
+      </ul>
+      <button id="logoutBtn" class="btn btn-light mt-auto">Logout</button>
+    </div>
+
+    <!-- Offcanvas Sidebar for smaller screens -->
+    <div
+      class="offcanvas offcanvas-start text-bg-primary"
+      tabindex="-1"
+      id="offcanvasSidebar"
+      aria-labelledby="offcanvasSidebarLabel"
+    >
+      <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasSidebarLabel">WRUS Asset Tracking System</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      </div>
+      <div class="offcanvas-body">
+        <ul class="nav flex-column">
+          <li class="nav-item mb-2">
+            <a href="#" class="nav-link text-white">Dashboard</a>
+          </li>
+          <li class="nav-item mb-2">
+            <a href="consumable.html" class="nav-link text-white">Consumable</a>
+          </li>
+          <li class="nav-item mb-2">
+            <a href="#" class="nav-link text-white">ICS</a>
+          </li>
+          <li class="nav-item mb-2">
+            <a href="ownership-summary.html" class="nav-link text-white">Ownership Summary</a>
+          </li>
+        </ul>
+        <button id="logoutBtnMobile" class="btn btn-light mt-auto">Logout</button>
+      </div>
+    </div>
+
+    <!-- Page Content -->
+    <div class="container-fluid p-4" id="page-content">
+      <h3 class="mb-4">Ownership Summary</h3>
+
+      <!-- 🔍 Search bar -->
+      <div class="mb-3">
+        <input
+          type="text"
+          id="searchInput"
+          class="form-control"
+          placeholder="Search by name..."
+        />
+      </div>
+
+      <!-- 📋 Users Table -->
+      <div class="table-responsive users-table-wrapper">
+        <table class="table table-bordered table-striped">
+          <thead class="table-light">
+            <tr>
+              <th>User</th>
+              <th> </th>
+              <th> </th>
+            </tr>
+          </thead>
+          <tbody id="usersTableBody">
+            <!-- Rows will be injected here by JS -->
+          </tbody>
+        </table>
+      </div>
+      <!-- Pagination nav (injected by JS) will go here -->
+    </div>
+  </div>
+
+  <!-- BEGIN: Consumable Modal (single, top‐level, not nested inside #page-content) -->
+  <div
+    class="modal fade"
+    id="consumableModal"
+    tabindex="-1"
+    aria-labelledby="consumableModalLabel"
+    aria-hidden="true"
+  >
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="consumableModalLabel">Consumable Details</h5>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+            aria-label="Close"
+          ></button>
+        </div>
+        <div class="modal-body">
+          <p class="text-center">Loading…</p>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-bs-dismiss="modal"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- END: Consumable Modal -->
+
+  <!-- Bootstrap JS Bundle (must come before your own JS) -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+  ></script>
+
+  <!-- Your Firestore/data logic -->
+  <script type="module" src="js/ownership-summary-data.js"></script>
+  <!-- Your UI logic (table + modal) -->
+  <script type="module" src="js/ownership-summary-ui.js"></script>
+</body>
+</html>
