@@ -1,3 +1,5 @@
+// File: js/ownership-summary-ui.js
+
 import {
   fetchUsers,
   fetchConsumablesMap,
@@ -47,7 +49,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const bsModal = new bootstrap.Modal(modalElement);
 
   // 4) Pagination & filtering state
-  const usersPerPage = 10;       // show 10 users per page
+  const usersPerPage = 5;       // show 5 users per page
   let currentPage = 1;
   let filteredUsers = [...users]; // for search filtering
 
@@ -138,34 +140,32 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       // Attach click handler to open modal and fetch data
       consumableBtn.addEventListener("click", async () => {
-        // a) Retrieve the user’s document ID from data-id
+        // a) Read document ID from data-id
         const docId = consumableBtn.getAttribute("data-id");
 
-        // b) Find the matching user object to get their name
+        // b) Find the matching user object
         const matchedUser = users.find((u) => u.id === docId);
-        if (!matchedUser) {
-          console.error(`User with ID="${docId}" not found.`);
-          return;
-        }
         const fullName = `${matchedUser.lastName}, ${matchedUser.firstName} ${matchedUser.middleInitial}.`;
 
-        // c) Update modal header title
+        // c) Update modal header
         const modalTitle = document.getElementById("consumableModalLabel");
         modalTitle.textContent = `Consumable for ${fullName}`;
 
-        // d) Clear modal-body and inject the user’s name + table skeleton
+        // d) Clear modal-body
         const modalBody = modalElement.querySelector(".modal-body");
-        modalBody.innerHTML = ""; // remove “Loading…” or prior contents
+        modalBody.innerHTML = "";
 
-        // Insert user’s full name as an <h5> in modal body
+        // e) Insert fullName in body
         const heading = document.createElement("h5");
         heading.className = "mb-3";
         heading.textContent = fullName;
         modalBody.appendChild(heading);
 
-        // Insert a responsive table skeleton with thead (CID | Specification | Unit | Qty) and empty tbody
+        // f) Insert table skeleton
         const tableWrapper = document.createElement("div");
         tableWrapper.className = "table-responsive";
+        tableWrapper.style.maxHeight = "60vh"; 
+        tableWrapper.style.overflowY = "auto";
         tableWrapper.innerHTML = `
           <table class="table table-bordered table-striped">
             <thead class="table-light">
@@ -174,37 +174,70 @@ document.addEventListener("DOMContentLoaded", async () => {
                 <th>Specification</th>
                 <th>Unit</th>
                 <th>Qty</th>
+                <th>Last Modified</th>
               </tr>
             </thead>
             <tbody id="consumable-table-body">
-              <!-- Rows will be appended here after fetching Firestore data -->
+              <!-- rows go here -->
             </tbody>
           </table>
         `;
         modalBody.appendChild(tableWrapper);
 
-        // e) Fetch consumable lookup map and ledger entries for this user in parallel
+        // g) Fetch data
         const [consumablesMap, ledgerEntries] = await Promise.all([
           fetchConsumablesMap(),
           fetchLedgerByUser(user.id),
         ]);
 
-        // f) Group ledger entries by CID and sum amounts
-        const qtyByCID = {};
-        ledgerEntries.forEach(({ cid, amount }) => {
-          if (!cid) return; // skip if no CID
-          if (!qtyByCID[cid]) qtyByCID[cid] = 0;
-          qtyByCID[cid] += amount;
+        // h) Group by cid: sum amount and track max(dateModified)
+        const dataByCID = {};
+        ledgerEntries.forEach(({ cid, amount, dateModified }) => {
+          if (!cid) return;
+          if (!dataByCID[cid]) {
+            dataByCID[cid] = {
+              totalQty: 0,
+              lastModified: dateModified || null,
+            };
+          }
+          dataByCID[cid].totalQty += amount || 0;
+          if (dateModified) {
+            const currentMax = dataByCID[cid].lastModified;
+            if (!currentMax || dateModified.toMillis() > currentMax.toMillis()) {
+              dataByCID[cid].lastModified = dateModified;
+            }
+          }
         });
 
-        // g) Populate the table body with one row per CID
-        const tbody = document.getElementById("consumable-table-body");
-        tbody.innerHTML = ""; // clear any placeholder
+        // i) Sort entries by lastModified DESC
+        const entriesArray = Object.entries(dataByCID);
+        entriesArray.sort((a, b) => {
+          const lmA = a[1].lastModified;
+          const lmB = b[1].lastModified;
+          if (!lmA && !lmB) return 0;
+          if (!lmA) return 1;
+          if (!lmB) return -1;
+          return lmB.toMillis() - lmA.toMillis();
+        });
 
-        Object.entries(qtyByCID).forEach(([cid, totalQty]) => {
-          // Lookup specification and unit in the consumablesMap
+        // j) Populate table body in sorted order
+        const tbody = document.getElementById("consumable-table-body");
+        tbody.innerHTML = "";
+
+        entriesArray.forEach(([cid, { totalQty, lastModified }]) => {
           const spec = consumablesMap[cid]?.specification || "–";
           const unit = consumablesMap[cid]?.unit || "–";
+
+          let lastModStr = "–";
+          if (lastModified && typeof lastModified.toDate === "function") {
+            const jsDate = lastModified.toDate();
+            const year = jsDate.getFullYear();
+            const month = String(jsDate.getMonth() + 1).padStart(2, "0");
+            const day = String(jsDate.getDate()).padStart(2, "0");
+            const hours = String(jsDate.getHours()).padStart(2, "0");
+            const minutes = String(jsDate.getMinutes()).padStart(2, "0");
+            lastModStr = `${year}-${month}-${day} ${hours}:${minutes}`;
+          }
 
           const tr = document.createElement("tr");
           tr.innerHTML = `
@@ -212,11 +245,12 @@ document.addEventListener("DOMContentLoaded", async () => {
             <td>${spec}</td>
             <td>${unit}</td>
             <td>${totalQty}</td>
+            <td>${lastModStr}</td>
           `;
           tbody.appendChild(tr);
         });
 
-        // h) Show the modal
+        // k) Show the modal
         bsModal.show();
       });
 

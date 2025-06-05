@@ -130,10 +130,10 @@ export async function populateUserSelect() {
   userSelect.innerHTML = ''; // Clear existing options
 
   // Add the static "For General Use" option
-  const generalOption = document.createElement("option");
-  generalOption.value = '4OSFVxSwP1ytiZU1bIqV';
-  generalOption.textContent = 'For General Use';
-  userSelect.appendChild(generalOption);
+  // const generalOption = document.createElement("option");
+  // generalOption.value = '4OSFVxSwP1ytiZU1bIqV';
+  // generalOption.textContent = 'For General Use';
+  // userSelect.appendChild(generalOption);
 
   // Optional: add a disabled "Select user" placeholder below it
   const defaultOption = document.createElement("option");
@@ -244,13 +244,12 @@ export async function renderLedgerTable(selectedCID) {
       const data = doc.data();
       ledgerEntries.push({ id: doc.id, ...data });
 
-      if (data.assignedTo && data.assignedTo !== '4OSFVxSwP1ytiZU1bIqV') {
+      if (data.assignedTo) {
         userIds.add(data.assignedTo);
       }
     });
 
     const userMap = {
-      '4OSFVxSwP1ytiZU1bIqV': 'For General Use'
     };
 
     await Promise.all(

@@ -47,9 +47,10 @@ export async function fetchLedgerByUser(userId) {
   snapshot.forEach((doc) => {
     const d = doc.data();
     entries.push({
-      cid: d.cid,           // Assuming your ledger docs store the field “cid”
-      amount: d.amount || 0 // and “amount” is a Number field
+      cid: d.cid,                         
+      amount: d.amount || 0,              
+      dateModified: d.dateModified || null 
     });
   });
-  return entries; 
+  return entries;
 }
