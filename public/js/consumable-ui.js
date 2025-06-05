@@ -37,22 +37,22 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 const logoutBtn = document.getElementById("logoutBtn");
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", () => {
-      localStorage.removeItem("loggedInUser");
-      localStorage.removeItem("userFullName");
-      window.location.href = "index.html";
-    });
-  }
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", () => {
+    localStorage.removeItem("loggedInUser");
+    localStorage.removeItem("userFullName");
+    window.location.href = "index.html";
+  });
+}
 
-  const logoutBtnMobile = document.getElementById("logoutBtnMobile");
-  if (logoutBtnMobile) {
-    logoutBtnMobile.addEventListener("click", () => {
-      localStorage.removeItem("loggedInUser");
-      localStorage.removeItem("userFullName");
-      window.location.href = "index.html";
-    });
-  }
+const logoutBtnMobile = document.getElementById("logoutBtnMobile");
+if (logoutBtnMobile) {
+  logoutBtnMobile.addEventListener("click", () => {
+    localStorage.removeItem("loggedInUser");
+    localStorage.removeItem("userFullName");
+    window.location.href = "index.html";
+  });
+}
 
 // async function renderConsumableTable() {
 //   const tbody = document.getElementById("consumableBody");
