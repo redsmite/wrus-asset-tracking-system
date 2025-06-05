@@ -49,7 +49,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const bsModal = new bootstrap.Modal(modalElement);
 
   // 4) Pagination & filtering state
-  const usersPerPage = 5;       // show 5 users per page
+  const usersPerPage = 10;       // show 10 users per page
   let currentPage = 1;
   let filteredUsers = [...users]; // for search filtering
 
