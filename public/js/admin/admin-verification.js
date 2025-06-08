@@ -1,37 +1,38 @@
 document.addEventListener("DOMContentLoaded", () => {
   const user = localStorage.getItem("loggedInUser");
+  const userRole = localStorage.getItem("userRole");
 
-  console.log('pekpek ni shin');
+  // Redirect if not logged in
   if (!user) {
     window.location.href = "index.html";
     return;
   }
 
- const logoutBtn = document.getElementById("logoutBtn");
+  // Redirect if role is not admin
+  if (userRole !== "admin") {
+    window.location.href = "404.html";
+    return;
+  }
+
+  // Logout for desktop
+  const logoutBtn = document.getElementById("logoutBtn");
   if (logoutBtn) {
     logoutBtn.addEventListener("click", () => {
       localStorage.removeItem("loggedInUser");
       localStorage.removeItem("userFullName");
+      localStorage.removeItem("userRole");
       window.location.href = "index.html";
     });
   }
 
+  // Logout for mobile
   const logoutBtnMobile = document.getElementById("logoutBtnMobile");
   if (logoutBtnMobile) {
     logoutBtnMobile.addEventListener("click", () => {
       localStorage.removeItem("loggedInUser");
       localStorage.removeItem("userFullName");
+      localStorage.removeItem("userRole");
       window.location.href = "index.html";
     });
-  }
-
-  // ✅ Load full name from localStorage and display it
-  const welcomeText = document.getElementById("welcomeText");
-  const userFullName = localStorage.getItem("userFullName");
-
-  console.log("Loaded full name:", userFullName);
-
-  if (welcomeText && userFullName) {
-    welcomeText.textContent = `Welcome ${userFullName}`;
   }
 });
