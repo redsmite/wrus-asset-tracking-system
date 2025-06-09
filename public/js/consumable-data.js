@@ -209,25 +209,116 @@ export async function handleAssignConsumable(selectedCID) {
   }
 }
 
-export async function renderLedgerTable(selectedCID) {
-  const tableBody = document.getElementById("ledgerTableBody");
-  const totalQtyDisplay = document.getElementById("totalQtyDisplay");
+export async function generateLedgerPDFBlob(selectedCID, ledgerEntries, totalQty) {
+  const { jsPDF } = window.jspdf;
+  const pdfDoc = new jsPDF();
+  const logoUrl = './images/denr logo.png';
+  const logoData = await loadImageAsBase64(logoUrl);
 
-  // Reset UI placeholders
-  tableBody.innerHTML = "<tr><td colspan='5'>Loading...</td></tr>";
-  totalQtyDisplay.textContent = "Loading...";
+  pdfDoc.addImage(logoData, 'PNG', 14, 10, 15, 15);
+
+  let specification = "Not Found";
 
   try {
-    // Fetch total quantity from consumable
+    const docRef = doc(db, "consumable", selectedCID);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      specification = data.specification || "N/A";
+    }
+  } catch (error) {
+    specification = "Error fetching specification";
+  }
+
+  // Header
+  pdfDoc.setFont("helvetica", "bold");
+  pdfDoc.setFontSize(12);
+  pdfDoc.text("Department of Environment and Natural Resources - National Capital Region", 32, 16);
+  pdfDoc.text("Licenses, Patents, and Deeds Division", 32, 22);
+  pdfDoc.text("Water Resources Utilization Section", 32, 28);
+
+  // PDF Title
+  pdfDoc.setFont("helvetica", "normal");
+  pdfDoc.setFontSize(10);
+  pdfDoc.setFont("helvetica", "normal");
+pdfDoc.text("Ledger Report for: ", 14, 40);
+pdfDoc.setFont("helvetica", "bold");
+pdfDoc.text(specification, pdfDoc.getTextWidth("Ledger Report for: ") + 14, 40);
+
+// Total Quantity line with bold value
+pdfDoc.setFont("helvetica", "normal");
+pdfDoc.text("Total Quantity: ", 14, 46);
+pdfDoc.setFont("helvetica", "bold");
+pdfDoc.text(String(totalQty), pdfDoc.getTextWidth("Total Quantity: ") + 14, 46);
+
+  let currentY = 52;
+
+  // Table 1: Add to Inventory
+  const addStockEntries = ledgerEntries.filter(e => e.action === 'Add Stock');
+
+  if (addStockEntries.length > 0) {
+    pdfDoc.setFont("helvetica", "bold");
+    pdfDoc.text("Items Received", 14, currentY);
+    currentY += 6;
+
+    const inventoryTable = addStockEntries.map(entry => ([
+      entry.dateModified?.toDate().toLocaleDateString() || "—",
+      entry.amount
+    ]));
+
+    pdfDoc.autoTable({
+      head: [["Date", "Qty"]],
+      body: inventoryTable,
+      startY: currentY,
+      theme: 'grid'
+    });
+
+    currentY = pdfDoc.lastAutoTable.finalY + 10;
+  }
+
+  // Table 2: Assigned
+  const assignedEntries = ledgerEntries.filter(e => e.action !== 'Add Stock');
+
+  if (assignedEntries.length > 0) {
+    pdfDoc.setFont("helvetica", "bold");
+    pdfDoc.text("Items Assigned", 14, currentY);
+    currentY += 6;
+
+    const assignedTable = assignedEntries.map(entry => ([
+      entry.dateModified?.toDate().toLocaleDateString() || "—",
+      entry.assignedTo || "—",
+      entry.amount
+    ]));
+
+    pdfDoc.autoTable({
+      head: [["Date", "Assigned To", "Qty"]],
+      body: assignedTable,
+      startY: currentY,
+      theme: 'grid'
+    });
+
+    currentY = pdfDoc.lastAutoTable.finalY + 10;
+  }
+
+  return pdfDoc.output("blob");
+}
+
+
+export async function renderLedgerTable(selectedCID) {
+  const totalQtyDisplay = document.getElementById("totalQtyDisplay");
+
+  try {
+    // Fetch total quantity
     const consumableSnap = await getDoc(doc(db, "consumable", selectedCID));
+    let totalQty = 0;
     if (consumableSnap.exists()) {
-      const consumableData = consumableSnap.data();
-      totalQtyDisplay.textContent = consumableData.qty ?? 0;
+      totalQty = consumableSnap.data().qty ?? 0;
+      totalQtyDisplay.textContent = totalQty;
     } else {
       totalQtyDisplay.textContent = "Not found";
     }
 
-    // Fetch ledger entries ordered by dateModified descending
+    // Fetch ledger entries
     const q = query(
       collection(db, "ledger"),
       where("cid", "==", selectedCID),
@@ -241,48 +332,47 @@ export async function renderLedgerTable(selectedCID) {
     ledgerSnapshot.forEach(doc => {
       const data = doc.data();
       ledgerEntries.push({ id: doc.id, ...data });
-
-      if (data.assignedTo) {
-        userIds.add(data.assignedTo);
-      }
+      if (data.assignedTo) userIds.add(data.assignedTo);
     });
 
-    const userMap = {
-    };
-
-    await Promise.all(
-      Array.from(userIds).map(async userId => {
-        try {
-          const userDoc = await getDoc(doc(db, "users", userId));
-          if (userDoc.exists()) {
-            const u = userDoc.data();
-            userMap[userId] = `${u.lastName}, ${u.firstName} ${u.middleInitial}.`;
-          } else {
-            userMap[userId] = "Unknown User";
-          }
-        } catch (e) {
-          userMap[userId] = "Error";
+    const userMap = {};
+    await Promise.all(Array.from(userIds).map(async userId => {
+      try {
+        const userDoc = await getDoc(doc(db, "users", userId));
+        if (userDoc.exists()) {
+          const u = userDoc.data();
+          userMap[userId] = `${u.lastName}, ${u.firstName} ${u.middleInitial}.`;
+        } else {
+          userMap[userId] = "Unknown User";
         }
-      })
-    );
+      } catch {
+        userMap[userId] = "Error";
+      }
+    }));
 
-    // Render rows
-    tableBody.innerHTML = "";
-    ledgerEntries.forEach(entry => {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${entry.action}</td>
-        <td>${entry.amount}</td>
-        <td>${userMap[entry.assignedTo] || "—"}</td>
-        <td>${entry.modifiedBy || "—"}</td>
-        <td>${entry.dateModified?.toDate().toLocaleString() || "—"}</td>
-      `;
-      tableBody.appendChild(row);
-    });
+    // Resolve user names
+    const enrichedEntries = ledgerEntries.map(entry => ({
+      ...entry,
+      assignedTo: userMap[entry.assignedTo] || "—"
+    }));
+
+    return { totalQty, ledgerEntries: enrichedEntries };
 
   } catch (error) {
     console.error("Failed to load ledger or total qty:", error);
-    tableBody.innerHTML = "<tr><td colspan='5'>Error loading data.</td></tr>";
     totalQtyDisplay.textContent = "Error";
+    return { totalQty: 0, ledgerEntries: [] };
   }
+}
+
+async function loadImageAsBase64(url) {
+  const response = await fetch(url);
+  const blob = await response.blob();
+
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
 }
