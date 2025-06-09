@@ -129,28 +129,26 @@ export async function populateUserSelect() {
 
   userSelect.innerHTML = ''; // Clear existing options
 
-  // Add the static "For General Use" option
-  // const generalOption = document.createElement("option");
-  // generalOption.value = '4OSFVxSwP1ytiZU1bIqV';
-  // generalOption.textContent = 'For General Use';
-  // userSelect.appendChild(generalOption);
-
-  // Optional: add a disabled "Select user" placeholder below it
+  // Optional: add a disabled "Select user" placeholder
   const defaultOption = document.createElement("option");
   defaultOption.disabled = true;
   defaultOption.selected = true;
   defaultOption.textContent = 'Select user';
   userSelect.appendChild(defaultOption);
 
-  // Fetch and append users from Firestore
+  // Fetch and append users with status 'active' from Firestore
   const usersSnapshot = await getDocs(collection(db, "users"));
   usersSnapshot.forEach(doc => {
     const user = doc.data();
-    const fullName = `${user.lastName}, ${user.firstName} ${user.middleInitial}.`;
-    const option = document.createElement("option");
-    option.value = doc.id;
-    option.textContent = fullName;
-    userSelect.appendChild(option);
+    
+    // Only include users with status 'active'
+    if (user.status === 'active') {
+      const fullName = `${user.lastName}, ${user.firstName} ${user.middleInitial}.`;
+      const option = document.createElement("option");
+      option.value = doc.id;
+      option.textContent = fullName;
+      userSelect.appendChild(option);
+    }
   });
 }
 

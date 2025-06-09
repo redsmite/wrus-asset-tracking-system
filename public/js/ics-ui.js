@@ -31,10 +31,12 @@ function loadUsers() {
 
   getUsers().then(users => {
     users.forEach(user => {
-      const option = document.createElement('option');
-      option.value = user.id;
-      option.textContent = `${user.lastName}, ${user.firstName} ${user.middleInitial}.`;
-      assignedToSelect.appendChild(option);
+      if (user.status === 'active') {
+        const option = document.createElement('option');
+        option.value = user.id;
+        option.textContent = `${user.lastName}, ${user.firstName} ${user.middleInitial}.`;
+        assignedToSelect.appendChild(option);
+      }
     });
   });
 }
