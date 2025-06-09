@@ -103,8 +103,8 @@ export async function updateConsumable(cid, updatedData) {
 //   renderConsumableTable();
 // });
 
-export async function addStock(cid, amount) {
-  const consumableRef = doc(db, "consumable", cid); // ✅ correct collection name
+export async function addStock(cid, amount, remarks = "") {
+  const consumableRef = doc(db, "consumable", cid);
 
   const snapshot = await getDoc(consumableRef);
   if (!snapshot.exists()) throw new Error("Item not found");
@@ -120,6 +120,7 @@ export async function addStock(cid, amount) {
     action: "Add Stock",
     assignedTo: "",
     amount: amount,
+    remarks: remarks.trim(),  // ✅ store remarks
   });
 }
 
@@ -156,8 +157,11 @@ export async function populateUserSelect() {
 export async function handleAssignConsumable(selectedCID) {
   const qtyInput = document.getElementById("assignQty");
   const userSelect = document.getElementById("userSelect");
+  const remarksInput = document.getElementById("assignRemarks");
+
   const assignQty = parseInt(qtyInput.value);
   const assignedTo = userSelect.value;
+  const remarks = remarksInput.value.trim();
 
   if (!assignQty || assignQty < 1) {
     alert("Please enter a valid quantity.");
@@ -192,7 +196,8 @@ export async function handleAssignConsumable(selectedCID) {
       assignedTo: assignedTo,
       cid: selectedCID,
       dateModified: serverTimestamp(),
-      modifiedBy: localStorage.getItem("userFullName")
+      modifiedBy: localStorage.getItem("userFullName"),
+      remarks: remarks  // ✅ Save remarks
     });
 
     await updateDoc(consumableRef, {
@@ -215,6 +220,7 @@ export async function generateLedgerPDFBlob(selectedCID, ledgerEntries, totalQty
   const logoUrl = './images/denr logo.png';
   const logoData = await loadImageAsBase64(logoUrl);
 
+  // Header logo
   pdfDoc.addImage(logoData, 'PNG', 14, 10, 15, 15);
 
   let specification = "Not Found";
@@ -230,6 +236,14 @@ export async function generateLedgerPDFBlob(selectedCID, ledgerEntries, totalQty
     specification = "Error fetching specification";
   }
 
+  // Date formatter
+  const formatDate = (dateObj) =>
+    dateObj.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric"
+    });
+
   // Header
   pdfDoc.setFont("helvetica", "bold");
   pdfDoc.setFontSize(12);
@@ -237,37 +251,47 @@ export async function generateLedgerPDFBlob(selectedCID, ledgerEntries, totalQty
   pdfDoc.text("Licenses, Patents, and Deeds Division", 32, 22);
   pdfDoc.text("Water Resources Utilization Section", 32, 28);
 
-  // PDF Title
+  // Today's Date
+  const today = formatDate(new Date());
+
   pdfDoc.setFont("helvetica", "normal");
   pdfDoc.setFontSize(10);
-  pdfDoc.setFont("helvetica", "normal");
-pdfDoc.text("Ledger Report for: ", 14, 40);
-pdfDoc.setFont("helvetica", "bold");
-pdfDoc.text(specification, pdfDoc.getTextWidth("Ledger Report for: ") + 14, 40);
+  pdfDoc.text("Date:", 14, 36);
+  let dateLabelWidth = pdfDoc.getTextWidth("Date:");
+  pdfDoc.setFont("helvetica", "bold");
+  pdfDoc.text(today, 14 + dateLabelWidth + 2, 36);
 
-// Total Quantity line with bold value
-pdfDoc.setFont("helvetica", "normal");
-pdfDoc.text("Total Quantity: ", 14, 46);
-pdfDoc.setFont("helvetica", "bold");
-pdfDoc.text(String(totalQty), pdfDoc.getTextWidth("Total Quantity: ") + 14, 46);
+  // PDF Title
+  pdfDoc.setFont("helvetica", "normal");
+  pdfDoc.text("Ledger Report for:", 14, 40);
+  let titleLabelWidth = pdfDoc.getTextWidth("Ledger Report for:");
+  pdfDoc.setFont("helvetica", "bold");
+  pdfDoc.text(specification, 14 + titleLabelWidth + 2, 40);
+
+  // Total Quantity
+  pdfDoc.setFont("helvetica", "normal");
+  pdfDoc.text("Total Quantity:", 14, 46);
+  let totalQtyLabelWidth = pdfDoc.getTextWidth("Total Quantity:");
+  pdfDoc.setFont("helvetica", "bold");
+  pdfDoc.text(String(totalQty), 14 + totalQtyLabelWidth + 2, 46);
 
   let currentY = 52;
 
-  // Table 1: Add to Inventory
+  // Table 1: Items Received
   const addStockEntries = ledgerEntries.filter(e => e.action === 'Add Stock');
-
   if (addStockEntries.length > 0) {
     pdfDoc.setFont("helvetica", "bold");
     pdfDoc.text("Items Received", 14, currentY);
     currentY += 6;
 
     const inventoryTable = addStockEntries.map(entry => ([
-      entry.dateModified?.toDate().toLocaleDateString() || "—",
-      entry.amount
+      entry.dateModified ? formatDate(entry.dateModified.toDate()) : "—",
+      entry.amount,
+      entry.remarks || "—"
     ]));
 
     pdfDoc.autoTable({
-      head: [["Date", "Qty"]],
+      head: [["Date", "Qty", "Remarks"]],
       body: inventoryTable,
       startY: currentY,
       theme: 'grid'
@@ -276,22 +300,22 @@ pdfDoc.text(String(totalQty), pdfDoc.getTextWidth("Total Quantity: ") + 14, 46);
     currentY = pdfDoc.lastAutoTable.finalY + 10;
   }
 
-  // Table 2: Assigned
+  // Table 2: Items Assigned
   const assignedEntries = ledgerEntries.filter(e => e.action !== 'Add Stock');
-
   if (assignedEntries.length > 0) {
     pdfDoc.setFont("helvetica", "bold");
     pdfDoc.text("Items Assigned", 14, currentY);
     currentY += 6;
 
     const assignedTable = assignedEntries.map(entry => ([
-      entry.dateModified?.toDate().toLocaleDateString() || "—",
+      entry.dateModified ? formatDate(entry.dateModified.toDate()) : "—",
       entry.assignedTo || "—",
-      entry.amount
+      entry.amount,
+      entry.remarks || "—"
     ]));
 
     pdfDoc.autoTable({
-      head: [["Date", "Assigned To", "Qty"]],
+      head: [["Date", "Assigned To", "Qty", "Remarks"]],
       body: assignedTable,
       startY: currentY,
       theme: 'grid'
@@ -300,9 +324,25 @@ pdfDoc.text(String(totalQty), pdfDoc.getTextWidth("Total Quantity: ") + 14, 46);
     currentY = pdfDoc.lastAutoTable.finalY + 10;
   }
 
+  // Watermark
+  const pageCount = pdfDoc.getNumberOfPages();
+  const pageWidth = pdfDoc.internal.pageSize.getWidth();
+  const pageHeight = pdfDoc.internal.pageSize.getHeight();
+  const watermarkWidth = 100;
+  const watermarkHeight = 100;
+  const x = (pageWidth - watermarkWidth) / 2;
+  const y = (pageHeight - watermarkHeight) / 2;
+
+  for (let i = 1; i <= pageCount; i++) {
+    pdfDoc.setPage(i);
+    pdfDoc.saveGraphicsState();
+    pdfDoc.setGState(new pdfDoc.GState({ opacity: 0.07 }));
+    pdfDoc.addImage(logoData, 'PNG', x, y, watermarkWidth, watermarkHeight);
+    pdfDoc.restoreGraphicsState();
+  }
+
   return pdfDoc.output("blob");
 }
-
 
 export async function renderLedgerTable(selectedCID) {
   const totalQtyDisplay = document.getElementById("totalQtyDisplay");

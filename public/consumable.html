@@ -78,8 +78,6 @@
               <th>Specification</th>
               <th>Qty</th>
               <th>Unit</th>
-              <th>Date Added</th>
-              <th>Added by</th>
               <th>Edit</th>
               <th>Action</th>
             </tr>
@@ -148,7 +146,7 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body d-grid gap-2">
-          <button id="addStockBtn" class="btn btn-success">➕ Add Stock</button>
+          <button id="addStockBtn" class="btn btn-success">➕ Receive Item</button>
           <button id="assignItemBtn" class="btn btn-warning">➖ Assign Item</button>
           <button id="viewLedgerBtn" class="btn btn-info">📖 View Ledger</button>
         </div>
@@ -161,12 +159,15 @@
     <div class="modal-dialog">
       <div class="modal-content rounded-3">
         <div class="modal-header">
-          <h5 class="modal-title" id="addStockModalLabel">Add Stock</h5>
+          <h5 class="modal-title" id="addStockModalLabel">Receive Item</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <label for="stockAmount" class="form-label">Enter quantity to add:</label>
+          <label for="stockAmount" class="form-label">Enter quantity to receive:</label>
           <input type="number" id="stockAmount" class="form-control" min="1" required>
+
+          <label for="stockRemarks" class="form-label mt-3">Remarks (optional):</label>
+          <textarea id="stockRemarks" class="form-control" rows="3" placeholder="Enter remarks..."></textarea>
         </div>
         <div class="modal-footer">
           <button id="confirmAddStockBtn" class="btn btn-success">Confirm</button>
@@ -180,7 +181,7 @@
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">Assign Consumable</h5>
+          <h5 class="modal-title">Assign Item</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
@@ -193,6 +194,10 @@
               <label for="assignTo" class="form-label">Assign to</label>
               <select class="form-select" id="userSelect" required></select>
             </div>
+            <div class="mb-3">
+              <label for="assignRemarks" class="form-label">Remarks</label>
+              <textarea class="form-control" id="assignRemarks" rows="3" placeholder="Enter remarks..."></textarea>
+            </div>
           </form>
         </div>
         <div class="modal-footer">
@@ -201,26 +206,24 @@
       </div>
     </div>
   </div>
-<!-- Ledger Modal -->
-<div class="modal fade" id="ledgerModal" tabindex="-1" aria-labelledby="ledgerModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-xl modal-dialog-scrollable">
-    <div class="modal-content rounded-3">
-      <div class="modal-header">
-        <h5 class="modal-title" id="ledgerModalLabel">Ledger Entries</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        <div class="px-3 pt-2">
-          <p class="text-muted mb-0">Total Quantity: <strong id="totalQtyDisplay">Loading...</strong></p>
+
+  <!-- Ledger Modal -->
+  <div class="modal fade" id="ledgerModal" tabindex="-1" aria-labelledby="ledgerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+      <div class="modal-content rounded-3">
+        <div class="modal-header">
+          <h5 class="modal-title" id="ledgerModalLabel">Ledger Entries</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          <div class="px-3 pt-2">
+            <p class="text-muted mb-0">Total Quantity: <strong id="totalQtyDisplay">Loading...</strong></p>
+          </div>
         </div>
-      </div>
-      <div class="modal-body">
-        <iframe id="pdfPreviewFrame" width="100%" height="600px" frameborder="0"></iframe>
+        <div class="modal-body">
+          <iframe id="pdfPreviewFrame" width="100%" height="600px" frameborder="0"></iframe>
+        </div>
       </div>
     </div>
   </div>
-</div>
-
-
-
 
   <!-- Firebase + Bootstrap -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

@@ -117,21 +117,21 @@ document.addEventListener("click", (e) => {
   }
 });
 
-// Modal button handlers
-document.getElementById("addStockBtn").addEventListener("click", () => {
-  //alert("Add stock to CID: " + selectedCID);
-  // TODO: Open add stock form/modal
-});
+// // Modal button handlers
+// document.getElementById("addStockBtn").addEventListener("click", () => {
+//   //alert("Add stock to CID: " + selectedCID);
+//   // TODO: Open add stock form/modal
+// });
 
-document.getElementById("assignItemBtn").addEventListener("click", () => {
-  //alert("Assign item from CID: " + selectedCID);
-  // TODO: Open assign item form/modal
-});
+// document.getElementById("assignItemBtn").addEventListener("click", () => {
+//   //alert("Assign item from CID: " + selectedCID);
+//   // TODO: Open assign item form/modal
+// });
 
-document.getElementById("viewLedgerBtn").addEventListener("click", () => {
-  //alert("View ledger for CID: " + selectedCID);
-  // TODO: Show ledger page/modal
-});
+// document.getElementById("viewLedgerBtn").addEventListener("click", () => {
+//   //alert("View ledger for CID: " + selectedCID);
+//   // TODO: Show ledger page/modal
+// });
 
 document.addEventListener("click", (e) => {
   if (e.target.classList.contains("action-btn")) {
@@ -151,12 +151,15 @@ document.getElementById("addStockBtn").addEventListener("click", () => {
 
 document.getElementById("confirmAddStockBtn").addEventListener("click", async () => {
   const amount = parseInt(document.getElementById("stockAmount").value);
+  const remarks = document.getElementById("stockRemarks").value;
+
   if (!amount || amount <= 0 || !selectedCID) return alert("Invalid amount.");
 
   try {
-    await addStock(selectedCID, amount);
+    await addStock(selectedCID, amount, remarks); // ✅ pass remarks
     const modal = bootstrap.Modal.getInstance(document.getElementById("addStockModal"));
     modal.hide();
+    alert('Items received successfully');
     renderConsumableTable();
   } catch (err) {
     console.error("Error adding stock:", err.message);
@@ -222,8 +225,6 @@ function renderTablePage() {
       <td>${item.specification}</td>
       <td>${item.qty}</td>
       <td>${item.unit}</td>
-      <td>${item.timestamp}</td>
-      <td>${item.addedBy}</td>
       <td>
         <button class="btn btn-warning btn-sm edit-btn" data-id="${item.id}" data-spec="${item.specification}" data-unit="${item.unit}" data-bs-toggle="modal" data-bs-target="#editModal">Edit</button>
       </td>
