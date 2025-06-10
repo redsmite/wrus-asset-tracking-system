@@ -75,4 +75,35 @@ async function fetchWeather() {
   }
 }
 
+function checkNetworkSpeed() {
+  const image = new Image();
+  const startTime = new Date().getTime();
+  const cacheBuster = '?nn=' + startTime;
+  const testImageUrl = "https://www.google.com/images/phd/px.gif" + cacheBuster; // ~43 bytes
+
+  image.onload = function () {
+    const endTime = new Date().getTime();
+    const duration = (endTime - startTime) / 1000;
+    const bitsLoaded = 43 * 8; // 43 bytes × 8 bits
+    const speedBps = bitsLoaded / duration;
+    const speedKbps = speedBps / 1024;
+    const speedMbps = speedKbps / 1024;
+
+    const displaySpeed = speedMbps > 0.5
+      ? `${speedMbps.toFixed(2)} Mbps`
+      : `${speedKbps.toFixed(2)} Kbps`;
+
+    document.getElementById('speed-value').textContent = displaySpeed;
+  };
+
+  image.onerror = function () {
+    document.getElementById('speed-value').textContent = "Error checking speed";
+  };
+
+  image.src = testImageUrl;
+}
+
 fetchWeather();
+// Check immediately, then every 30 seconds
+checkNetworkSpeed();
+setInterval(checkNetworkSpeed, 30000);
