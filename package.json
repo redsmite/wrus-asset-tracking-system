@@ -1,0 +1,24 @@
+{
+  "name": "wrus-asset-tracking",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/redsmite/wrus-asset-tracking-system.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/redsmite/wrus-asset-tracking-system/issues"
+  },
+  "homepage": "https://github.com/redsmite/wrus-asset-tracking-system#readme",
+  "description": ""
+}
