@@ -288,7 +288,26 @@ export async function generateLedgerPDFBlob(selectedCID, ledgerEntries, totalQty
   pdfDoc.setFont("helvetica", "bold");
   pdfDoc.text(String(totalQty), 14 + totalQtyLabelWidth + 2, 46);
 
-  let currentY = 52;
+  let unit = "—";
+  try {
+    const docRef = doc(db, "consumable", selectedCID);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      specification = data.specification || "N/A";
+      unit = data.unit || "—";
+    }
+  } catch (error) {
+    specification = "Error fetching specification";
+  }
+
+  pdfDoc.setFont("helvetica", "normal");
+  pdfDoc.text("Unit:", 14, 50);
+  let unitLabelWidth = pdfDoc.getTextWidth("Unit:");
+  pdfDoc.setFont("helvetica", "bold");
+  pdfDoc.text(unit, 14 + unitLabelWidth + 2, 50);
+
+  let currentY = 56;
 
   // Table 1: Items Received
   const addStockEntries = ledgerEntries.filter(e => {
