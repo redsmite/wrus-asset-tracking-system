@@ -46,6 +46,19 @@ export async function addConsumable(spec, qty, unit, addedBy) {
   const docRef = doc(db, "consumable", id);
   await setDoc(docRef, newItem);
 
+  // Add entry to the ledger
+  const ledgerEntry = {
+    cid: id,
+    modifiedBy: addedBy,
+    amount: Number(qty),
+    remarks: "Opening stock",
+    action: "Add Stock",
+    dateModified: new Date()
+  };
+
+  const ledgerRef = doc(collection(db, "ledger"));
+  await setDoc(ledgerRef, ledgerEntry);
+
   return id;
 }
 
@@ -278,7 +291,10 @@ export async function generateLedgerPDFBlob(selectedCID, ledgerEntries, totalQty
   let currentY = 52;
 
   // Table 1: Items Received
-  const addStockEntries = ledgerEntries.filter(e => e.action === 'Add Stock');
+  const addStockEntries = ledgerEntries.filter(e => {
+    console.log("Checking action:", e.action);
+    return e.action === "Add Stock";
+  });
   if (addStockEntries.length > 0) {
     pdfDoc.setFont("helvetica", "bold");
     pdfDoc.text("Items Received", 14, currentY);
@@ -294,7 +310,12 @@ export async function generateLedgerPDFBlob(selectedCID, ledgerEntries, totalQty
       head: [["Date", "Qty", "Remarks"]],
       body: inventoryTable,
       startY: currentY,
-      theme: 'grid'
+      theme: 'grid',
+      didParseCell: function (data) {
+        if (data.section === 'body' && data.column.index === 1) {
+          data.cell.styles.textColor = [0, 128, 0]; // green
+        }
+      }
     });
 
     currentY = pdfDoc.lastAutoTable.finalY + 10;
@@ -318,8 +339,14 @@ export async function generateLedgerPDFBlob(selectedCID, ledgerEntries, totalQty
       head: [["Date", "Assigned To", "Qty", "Remarks"]],
       body: assignedTable,
       startY: currentY,
-      theme: 'grid'
+      theme: 'grid',
+      didParseCell: function (data) {
+        if (data.section === 'body' && data.column.index === 2) {
+          data.cell.styles.textColor = [220, 20, 60]; // red (crimson)
+        }
+      }
     });
+
 
     currentY = pdfDoc.lastAutoTable.finalY + 10;
   }
