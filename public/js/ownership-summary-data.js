@@ -12,6 +12,10 @@ export async function fetchUsers() {
 
   querySnapshot.forEach((doc) => {
     const data = doc.data();
+
+    // Skip if role is admin
+    if (data.role && data.role.toLowerCase() === "admin") return;
+
     users.push({
       id: doc.id,
       lastName: data.lastName || '',

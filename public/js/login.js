@@ -25,9 +25,17 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!querySnapshot.empty) {
           const docSnap = querySnapshot.docs[0];
           const userData = docSnap.data();
-          const hashedPassword = userData.password;
-          const userRole = userData.role;
 
+          const userRole = userData.role?.toLowerCase();
+          const userStatus = userData.status?.toLowerCase();
+
+          // 🚫 Block login if non-admin and status is inactive
+          if (userRole !== "admin" && userStatus === "inactive") {
+            alert("Your account is inactive. Please contact the administrator.");
+            return;
+          }
+
+          const hashedPassword = userData.password;
           const isMatch = bcrypt.compareSync(password, hashedPassword);
 
           if (isMatch) {
