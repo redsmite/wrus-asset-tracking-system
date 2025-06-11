@@ -387,8 +387,7 @@ export async function generateLedgerPDFBlob(selectedCID, ledgerEntries, totalQty
     pdfDoc.restoreGraphicsState();
   }
 
-  pdfDoc.save("ledger.pdf");
-
+  return pdfDoc.output("blob");
 }
 
 export async function renderLedgerTable(selectedCID) {

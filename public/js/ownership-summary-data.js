@@ -90,7 +90,8 @@ export async function generateConsumablePDF(user, entriesArray, consumablesMap) 
       day: "2-digit"
     });
 
-  const today = new Date().toLocaleDateString("en-US", {
+  const now = new Date();
+  const today = now.toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
     day: "numeric"
@@ -163,9 +164,20 @@ export async function generateConsumablePDF(user, entriesArray, consumablesMap) 
     doc.restoreGraphicsState();
   }
 
-  // Show PDF in modal
-  const blob = doc.output("blob");
-  const blobUrl = URL.createObjectURL(blob);
-  const modalBody = document.querySelector("#consumableModal .modal-body");
-  modalBody.innerHTML = `<embed src="${blobUrl}" type="application/pdf" width="100%" height="600px" />`;
+  // Ask to save on mobile, or show modal on desktop
+  const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+  const filename = `consumable-report-${now.toISOString().slice(0, 19).replace(/[:T]/g, "-")}.pdf`;
+
+  if (isMobile) {
+    const confirmSave = window.confirm("Do you want to save this report as a PDF?");
+    if (confirmSave) {
+      doc.save(filename);
+    }
+  } else {
+    // Show PDF in modal on desktop
+    const blob = doc.output("blob");
+    const blobUrl = URL.createObjectURL(blob);
+    const modalBody = document.querySelector("#consumableModal .modal-body");
+    modalBody.innerHTML = `<embed src="${blobUrl}" type="application/pdf" width="100%" height="600px" />`;
+  }
 }
