@@ -231,64 +231,26 @@ export async function generateLedgerPDFBlob(selectedCID, ledgerEntries, totalQty
   const { jsPDF } = window.jspdf;
   const pdfDoc = new jsPDF();
   const logoUrl = './images/denr logo.png';
+
+  const loadImageAsBase64 = (url) =>
+    fetch(url)
+      .then(res => res.blob())
+      .then(blob =>
+        new Promise(resolve => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.readAsDataURL(blob);
+        })
+      );
+
   const logoData = await loadImageAsBase64(logoUrl);
 
   // Header logo
   pdfDoc.addImage(logoData, 'PNG', 14, 10, 15, 15);
 
   let specification = "Not Found";
-
-  try {
-    const docRef = doc(db, "consumable", selectedCID);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      const data = docSnap.data();
-      specification = data.specification || "N/A";
-    }
-  } catch (error) {
-    specification = "Error fetching specification";
-  }
-
-  // Date formatter
-  const formatDate = (dateObj) =>
-    dateObj.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric"
-    });
-
-  // Header
-  pdfDoc.setFont("helvetica", "bold");
-  pdfDoc.setFontSize(12);
-  pdfDoc.text("Department of Environment and Natural Resources - National Capital Region", 32, 16);
-  pdfDoc.text("Licenses, Patents, and Deeds Division", 32, 22);
-  pdfDoc.text("Water Resources Utilization Section", 32, 28);
-
-  // Today's Date
-  const today = formatDate(new Date());
-
-  pdfDoc.setFont("helvetica", "normal");
-  pdfDoc.setFontSize(10);
-  pdfDoc.text("Date:", 14, 36);
-  let dateLabelWidth = pdfDoc.getTextWidth("Date:");
-  pdfDoc.setFont("helvetica", "bold");
-  pdfDoc.text(today, 14 + dateLabelWidth + 2, 36);
-
-  // PDF Title
-  pdfDoc.setFont("helvetica", "normal");
-  pdfDoc.text("Ledger Report for:", 14, 40);
-  let titleLabelWidth = pdfDoc.getTextWidth("Ledger Report for:");
-  pdfDoc.setFont("helvetica", "bold");
-  pdfDoc.text(specification, 14 + titleLabelWidth + 2, 40);
-
-  // Total Quantity
-  pdfDoc.setFont("helvetica", "normal");
-  pdfDoc.text("Total Quantity:", 14, 46);
-  let totalQtyLabelWidth = pdfDoc.getTextWidth("Total Quantity:");
-  pdfDoc.setFont("helvetica", "bold");
-  pdfDoc.text(String(totalQty), 14 + totalQtyLabelWidth + 2, 46);
-
   let unit = "—";
+
   try {
     const docRef = doc(db, "consumable", selectedCID);
     const docSnap = await getDoc(docRef);
@@ -301,6 +263,40 @@ export async function generateLedgerPDFBlob(selectedCID, ledgerEntries, totalQty
     specification = "Error fetching specification";
   }
 
+  const formatDate = (dateObj) =>
+    dateObj.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric"
+    });
+
+  const today = formatDate(new Date());
+
+  pdfDoc.setFont("helvetica", "bold");
+  pdfDoc.setFontSize(12);
+  pdfDoc.text("Department of Environment and Natural Resources - National Capital Region", 32, 16);
+  pdfDoc.text("Licenses, Patents, and Deeds Division", 32, 22);
+  pdfDoc.text("Water Resources Utilization Section", 32, 28);
+
+  pdfDoc.setFont("helvetica", "normal");
+  pdfDoc.setFontSize(10);
+  pdfDoc.text("Date:", 14, 36);
+  let dateLabelWidth = pdfDoc.getTextWidth("Date:");
+  pdfDoc.setFont("helvetica", "bold");
+  pdfDoc.text(today, 14 + dateLabelWidth + 2, 36);
+
+  pdfDoc.setFont("helvetica", "normal");
+  pdfDoc.text("Ledger Report for:", 14, 40);
+  let titleLabelWidth = pdfDoc.getTextWidth("Ledger Report for:");
+  pdfDoc.setFont("helvetica", "bold");
+  pdfDoc.text(specification, 14 + titleLabelWidth + 2, 40);
+
+  pdfDoc.setFont("helvetica", "normal");
+  pdfDoc.text("Total Quantity:", 14, 46);
+  let qtyLabelWidth = pdfDoc.getTextWidth("Total Quantity:");
+  pdfDoc.setFont("helvetica", "bold");
+  pdfDoc.text(String(totalQty), 14 + qtyLabelWidth + 2, 46);
+
   pdfDoc.setFont("helvetica", "normal");
   pdfDoc.text("Unit:", 14, 50);
   let unitLabelWidth = pdfDoc.getTextWidth("Unit:");
@@ -309,11 +305,7 @@ export async function generateLedgerPDFBlob(selectedCID, ledgerEntries, totalQty
 
   let currentY = 56;
 
-  // Table 1: Items Received
-  const addStockEntries = ledgerEntries.filter(e => {
-    console.log("Checking action:", e.action);
-    return e.action === "Add Stock";
-  });
+  const addStockEntries = ledgerEntries.filter(e => e.action === "Add Stock");
   if (addStockEntries.length > 0) {
     pdfDoc.setFont("helvetica", "bold");
     pdfDoc.text("Items Received", 14, currentY);
@@ -340,8 +332,7 @@ export async function generateLedgerPDFBlob(selectedCID, ledgerEntries, totalQty
     currentY = pdfDoc.lastAutoTable.finalY + 10;
   }
 
-  // Table 2: Items Assigned
-  const assignedEntries = ledgerEntries.filter(e => e.action !== 'Add Stock');
+  const assignedEntries = ledgerEntries.filter(e => e.action !== "Add Stock");
   if (assignedEntries.length > 0) {
     pdfDoc.setFont("helvetica", "bold");
     pdfDoc.text("Items Assigned", 14, currentY);
@@ -361,11 +352,10 @@ export async function generateLedgerPDFBlob(selectedCID, ledgerEntries, totalQty
       theme: 'grid',
       didParseCell: function (data) {
         if (data.section === 'body' && data.column.index === 2) {
-          data.cell.styles.textColor = [220, 20, 60]; // red (crimson)
+          data.cell.styles.textColor = [220, 20, 60]; // red
         }
       }
     });
-
 
     currentY = pdfDoc.lastAutoTable.finalY + 10;
   }
@@ -387,7 +377,31 @@ export async function generateLedgerPDFBlob(selectedCID, ledgerEntries, totalQty
     pdfDoc.restoreGraphicsState();
   }
 
-  return pdfDoc.output("blob");
+  const blob = pdfDoc.output("blob");
+
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  if (isMobile) {
+    const saveConfirmed = window.confirm("Do you want to save this PDF?");
+    if (saveConfirmed) {
+      const now = new Date();
+      const filename = `ledger-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}_${String(now.getHours()).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}${String(now.getSeconds()).padStart(2, "0")}.pdf`;
+
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+    }
+  } else {
+    // On desktop: display the PDF in a new tab
+    const blobUrl = URL.createObjectURL(blob);
+    window.open(blobUrl, '_blank');
+  }
+
+  return blob;
 }
 
 export async function renderLedgerTable(selectedCID) {
