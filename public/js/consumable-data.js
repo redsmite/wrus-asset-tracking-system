@@ -292,14 +292,14 @@ export async function generateLedgerPDFBlob(selectedCID, ledgerEntries, totalQty
   pdfDoc.text(specification, 14 + titleLabelWidth + 2, 40);
 
   pdfDoc.setFont("helvetica", "normal");
-  pdfDoc.text("Total Quantity:", 14, 46);
-  let qtyLabelWidth = pdfDoc.getTextWidth("Total Quantity:");
+  pdfDoc.text("Stocks Left:", 14, 46);
+  let qtyLabelWidth = pdfDoc.getTextWidth("Stocks Left:");
   pdfDoc.setFont("helvetica", "bold");
   pdfDoc.text(String(totalQty), 14 + qtyLabelWidth + 2, 46);
 
   pdfDoc.setFont("helvetica", "normal");
-  pdfDoc.text("Unit:", 14, 50);
-  let unitLabelWidth = pdfDoc.getTextWidth("Unit:");
+  pdfDoc.text("Unit of Measurement:", 14, 50);
+  let unitLabelWidth = pdfDoc.getTextWidth("Unit of Measurement:");
   pdfDoc.setFont("helvetica", "bold");
   pdfDoc.text(unit, 14 + unitLabelWidth + 2, 50);
 
@@ -378,28 +378,6 @@ export async function generateLedgerPDFBlob(selectedCID, ledgerEntries, totalQty
   }
 
   const blob = pdfDoc.output("blob");
-
-  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-  if (isMobile) {
-    const saveConfirmed = window.confirm("Do you want to save this PDF?");
-    if (saveConfirmed) {
-      const now = new Date();
-      const filename = `ledger-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}_${String(now.getHours()).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}${String(now.getSeconds()).padStart(2, "0")}.pdf`;
-
-      const blobUrl = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = blobUrl;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(blobUrl);
-    }
-  } else {
-    // On desktop: display the PDF in a new tab
-    const blobUrl = URL.createObjectURL(blob);
-    window.open(blobUrl, '_blank');
-  }
 
   return blob;
 }

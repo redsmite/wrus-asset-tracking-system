@@ -53,7 +53,7 @@ export async function fetchLedgerByUser(userId) {
     entries.push({
       cid: d.cid,                         
       amount: d.amount || 0,              
-      dateModified: d.dateModified || null 
+      dateModified: d.dateModified || null
     });
   });
   return entries;
@@ -121,28 +121,27 @@ export async function generateConsumablePDF(user, entriesArray, consumablesMap) 
   doc.text(fullName, 14 + titleLabelWidth + 2, 42);
 
   // Build table body
-  const tableBody = entriesArray.map(([cid, { totalQty, lastModified, remarks }]) => {
-    const spec = consumablesMap[cid]?.specification || "–";
-    const unit = consumablesMap[cid]?.unit || "–";
+    const tableBody = entriesArray.map(([cid, { totalQty, lastModified}]) => {
+      const spec = consumablesMap[cid]?.specification || "–";
+      const unit = consumablesMap[cid]?.unit || "–";
 
-    let formattedDate = "–";
-    if (lastModified && typeof lastModified.toDate === "function") {
-      formattedDate = formatDateForTable(lastModified.toDate());
-    }
+      let formattedDate = "–";
+      if (lastModified && typeof lastModified.toDate === "function") {
+        formattedDate = formatDateForTable(lastModified.toDate());
+      }
 
-    return [
-      formattedDate,
-      spec,
-      unit,
-      totalQty,
-      remarks || "–"
-    ];
-  });
+      return [
+        formattedDate,
+        spec,
+        unit,
+        totalQty
+      ];
+    });
 
   // Table with Remarks
   doc.autoTable({
     startY: 50,
-    head: [["Date", "Specification", "Unit", "Qty", "Remarks"]],
+    head: [["Date", "Specification", "Unit", "Qty"]],
     body: tableBody,
     styles: { font: "helvetica", fontSize: 10 },
   });
