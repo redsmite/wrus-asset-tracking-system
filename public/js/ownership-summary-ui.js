@@ -108,31 +108,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         fetchLedgerByUser(user.id),
       ]);
 
-      const dataByCID = {};
-      ledgerEntries.forEach(({ cid, amount, dateModified }) => {
-        if (!cid) return;
-        if (!dataByCID[cid]) {
-          dataByCID[cid] = { totalQty: 0, lastModified: dateModified || null };
-        }
-        dataByCID[cid].totalQty += amount || 0;
-        if (dateModified) {
-          const currentMax = dataByCID[cid].lastModified;
-          if (!currentMax || dateModified.toMillis() > currentMax.toMillis()) {
-            dataByCID[cid].lastModified = dateModified;
-          }
-        }
-      });
+      ledgerEntries.sort((a, b) => {
+      if (!a.dateModified) return 1;
+      if (!b.dateModified) return -1;
+      return b.dateModified.toMillis() - a.dateModified.toMillis();
+    });
 
-      const entriesArray = Object.entries(dataByCID).sort((a, b) => {
-        const lmA = a[1].lastModified;
-        const lmB = b[1].lastModified;
-        if (!lmA && !lmB) return 0;
-        if (!lmA) return 1;
-        if (!lmB) return -1;
-        return lmB.toMillis() - lmA.toMillis();
-      });
-
-      await generateConsumablePDF(user, entriesArray, consumablesMap);
+      console.log(ledgerEntries);
+      await generateConsumablePDF(user, ledgerEntries, consumablesMap);
       bsModal.show();
     });
   }
