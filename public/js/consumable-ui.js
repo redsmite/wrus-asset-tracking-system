@@ -1,18 +1,18 @@
-import { fetchConsumables,addConsumable,updateConsumable, addStock, populateUserSelect, handleAssignConsumable, renderLedgerTable, generateLedgerPDFBlob } from "./consumable-data.js";
+import { fetchConsumables,addConsumable,isSpecDuplicate, updateConsumable, addStock, populateUserSelect, handleAssignConsumable, renderLedgerTable, generateLedgerPDFBlob } from "./consumable-data.js";
 
 let selectedCID = null;
 let currentQty = 0;
 let currentItems = [];     // all fetched items
 let filteredItems = [];    // filtered items after search
 let currentPage = 1;
-const pageSize = 10;
+const pageSize = 8;
 
 document.addEventListener("DOMContentLoaded", () => {
-  const showFormBtn = document.getElementById("showAddFormBtn");
-  const addItemBtn = document.getElementById("addItemBtn");
+    const showAddFormBtn = document.getElementById('showAddFormBtn');
+    const addItemModal = new bootstrap.Modal(document.getElementById('addItemModal'));
 
-  showFormBtn.addEventListener("click", () => {
-    document.getElementById("addItemForm").classList.toggle("d-none");
+    showAddFormBtn.addEventListener('click', function () {
+      addItemModal.show();
   });
 
   addItemBtn.addEventListener("click", async () => {
@@ -22,14 +22,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const addedBy = localStorage.getItem("userFullName") || "Unknown";
 
     if (spec && qty && unit) {
+      const duplicate = await isSpecDuplicate(spec);
+
+      if (duplicate) {
+        alert("An item with the same specification already exists.");
+        return;
+      }
+
       await addConsumable(spec, qty, unit, addedBy);
-
-      // Clear form
-      newSpec.value = "";
-      newQty.value = "";
-      newUnit.value = "";
-      addItemForm.classList.add("d-none");
-
+      alert("Consumable Item successfully added!");
+      addItemModal.hide();
+      document.getElementById("newSpec").value = "";
+      document.getElementById("newQty").value = "";
+      document.getElementById("newUnit").value = "";
       // Reload table
       renderConsumableTable();
     }

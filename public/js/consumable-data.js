@@ -62,6 +62,20 @@ export async function addConsumable(spec, qty, unit, addedBy) {
   return id;
 }
 
+export async function isSpecDuplicate(spec) {
+  const specLower = spec.toLowerCase();
+  const snapshot = await getDocs(collection(db, "consumable"));
+
+  for (const doc of snapshot.docs) {
+    const existingSpec = doc.data().specification || "";
+    if (existingSpec.toLowerCase() === specLower) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 export async function fetchConsumables() {
   const consumablesRef = collection(db, "consumable");
   const q = query(consumablesRef, orderBy("timestamp", "desc"));

@@ -68,6 +68,9 @@
           <input type="text" id="searchInput" class="form-control" placeholder="Enter item name..." />
         </div>
       </div>
+      <div class="text-center mt-4">
+        <button id="showAddFormBtn" class="btn btn-success btn-lg mb-3">Add Item</button>
+      </div>
 
       <div class="table-responsive">
         <table id="consumableTable" class="table table-bordered table-hover text-center align-middle">
@@ -87,26 +90,39 @@
         </table>
         <div class="d-flex justify-content-center my-3" id="paginationContainer"></div>
       </div>
+    </div>
+  </div>
+  <!-- Add Item Modal -->
+  <div class="modal fade" id="addItemModal" tabindex="-1" aria-labelledby="addItemModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addItemModalLabel">Add Item</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
 
-      <!-- Add Item Section -->
-      <div class="text-center mt-4">
-        <button id="showAddFormBtn" class="btn btn-success btn-lg">Add Item</button>
-      </div>
+        <div class="modal-body">
+          <form id="addItemForm">
+            <div class="mb-3">
+              <label for="newSpec" class="form-label">Specification</label>
+              <input type="text" class="form-control" id="newSpec" placeholder="Enter specification" />
+            </div>
 
-      <div id="addItemForm" class="container mt-4 d-none">
-        <div class="row g-3 justify-content-center">
-          <div class="col-md-4">
-            <input type="text" class="form-control" placeholder="Specification" id="newSpec" />
-          </div>
-          <div class="col-md-2">
-            <input type="number" class="form-control" placeholder="Qty" id="newQty" />
-          </div>
-          <div class="col-md-2">
-            <input type="text" class="form-control" placeholder="Unit" id="newUnit" />
-          </div>
-          <div class="col-md-2">
-            <button class="btn btn-primary w-100" id="addItemBtn">Add</button>
-          </div>
+            <div class="mb-3">
+              <label for="newQty" class="form-label">Quantity</label>
+              <input type="number" class="form-control" id="newQty" placeholder="Enter quantity" />
+            </div>
+
+            <div class="mb-3">
+              <label for="newUnit" class="form-label">Unit</label>
+              <input type="text" class="form-control" id="newUnit" placeholder="Enter unit" />
+            </div>
+          </form>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-primary" id="addItemBtn">Add</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
         </div>
       </div>
     </div>

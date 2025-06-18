@@ -49,7 +49,7 @@ function updateTotalCost() {
   const qty = parseFloat(qtyInput.value) || 0;
   const unitCost = parseFloat(unitCostInput.value) || 0;
   const total = qty * unitCost;
-  totalCostDisplay.textContent = `₱${total.toFixed(2)}`;
+  totalCostDisplay.textContent = `₱${total.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 qtyInput.addEventListener('input', updateTotalCost);
