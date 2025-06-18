@@ -47,7 +47,7 @@
 
     <!-- Page Content -->
     <div class="container-fluid p-4" id="page-content">
-      <h3 class="mb-4">Inventory Custody Slip</h3>
+      <h3 class="mb-4">Inventory Custody Slip / Property Acknowledgement Receipt</h3>
 
       <div class="mb-3">
         <input type="text" id="searchBar" class="form-control" placeholder="Search ICS..." />
@@ -70,6 +70,10 @@
           </tbody>
         </table>
       </div>
+
+      <nav aria-label="ICS Table pagination">
+        <ul class="pagination pagination-sm justify-content-center" id="paginationControls"></ul>
+      </nav>
 
       <div class="mt-4 d-flex justify-content-center">
         <button class="btn btn-success btn-lg px-5" id="addBtn">Add ICS</button>
@@ -166,7 +170,99 @@
           </div>
         </div>
       </div>
+      <!-- Edit ICS Modal -->
+      <div class="modal fade" id="editICSModal" tabindex="-1" aria-labelledby="editICSModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <form id="editICSForm">
+              <div class="modal-header">
+                <h5 class="modal-title" id="editICSModalLabel">Edit ICS Entry</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
 
+              <div class="modal-body row g-3">
+
+                <input type="hidden" id="editDocId">
+
+                <div class="col-md-6">
+                  <label for="editIcsNo" class="form-label">ICS/PAR No.</label>
+                  <input type="text" class="form-control" id="editIcsNo" required />
+                </div>
+
+                <div class="col-md-6">
+                  <label for="editSerialNumber" class="form-label">Serial Number</label>
+                  <input type="text" class="form-control" id="editSerialNumber" />
+                </div>
+
+                <div class="col-md-6">
+                  <label for="editAssignedTo" class="form-label">Assigned to</label>
+                  <select class="form-select" id="editAssignedTo" required>
+                    <option value="">Select User</option>
+                    <!-- Populated via JS -->
+                  </select>
+                </div>
+
+                <div class="col-12">
+                  <label for="editDescription" class="form-label">Description</label>
+                  <textarea class="form-control" id="editDescription" rows="2" required></textarea>
+                </div>
+
+                <div class="col-md-4">
+                  <label for="editQty" class="form-label">Qty</label>
+                  <input type="number" class="form-control" id="editQty" min="0" required />
+                </div>
+
+                <div class="col-md-4">
+                  <label for="editUnit" class="form-label">Unit of Measurement</label>
+                  <input type="text" class="form-control" id="editUnit" required />
+                </div>
+
+                <div class="col-md-4">
+                  <label for="editUnitCost" class="form-label">Unit Cost (₱)</label>
+                  <input type="number" class="form-control" id="editUnitCost" min="0" step="0.01" required />
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label">Total Cost (₱)</label>
+                  <p id="editTotalCostDisplay" class="form-control-plaintext fw-bold">₱0.00</p>
+                </div>
+
+                <div class="col-md-6">
+                  <label for="editDateIssued" class="form-label">Date Issued</label>
+                  <input type="date" class="form-control" id="editDateIssued" required />
+                </div>
+
+                <div class="col-12">
+                  <label for="editRemarks" class="form-label">Remarks</label>
+                  <textarea class="form-control" id="editRemarks" rows="2"></textarea>
+                </div>
+
+                <div class="col-md-6">
+                  <label for="editStatus" class="form-label">Status</label>
+                  <select class="form-select" id="editStatus" required>
+                    <option value="">Select Status</option>
+                    <option value="Original">Original</option>
+                    <option value="Transferred">Transferred</option>
+                    <option value="RTS">RTS</option>
+                  </select>
+                </div>
+
+                <div class="col-md-6">
+                  <label for="editAttachment" class="form-label">Attach File (PDF, max 1MB)</label>
+                  <input type="file" class="form-control" id="editAttachment" accept="application/pdf" />
+                </div>
+
+              </div>
+
+              <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">Update ICS</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              </div>
+
+            </form>
+          </div>
+        </div>
+      </div>
     </div>
 
   </div>

@@ -1,65 +1,418 @@
-import { getUsers } from './ics-data.js';
+import {
+  getUsers,
+  addICSEntry,
+  getUsersMap,
+  getICSListWithDocIds,
+  updateICSEntry
+} from './ics-data.js';
 
-//logout function
-const logoutBtn = document.getElementById("logoutBtn");
-if (logoutBtn) {
-  logoutBtn.addEventListener("click", () => {
-    localStorage.removeItem("loggedInUser");
-    localStorage.removeItem("userFullName");
-    window.location.href = "index.html";
-  });
-}
+let currentPage = 1;
+let rowsPerPage = 5;
+let currentData = [];        // All data fetched from Firestore
+let filteredData = [];       // Data after filtering
+let usersMapGlobal = {};     // For use in renderFilteredTable
 
-const logoutBtnMobile = document.getElementById("logoutBtnMobile");
-if (logoutBtnMobile) {
-  logoutBtnMobile.addEventListener("click", () => {
-    localStorage.removeItem("loggedInUser");
-    localStorage.removeItem("userFullName");
-    window.location.href = "index.html";
-  });
-}
-
-document.getElementById('addBtn').addEventListener('click', () => {
-  const modal = new bootstrap.Modal(document.getElementById('addICSModal'));
-  modal.show();
-  loadUsers();
+document.addEventListener('DOMContentLoaded', () => {
+  setupLogoutButtons();
+  setupAddBtn();
+  setupEditQtyAndCostListeners();
+  setupFileValidation();
+  setupICSFormSubmit();
+  renderICSTable();
+  document.getElementById("searchBar").addEventListener("input", applySearchFilter);
+  setupEditICSFormSubmit();
 });
 
-function loadUsers() {
-  const assignedToSelect = document.getElementById('assignedTo');
-  assignedToSelect.innerHTML = '<option value="">Select User</option>';
+// 🔹 Logout button setup
+function setupLogoutButtons() {
+  const logoutBtn = document.getElementById("logoutBtn");
+  const logoutBtnMobile = document.getElementById("logoutBtnMobile");
 
-  getUsers().then(users => {
-    users.forEach(user => {
-      if (user.status === 'active') {
-        const option = document.createElement('option');
-        option.value = user.id;
-        option.textContent = `${user.lastName}, ${user.firstName} ${user.middleInitial}.`;
-        assignedToSelect.appendChild(option);
-      }
+  [logoutBtn, logoutBtnMobile].forEach(btn => {
+    if (btn) {
+      btn.addEventListener("click", () => {
+        localStorage.removeItem("loggedInUser");
+        localStorage.removeItem("userFullName");
+        window.location.href = "index.html";
+      });
+    }
+  });
+}
+
+// 🔹 Show modal and load users
+function setupAddBtn() {
+  const addBtn = document.getElementById('addBtn');
+  if (addBtn) {
+    addBtn.addEventListener('click', () => {
+      const modal = new bootstrap.Modal(document.getElementById('addICSModal'));
+      modal.show();
+      loadUsers();
+    });
+  }
+}
+
+// 🔹 Load users into dropdown
+function loadUsers(selectElementId = 'assignedTo', selectedUserId = '') {
+  return new Promise((resolve) => {
+    const select = document.getElementById(selectElementId);
+    select.innerHTML = '<option value="">Select User</option>';
+
+    getUsers().then(users => {
+      users.forEach(user => {
+        if (user.status === 'active') {
+          const option = document.createElement('option');
+          option.value = user.id;
+          option.textContent = `${user.lastName}, ${user.firstName} ${user.middleInitial}.`;
+          if (user.id === selectedUserId) {
+            option.selected = true;
+          }
+          select.appendChild(option);
+        }
+      });
+      resolve(); // ✅ important: resolve only after it's populated
     });
   });
 }
 
-const qtyInput = document.getElementById('qty');
-const unitCostInput = document.getElementById('unitCost');
-const totalCostDisplay = document.getElementById('totalCostDisplay');
+// 🔹 Set up qty & cost listeners to auto-update total
+function setupEditQtyAndCostListeners() {
+  const qtyInput = document.getElementById('editQty');
+  const unitCostInput = document.getElementById('editUnitCost');
 
-function updateTotalCost() {
-  const qty = parseFloat(qtyInput.value) || 0;
-  const unitCost = parseFloat(unitCostInput.value) || 0;
-  const total = qty * unitCost;
-  totalCostDisplay.textContent = `₱${total.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  if (qtyInput && unitCostInput) {
+    qtyInput.addEventListener('input', updateEditTotalCost);
+    unitCostInput.addEventListener('input', updateEditTotalCost);
+  }
 }
 
-qtyInput.addEventListener('input', updateTotalCost);
-unitCostInput.addEventListener('input', updateTotalCost);
+// 🔹 Calculate and display total cost
+function updateTotalCost() {
+  const qty = parseFloat(document.getElementById('qty').value) || 0;
+  const unitCost = parseFloat(document.getElementById('unitCost').value) || 0;
+  const total = qty * unitCost;
 
-// Optional: file size validation
-document.getElementById('attachment').addEventListener('change', function () {
-  const file = this.files[0];
-  if (file && file.size > 1048576) {
-    alert("File exceeds 1MB limit.");
-    this.value = "";
+  document.getElementById('totalCostDisplay').textContent =
+    `₱${total.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function updateEditTotalCost() {
+  const qty = parseFloat(document.getElementById('editQty').value) || 0;
+  const unitCost = parseFloat(document.getElementById('editUnitCost').value) || 0;
+  const total = qty * unitCost;
+
+  document.getElementById('editTotalCostDisplay').textContent =
+    `₱${total.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+// 🔹 File size validation (max 1MB)
+function setupFileValidation() {
+  const fileInput = document.getElementById('attachment');
+  if (fileInput) {
+    fileInput.addEventListener('change', function () {
+      const file = this.files[0];
+      if (file && file.size > 1048576) {
+        alert("File exceeds 1MB limit.");
+        this.value = "";
+      }
+    });
   }
-});
+}
+
+// 🔹 Submit handler for ICS form
+function setupICSFormSubmit() {
+  const addICSForm = document.getElementById('addICSForm');
+  if (addICSForm) {
+    addICSForm.addEventListener('submit', handleICSFormSubmit);
+  }
+}
+
+async function handleICSFormSubmit(e) {
+  e.preventDefault();
+
+  const docId = document.getElementById('icsNo').value.trim();
+  const fileInput = document.getElementById('attachment');
+  const icsData = collectICSFormData();
+
+  await addICSEntry(icsData);
+
+  document.getElementById('addICSForm').reset();
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('addICSModal')).hide();
+
+  renderICSTable(); // ⬅️ Re-render table after submit
+}
+
+// 🔹 Collect ICS data from form
+function collectICSFormData() {
+  return {
+    ICSno: document.getElementById('icsNo').value.trim(), // Include ICSno here for table render
+    serialNo: document.getElementById('serialNumber').value.trim(),
+    assignedTo: document.getElementById('assignedTo').value.trim(),
+    description: document.getElementById('description').value.trim(),
+    qty: parseInt(document.getElementById('qty').value),
+    unit: document.getElementById('unit').value.trim(),
+    unitCost: parseFloat(document.getElementById('unitCost').value),
+    totalCost: parseFloat(document.getElementById('totalCostDisplay').textContent.replace(/[₱,]/g, '')) || 0,
+    dateIssued: document.getElementById('dateIssued').value,
+    remarks: document.getElementById('remarks').value.trim(),
+    status: document.getElementById('status').value,
+  };
+}
+
+// 🔹 Render ICS Table
+async function renderICSTable(page = 1) {
+  const tableBody = document.querySelector("#icsTableBody");
+  const pagination = document.getElementById("paginationControls");
+  tableBody.innerHTML = "<tr><td colspan='6'>Loading...</td></tr>";
+  pagination.innerHTML = "";
+
+  try {
+    const [usersMap, icsSnapshot] = await Promise.all([
+      getUsersMap(),
+      getICSListWithDocIds()
+    ]);
+
+    usersMapGlobal = usersMap;
+
+    if (icsSnapshot.length === 0) {
+      tableBody.innerHTML = "<tr><td colspan='6'>No ICS entries found.</td></tr>";
+      return;
+    }
+
+    currentData = icsSnapshot;
+
+    const totalPages = Math.ceil(currentData.length / rowsPerPage);
+    currentPage = page;
+
+    const startIndex = (page - 1) * rowsPerPage;
+    const paginatedItems = currentData.slice(startIndex, startIndex + rowsPerPage);
+
+    const rowsHtml = paginatedItems.map(entry => {
+      const { ICSno, description, dateIssued, status, assignedTo } = entry.data;
+      const assignedName = usersMap[assignedTo] || "Unknown User";
+
+      return `
+        <tr>
+          <td>${ICSno || '(no ICSno)'}</td>
+          <td>${assignedName}</td>
+          <td>${description || ''}</td>
+          <td>${dateIssued || ''}</td>
+          <td>${status || ''}</td>
+          <td><button class="btn btn-sm btn-primary" data-id="${entry.id}">Edit</button></td>
+        </tr>
+      `;
+    }).join("");
+
+    tableBody.innerHTML = rowsHtml;
+    
+    document.querySelectorAll(".btn-primary[data-id]").forEach(button => {
+      button.addEventListener("click", () => {
+        const docId = button.getAttribute("data-id");
+        const icsItem = currentData.find(item => item.id === docId);
+
+        if (icsItem) {
+          populateEditModal(icsItem);
+          const editModal = new bootstrap.Modal(document.getElementById('editICSModal'));
+          editModal.show();
+        }
+      });
+    });
+
+    // Create pagination buttons
+      // Create Previous button
+      const prevLi = document.createElement("li");
+      prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+      prevLi.innerHTML = `<a class="page-link" href="#">Previous</a>`;
+      prevLi.addEventListener("click", (e) => {
+        e.preventDefault();
+        if (currentPage > 1) renderICSTable(currentPage - 1);
+      });
+      pagination.appendChild(prevLi);
+
+      // Create numbered page buttons
+      for (let i = 1; i <= totalPages; i++) {
+        const li = document.createElement("li");
+        li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+        li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+        li.addEventListener("click", (e) => {
+          e.preventDefault();
+          renderICSTable(i);
+        });
+        pagination.appendChild(li);
+      }
+
+      // Create Next button
+      const nextLi = document.createElement("li");
+      nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+      nextLi.innerHTML = `<a class="page-link" href="#">Next</a>`;
+      nextLi.addEventListener("click", (e) => {
+        e.preventDefault();
+        if (currentPage < totalPages) renderICSTable(currentPage + 1);
+      });
+      pagination.appendChild(nextLi);
+
+  } catch (err) {
+    console.error("Error rendering ICS table:", err);
+    tableBody.innerHTML = "<tr><td colspan='6'>Error loading data.</td></tr>";
+  }
+}
+
+function applySearchFilter() {
+  const query = document.getElementById("searchBar").value.trim().toLowerCase();
+
+  filteredData = currentData.filter(entry => {
+    const { ICSno, assignedTo, dateIssued, description } = entry.data;
+
+    const assignedName = usersMapGlobal[assignedTo] || "Unknown User";
+
+    return (
+      (ICSno || '').toLowerCase().includes(query) ||
+      assignedName.toLowerCase().includes(query) ||
+      (dateIssued || '').toLowerCase().includes(query) ||
+      (description || '').toLowerCase().includes(query)
+    );
+  });
+
+  renderFilteredTable(filteredData, 1);
+}
+
+function renderFilteredTable(dataSet, page = 1) {
+  const tableBody = document.querySelector("#icsTableBody");
+  const pagination = document.getElementById("paginationControls");
+  tableBody.innerHTML = "<tr><td colspan='6'>Loading...</td></tr>";
+  pagination.innerHTML = "";
+
+  const totalPages = Math.ceil(dataSet.length / rowsPerPage);
+  currentPage = page;
+
+  const startIndex = (page - 1) * rowsPerPage;
+  const paginatedItems = dataSet.slice(startIndex, startIndex + rowsPerPage);
+
+  const rowsHtml = paginatedItems.map(entry => {
+    const { ICSno, description, dateIssued, status, assignedTo } = entry.data;
+    const assignedName = usersMapGlobal[assignedTo] || "Unknown User";
+
+    return `
+      <tr>
+        <td>${ICSno || '(no ICSno)'}</td>
+        <td>${assignedName}</td>
+        <td>${description || ''}</td>
+        <td>${dateIssued || ''}</td>
+        <td>${status || ''}</td>
+        <td><button class="btn btn-sm btn-primary" data-id="${entry.id}">Action</button></td>
+      </tr>
+    `;
+  }).join("");
+
+  tableBody.innerHTML = rowsHtml;
+
+  document.querySelectorAll(".btn-primary[data-id]").forEach(button => {
+    button.addEventListener("click", () => {
+      const docId = button.getAttribute("data-id");
+      const icsItem = currentData.find(item => item.id === docId);
+
+      if (icsItem) {
+        populateEditModal(icsItem);
+        const editModal = new bootstrap.Modal(document.getElementById('editICSModal'));
+        editModal.show();
+      }
+    });
+  });
+
+  // Pagination controls
+  const prevLi = document.createElement("li");
+  prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+  prevLi.innerHTML = `<a class="page-link" href="#">Previous</a>`;
+  prevLi.addEventListener("click", (e) => {
+    e.preventDefault();
+    if (currentPage > 1) renderFilteredTable(dataSet, currentPage - 1);
+  });
+  pagination.appendChild(prevLi);
+
+  for (let i = 1; i <= totalPages; i++) {
+    const li = document.createElement("li");
+    li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+    li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+    li.addEventListener("click", (e) => {
+      e.preventDefault();
+      renderFilteredTable(dataSet, i);
+    });
+    pagination.appendChild(li);
+  }
+
+  const nextLi = document.createElement("li");
+  nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+  nextLi.innerHTML = `<a class="page-link" href="#">Next</a>`;
+  nextLi.addEventListener("click", (e) => {
+    e.preventDefault();
+    if (currentPage < totalPages) renderFilteredTable(dataSet, currentPage + 1);
+  });
+  pagination.appendChild(nextLi);
+}
+
+async function populateEditModal(icsItem) {
+  const data = icsItem.data;
+  
+  document.getElementById("editDocId").value = icsItem.id;
+  document.getElementById('editIcsNo').value = data.ICSno || '';
+  document.getElementById('editSerialNumber').value = data.serialNo || '';
+  document.getElementById('editDescription').value = data.description || '';
+  document.getElementById('editQty').value = data.qty || '';
+  document.getElementById('editUnit').value = data.unit || '';
+  document.getElementById('editUnitCost').value = data.unitCost || '';
+  document.getElementById('editRemarks').value = data.remarks || '';
+  document.getElementById('editDateIssued').value = data.dateIssued || '';
+  document.getElementById('editStatus').value = data.status || '';
+
+  // Compute and show total cost
+  const total = (data.qty || 0) * (data.unitCost || 0);
+  document.getElementById('editTotalCostDisplay').textContent = 
+    `₱${total.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+  // Populate the dropdown and pre-select user
+  await loadUsers('editAssignedTo', data.assignedTo);
+}
+
+function setupEditICSFormSubmit() {
+  const editICSForm = document.getElementById('editICSForm');
+  if (editICSForm) {
+    editICSForm.addEventListener('submit', handleEditICSSubmit);
+  }
+}
+
+async function handleEditICSSubmit(e) {
+  e.preventDefault();
+
+  const docId = document.getElementById('editDocId').value;
+
+    if (!docId) {
+    console.error("❌ No document ID set for editing.");
+    alert("Document ID missing. Please reload and try again.");
+    return;
+  }
+
+  //const icsRef = doc(db, "ICS", docId);
+
+  const updatedData = {
+    ICSno: document.getElementById('editIcsNo').value.trim(),
+    serialNo: document.getElementById('editSerialNumber').value.trim(),
+    assignedTo: document.getElementById('editAssignedTo').value.trim(),
+    description: document.getElementById('editDescription').value.trim(),
+    qty: parseInt(document.getElementById('editQty').value),
+    unit: document.getElementById('editUnit').value.trim(),
+    unitCost: parseFloat(document.getElementById('editUnitCost').value),
+    totalCost: parseFloat(document.getElementById('editTotalCostDisplay').textContent.replace(/[₱,]/g, '')) || 0,
+    dateIssued: document.getElementById('editDateIssued').value,
+    remarks: document.getElementById('editRemarks').value.trim(),
+    status: document.getElementById('editStatus').value
+  };
+
+  try {
+    await updateICSEntry(docId, updatedData);
+
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('editICSModal')).hide();
+    renderICSTable(currentPage); // Re-render table
+  } catch (err) {
+    console.error("Failed to update ICS entry:", err);
+    alert("Update failed. Check console for details.");
+  }
+}
