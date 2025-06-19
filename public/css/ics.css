@@ -1,3 +1,6 @@
 #page-content{
    z-index: auto;
 }
+#loadingOverlay {
+  transition: opacity 0.3s ease;
+}

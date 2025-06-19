@@ -1,3 +1,4 @@
+import { uploadFileAndGetURL } from './upload/upload.js';
 import {
   getUsers,
   addICSEntry,
@@ -85,16 +86,6 @@ function setupEditQtyAndCostListeners() {
   }
 }
 
-// 🔹 Calculate and display total cost
-function updateTotalCost() {
-  const qty = parseFloat(document.getElementById('qty').value) || 0;
-  const unitCost = parseFloat(document.getElementById('unitCost').value) || 0;
-  const total = qty * unitCost;
-
-  document.getElementById('totalCostDisplay').textContent =
-    `₱${total.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
-
 function updateEditTotalCost() {
   const qty = parseFloat(document.getElementById('editQty').value) || 0;
   const unitCost = parseFloat(document.getElementById('editUnitCost').value) || 0;
@@ -129,22 +120,43 @@ function setupICSFormSubmit() {
 async function handleICSFormSubmit(e) {
   e.preventDefault();
 
-  const docId = document.getElementById('icsNo').value.trim();
+  const loadingOverlay = document.getElementById('loadingOverlay');
+  loadingOverlay.style.display = 'flex'; // Show loading
+
   const fileInput = document.getElementById('attachment');
-  const icsData = collectICSFormData();
+  let fileURL = null;
 
-  await addICSEntry(icsData);
+  try {
+    // Upload file to Supabase (if selected)
+    if (fileInput.files.length > 0) {
+      const file = fileInput.files[0];
+      fileURL = await uploadFileAndGetURL(file);
+      if (!fileURL) throw new Error("File upload failed");
+    }
 
-  document.getElementById('addICSForm').reset();
-  bootstrap.Modal.getOrCreateInstance(document.getElementById('addICSModal')).hide();
+    const icsData = collectICSFormData();
+    if (fileURL) {
+      icsData.attachmentURL = fileURL;
+    }
 
-  renderICSTable(); // ⬅️ Re-render table after submit
+    await addICSEntry(icsData);
+
+    document.getElementById('addICSForm').reset();
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('addICSModal')).hide();
+
+    renderICSTable();
+  } catch (err) {
+    console.error(err);
+    alert("Failed to save. Please try again.");
+  } finally {
+    loadingOverlay.style.display = 'none'; // Always hide loading
+  }
 }
 
 // 🔹 Collect ICS data from form
 function collectICSFormData() {
   return {
-    ICSno: document.getElementById('icsNo').value.trim(), // Include ICSno here for table render
+    ICSno: document.getElementById('icsNo').value.trim(),
     serialNo: document.getElementById('serialNumber').value.trim(),
     assignedTo: document.getElementById('assignedTo').value.trim(),
     description: document.getElementById('description').value.trim(),
@@ -155,6 +167,7 @@ function collectICSFormData() {
     dateIssued: document.getElementById('dateIssued').value,
     remarks: document.getElementById('remarks').value.trim(),
     status: document.getElementById('status').value,
+    attachmentURL: "", // optional default
   };
 }
 
@@ -298,7 +311,7 @@ function renderFilteredTable(dataSet, page = 1) {
         <td>${description || ''}</td>
         <td>${dateIssued || ''}</td>
         <td>${status || ''}</td>
-        <td><button class="btn btn-sm btn-primary" data-id="${entry.id}">Action</button></td>
+        <td><button class="btn btn-sm btn-primary" data-id="${entry.id}">Edit</button></td>
       </tr>
     `;
   }).join("");
