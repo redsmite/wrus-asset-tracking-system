@@ -1,4 +1,4 @@
-import { uploadFileAndGetURL } from './upload/upload.js';
+import { uploadFileAndGetURL, deleteFileFromStorage } from './upload/upload.js';
 import {
   getUsers,
   addICSEntry,
@@ -16,6 +16,7 @@ let usersMapGlobal = {};     // For use in renderFilteredTable
 document.addEventListener('DOMContentLoaded', () => {
   setupLogoutButtons();
   setupAddBtn();
+  setupAddQtyAndCostListeners();
   setupEditQtyAndCostListeners();
   setupFileValidation();
   setupICSFormSubmit();
@@ -76,6 +77,26 @@ function loadUsers(selectElementId = 'assignedTo', selectedUserId = '') {
 }
 
 // 🔹 Set up qty & cost listeners to auto-update total
+function setupAddQtyAndCostListeners() {
+  const qtyInput = document.getElementById('qty');
+  const unitCostInput = document.getElementById('unitCost');
+
+  if (qtyInput && unitCostInput) {
+    qtyInput.addEventListener('input', updateAddTotalCost);
+    unitCostInput.addEventListener('input', updateAddTotalCost);
+  }
+}
+
+function updateAddTotalCost() {
+  const qty = parseFloat(document.getElementById('qty').value) || 0;
+  const unitCost = parseFloat(document.getElementById('unitCost').value) || 0;
+  const total = qty * unitCost;
+
+  document.getElementById('totalCostDisplay').textContent =
+    `₱${total.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+
 function setupEditQtyAndCostListeners() {
   const qtyInput = document.getElementById('editQty');
   const unitCostInput = document.getElementById('editUnitCost');
@@ -143,6 +164,8 @@ async function handleICSFormSubmit(e) {
 
     document.getElementById('addICSForm').reset();
     bootstrap.Modal.getOrCreateInstance(document.getElementById('addICSModal')).hide();
+    document.getElementById('editAttachment').value = '';
+    document.getElementById('attachment').value = '';
 
     renderICSTable();
   } catch (err) {
@@ -172,32 +195,35 @@ function collectICSFormData() {
 }
 
 // 🔹 Render ICS Table
-async function renderICSTable(page = 1) {
+async function renderICSTable(dataSet = null, page = 1) {
   const tableBody = document.querySelector("#icsTableBody");
   const pagination = document.getElementById("paginationControls");
   tableBody.innerHTML = "<tr><td colspan='6'>Loading...</td></tr>";
   pagination.innerHTML = "";
 
   try {
-    const [usersMap, icsSnapshot] = await Promise.all([
-      getUsersMap(),
-      getICSListWithDocIds()
-    ]);
+    if (!dataSet) {
+      // Fetch fresh data only if no filtered dataset is provided
+      const [usersMap, icsSnapshot] = await Promise.all([
+        getUsersMap(),
+        getICSListWithDocIds()
+      ]);
+      usersMapGlobal = usersMap;
+      currentData = icsSnapshot;
+    }
 
-    usersMapGlobal = usersMap;
-
-    if (icsSnapshot.length === 0) {
+    const dataToUse = dataSet || currentData;
+    const usersMap = usersMapGlobal;
+    if (dataToUse.length === 0) {
       tableBody.innerHTML = "<tr><td colspan='6'>No ICS entries found.</td></tr>";
       return;
     }
 
-    currentData = icsSnapshot;
-
-    const totalPages = Math.ceil(currentData.length / rowsPerPage);
+    const totalPages = Math.ceil(dataToUse.length / rowsPerPage);
     currentPage = page;
 
     const startIndex = (page - 1) * rowsPerPage;
-    const paginatedItems = currentData.slice(startIndex, startIndex + rowsPerPage);
+    const paginatedItems = dataToUse.slice(startIndex, startIndex + rowsPerPage);
 
     const rowsHtml = paginatedItems.map(entry => {
       const { ICSno, description, dateIssued, status, assignedTo } = entry.data;
@@ -216,12 +242,11 @@ async function renderICSTable(page = 1) {
     }).join("");
 
     tableBody.innerHTML = rowsHtml;
-    
+
     document.querySelectorAll(".btn-primary[data-id]").forEach(button => {
       button.addEventListener("click", () => {
         const docId = button.getAttribute("data-id");
-        const icsItem = currentData.find(item => item.id === docId);
-
+        const icsItem = currentData.find(item => item.id === docId); // Always find from full data
         if (icsItem) {
           populateEditModal(icsItem);
           const editModal = new bootstrap.Modal(document.getElementById('editICSModal'));
@@ -230,38 +255,35 @@ async function renderICSTable(page = 1) {
       });
     });
 
-    // Create pagination buttons
-      // Create Previous button
-      const prevLi = document.createElement("li");
-      prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
-      prevLi.innerHTML = `<a class="page-link" href="#">Previous</a>`;
-      prevLi.addEventListener("click", (e) => {
-        e.preventDefault();
-        if (currentPage > 1) renderICSTable(currentPage - 1);
-      });
-      pagination.appendChild(prevLi);
+    // Pagination
+    const prevLi = document.createElement("li");
+    prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+    prevLi.innerHTML = `<a class="page-link" href="#">Previous</a>`;
+    prevLi.addEventListener("click", (e) => {
+      e.preventDefault();
+      if (currentPage > 1) renderICSTable(dataToUse, currentPage - 1);
+    });
+    pagination.appendChild(prevLi);
 
-      // Create numbered page buttons
-      for (let i = 1; i <= totalPages; i++) {
-        const li = document.createElement("li");
-        li.className = `page-item ${i === currentPage ? 'active' : ''}`;
-        li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
-        li.addEventListener("click", (e) => {
-          e.preventDefault();
-          renderICSTable(i);
-        });
-        pagination.appendChild(li);
-      }
-
-      // Create Next button
-      const nextLi = document.createElement("li");
-      nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
-      nextLi.innerHTML = `<a class="page-link" href="#">Next</a>`;
-      nextLi.addEventListener("click", (e) => {
+    for (let i = 1; i <= totalPages; i++) {
+      const li = document.createElement("li");
+      li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+      li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+      li.addEventListener("click", (e) => {
         e.preventDefault();
-        if (currentPage < totalPages) renderICSTable(currentPage + 1);
+        renderICSTable(dataToUse, i);
       });
-      pagination.appendChild(nextLi);
+      pagination.appendChild(li);
+    }
+
+    const nextLi = document.createElement("li");
+    nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+    nextLi.innerHTML = `<a class="page-link" href="#">Next</a>`;
+    nextLi.addEventListener("click", (e) => {
+      e.preventDefault();
+      if (currentPage < totalPages) renderICSTable(dataToUse, currentPage + 1);
+    });
+    pagination.appendChild(nextLi);
 
   } catch (err) {
     console.error("Error rendering ICS table:", err);
@@ -285,81 +307,7 @@ function applySearchFilter() {
     );
   });
 
-  renderFilteredTable(filteredData, 1);
-}
-
-function renderFilteredTable(dataSet, page = 1) {
-  const tableBody = document.querySelector("#icsTableBody");
-  const pagination = document.getElementById("paginationControls");
-  tableBody.innerHTML = "<tr><td colspan='6'>Loading...</td></tr>";
-  pagination.innerHTML = "";
-
-  const totalPages = Math.ceil(dataSet.length / rowsPerPage);
-  currentPage = page;
-
-  const startIndex = (page - 1) * rowsPerPage;
-  const paginatedItems = dataSet.slice(startIndex, startIndex + rowsPerPage);
-
-  const rowsHtml = paginatedItems.map(entry => {
-    const { ICSno, description, dateIssued, status, assignedTo } = entry.data;
-    const assignedName = usersMapGlobal[assignedTo] || "Unknown User";
-
-    return `
-      <tr>
-        <td>${ICSno || '(no ICSno)'}</td>
-        <td>${assignedName}</td>
-        <td>${description || ''}</td>
-        <td>${dateIssued || ''}</td>
-        <td>${status || ''}</td>
-        <td><button class="btn btn-sm btn-primary" data-id="${entry.id}">Edit</button></td>
-      </tr>
-    `;
-  }).join("");
-
-  tableBody.innerHTML = rowsHtml;
-
-  document.querySelectorAll(".btn-primary[data-id]").forEach(button => {
-    button.addEventListener("click", () => {
-      const docId = button.getAttribute("data-id");
-      const icsItem = currentData.find(item => item.id === docId);
-
-      if (icsItem) {
-        populateEditModal(icsItem);
-        const editModal = new bootstrap.Modal(document.getElementById('editICSModal'));
-        editModal.show();
-      }
-    });
-  });
-
-  // Pagination controls
-  const prevLi = document.createElement("li");
-  prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
-  prevLi.innerHTML = `<a class="page-link" href="#">Previous</a>`;
-  prevLi.addEventListener("click", (e) => {
-    e.preventDefault();
-    if (currentPage > 1) renderFilteredTable(dataSet, currentPage - 1);
-  });
-  pagination.appendChild(prevLi);
-
-  for (let i = 1; i <= totalPages; i++) {
-    const li = document.createElement("li");
-    li.className = `page-item ${i === currentPage ? 'active' : ''}`;
-    li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
-    li.addEventListener("click", (e) => {
-      e.preventDefault();
-      renderFilteredTable(dataSet, i);
-    });
-    pagination.appendChild(li);
-  }
-
-  const nextLi = document.createElement("li");
-  nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
-  nextLi.innerHTML = `<a class="page-link" href="#">Next</a>`;
-  nextLi.addEventListener("click", (e) => {
-    e.preventDefault();
-    if (currentPage < totalPages) renderFilteredTable(dataSet, currentPage + 1);
-  });
-  pagination.appendChild(nextLi);
+  renderICSTable(filteredData, 1);
 }
 
 async function populateEditModal(icsItem) {
@@ -375,6 +323,7 @@ async function populateEditModal(icsItem) {
   document.getElementById('editRemarks').value = data.remarks || '';
   document.getElementById('editDateIssued').value = data.dateIssued || '';
   document.getElementById('editStatus').value = data.status || '';
+  document.getElementById('editCurrentAttachmentUrl').value = data.attachmentURL || ''; '';
 
   // Compute and show total cost
   const total = (data.qty || 0) * (data.unitCost || 0);
@@ -395,15 +344,37 @@ function setupEditICSFormSubmit() {
 async function handleEditICSSubmit(e) {
   e.preventDefault();
 
-  const docId = document.getElementById('editDocId').value;
+  const loadingOverlay = document.getElementById('loadingOverlay');
+  loadingOverlay.style.display = 'flex'; // Show loading
 
-    if (!docId) {
-    console.error("❌ No document ID set for editing.");
+  const docId = document.getElementById('editDocId').value;
+  if (!docId) {
     alert("Document ID missing. Please reload and try again.");
     return;
   }
 
-  //const icsRef = doc(db, "ICS", docId);
+  const fileInput = document.getElementById('editAttachment');
+  const newFile = fileInput.files[0];
+  let attachmentURL = document.getElementById('editCurrentAttachmentUrl').value;
+
+  // If a new file is selected, delete old and upload new
+  if (newFile) {
+    // Delete the old file (if exists)
+    if (attachmentURL) {
+      const deleted = await deleteFileFromStorage(attachmentURL);
+      if (!deleted) {
+        console.warn("Old file may not have been deleted properly.");
+      }
+    }
+
+    // Upload new file
+    const uploadedUrl = await uploadFileAndGetURL(newFile);
+    if (!uploadedUrl) {
+      alert('New file upload failed.');
+      return;
+    }
+    attachmentURL = uploadedUrl;
+  }
 
   const updatedData = {
     ICSno: document.getElementById('editIcsNo').value.trim(),
@@ -416,16 +387,20 @@ async function handleEditICSSubmit(e) {
     totalCost: parseFloat(document.getElementById('editTotalCostDisplay').textContent.replace(/[₱,]/g, '')) || 0,
     dateIssued: document.getElementById('editDateIssued').value,
     remarks: document.getElementById('editRemarks').value.trim(),
-    status: document.getElementById('editStatus').value
+    status: document.getElementById('editStatus').value,
+    attachmentURL
   };
 
   try {
     await updateICSEntry(docId, updatedData);
-
     bootstrap.Modal.getOrCreateInstance(document.getElementById('editICSModal')).hide();
-    renderICSTable(currentPage); // Re-render table
+    document.getElementById('editAttachment').value = '';
+    document.getElementById('attachment').value = '';
+    renderICSTable(null, currentPage);// Refresh view
   } catch (err) {
-    console.error("Failed to update ICS entry:", err);
+    console.error("❌ Failed to update ICS entry:", err);
     alert("Update failed. Check console for details.");
+  } finally {
+    loadingOverlay.style.display = 'none'; // Always hide loading
   }
 }
