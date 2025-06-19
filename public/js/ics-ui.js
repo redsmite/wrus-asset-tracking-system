@@ -196,6 +196,10 @@ function collectICSFormData() {
 
 // 🔹 Render ICS Table
 async function renderICSTable(dataSet = null, page = 1) {
+
+  const loadingOverlay = document.getElementById('loadingOverlay');
+  loadingOverlay.style.display = 'flex';
+
   const tableBody = document.querySelector("#icsTableBody");
   const pagination = document.getElementById("paginationControls");
   tableBody.innerHTML = "<tr><td colspan='6'>Loading...</td></tr>";
@@ -288,6 +292,8 @@ async function renderICSTable(dataSet = null, page = 1) {
   } catch (err) {
     console.error("Error rendering ICS table:", err);
     tableBody.innerHTML = "<tr><td colspan='6'>Error loading data.</td></tr>";
+  }  finally {
+    loadingOverlay.style.display = 'none'; // Always hide loading
   }
 }
 

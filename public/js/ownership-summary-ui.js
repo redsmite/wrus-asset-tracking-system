@@ -122,42 +122,49 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Table Renderer
   function renderTable() {
-    tableBody.innerHTML = "";
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    loadingOverlay.style.display = 'flex';
 
-    const startIndex = (currentPage - 1) * usersPerPage;
-    const pageUsers = filteredUsers.slice(startIndex, startIndex + usersPerPage);
+    try {
+      tableBody.innerHTML = "";
 
-    pageUsers.forEach((user) => {
-      const row = document.createElement("tr");
+      const startIndex = (currentPage - 1) * usersPerPage;
+      const pageUsers = filteredUsers.slice(startIndex, startIndex + usersPerPage);
 
-      // Full Name
-      const nameCell = document.createElement("td");
-      nameCell.textContent = `${user.lastName}, ${user.firstName} ${user.middleInitial}.`;
-      row.appendChild(nameCell);
+      pageUsers.forEach((user) => {
+        const row = document.createElement("tr");
 
-      // View Consumable Button
-      const consumableCell = document.createElement("td");
-      const consumableBtn = document.createElement("button");
-      consumableBtn.textContent = "View Consumable";
-      consumableBtn.className = "btn btn-success golden-button";
-      consumableBtn.setAttribute("data-id", user.id);
-      setupConsumableButton(consumableBtn, user);
-      consumableCell.appendChild(consumableBtn);
-      row.appendChild(consumableCell);
+        // Full Name
+        const nameCell = document.createElement("td");
+        nameCell.textContent = `${user.lastName}, ${user.firstName} ${user.middleInitial}.`;
+        row.appendChild(nameCell);
 
-      // View ICS Button (placeholder)
-      const icsCell = document.createElement("td");
-      const icsBtn = document.createElement("button");
-      icsBtn.textContent = "View ICS";
-      icsBtn.className = "btn btn-info golden-button";
-      icsBtn.setAttribute("data-id", user.id);
-      icsCell.appendChild(icsBtn);
-      row.appendChild(icsCell);
+        // View Consumable Button
+        const consumableCell = document.createElement("td");
+        const consumableBtn = document.createElement("button");
+        consumableBtn.textContent = "View Consumable";
+        consumableBtn.className = "btn btn-success golden-button";
+        consumableBtn.setAttribute("data-id", user.id);
+        setupConsumableButton(consumableBtn, user);
+        consumableCell.appendChild(consumableBtn);
+        row.appendChild(consumableCell);
 
-      tableBody.appendChild(row);
-    });
+        // View ICS Button (placeholder)
+        const icsCell = document.createElement("td");
+        const icsBtn = document.createElement("button");
+        icsBtn.textContent = "View ICS";
+        icsBtn.className = "btn btn-info golden-button";
+        icsBtn.setAttribute("data-id", user.id);
+        icsCell.appendChild(icsBtn);
+        row.appendChild(icsCell);
 
-    renderPagination(Math.ceil(filteredUsers.length / usersPerPage));
+        tableBody.appendChild(row);
+      });
+
+      renderPagination(Math.ceil(filteredUsers.length / usersPerPage));
+    } finally {
+      loadingOverlay.style.display = 'none'; // Always hide loading
+    }
   }
 
   // Initialize

@@ -5,247 +5,210 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Consumable Items</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="css/dashboard.css">
   <link rel="icon" type="image/png" href="images/favicon-32x32.png">
 </head>
 <body>
-  <!-- Toggle Button for Small Screens -->
-  <button class="btn btn-primary m-2 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSidebar" aria-controls="offcanvasSidebar">
-    <span class="navbar-toggler-icon"></span>
-  </button>
-
   <div class="d-flex" id="wrapper">
-    <!-- Sidebar for md and up -->
-    <div class="bg-primary text-white p-3 vh-100 d-none d-md-block" id="sidebar">
-      <h4 class="mb-4">WRUS Asset Tracking System</h4>
-      <ul class="nav flex-column">
-        <li class="nav-item mb-2">
-          <a href="./dashboard.html" class="nav-link text-white">Dashboard</a>
-        </li>
-        <li class="nav-item mb-2">
-          <a href="#" class="nav-link text-white">Consumable</a>
-        </li>
-        <li class="nav-item mb-2">
-          <a href="ics.html" class="nav-link text-white">ICS</a>
-        </li>
-        <li class="nav-item mb-2">
-          <a href="ownership-summary.html" class="nav-link text-white">Inventory Summary</a>
-        </li>
-      </ul>
-      <button id="logoutBtn" class="btn btn-light mt-auto">Logout</button>
-    </div>
-
-    <!-- Offcanvas Sidebar for smaller screens -->
-    <div class="offcanvas offcanvas-start text-bg-primary" tabindex="-1" id="offcanvasSidebar" aria-labelledby="offcanvasSidebarLabel">
-      <div class="offcanvas-header">
-        <h5 class="offcanvas-title" id="offcanvasSidebarLabel">WRUS Asset Tracking System</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-      </div>
-      <div class="offcanvas-body">
-        <ul class="nav flex-column">
-          <li class="nav-item mb-2">
-            <a href="./dashboard.html" class="nav-link text-white">Dashboard</a>
-          </li>
-          <li class="nav-item mb-2">
-            <a href="#" class="nav-link text-white">Consumable</a>
-          </li>
-          <li class="nav-item mb-2">
-            <a href="ics.html" class="nav-link text-white">ICS</a>
-          </li>
-          <li class="nav-item mb-2">
-            <a href="ownership-summary.html" class="nav-link text-white">Inventory Summary</a>
-          </li>
-        </ul>
-        <button id="logoutBtnMobile" class="btn btn-light mt-auto">Logout</button>
-      </div>
-    </div>
+    <div id="sidebarContainer"></div>
 
     <!-- Page Content -->
     <div class="container-fluid p-4" id="page-content">
-      <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Consumable Items</h2>
-        <div class="input-group w-50">
-          <span class="input-group-text">Search Item</span>
-          <input type="text" id="searchInput" class="form-control" placeholder="Enter item name..." />
-        </div>
-      </div>
-      <div class="text-center mt-4">
-        <button id="showAddFormBtn" class="btn btn-success btn-lg mb-3">Add Item</button>
-      </div>
-
-      <div class="table-responsive">
-        <table id="consumableTable" class="table table-bordered table-hover text-center align-middle">
-          <thead class="table-success">
-            <tr>
-              <th>CID</th>
-              <th>Specification</th>
-              <th>Qty</th>
-              <th>UoM</th>
-              <th>Edit</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody id="consumableBody">
-            <!-- Filled dynamically -->
-          </tbody>
-        </table>
-        <div class="d-flex justify-content-center my-3" id="paginationContainer"></div>
-      </div>
-    </div>
-  </div>
-  <!-- Add Item Modal -->
-  <div class="modal fade" id="addItemModal" tabindex="-1" aria-labelledby="addItemModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="addItemModalLabel">Add Item</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-
-        <div class="modal-body">
-          <form id="addItemForm">
-            <div class="mb-3">
-              <label for="newSpec" class="form-label">Specification</label>
-              <input type="text" class="form-control" id="newSpec" placeholder="Enter specification" />
-            </div>
-
-            <div class="mb-3">
-              <label for="newQty" class="form-label">Quantity</label>
-              <input type="number" class="form-control" id="newQty" placeholder="Enter quantity" />
-            </div>
-
-            <div class="mb-3">
-              <label for="newUnit" class="form-label">Unit</label>
-              <input type="text" class="form-control" id="newUnit" placeholder="Enter unit" />
-            </div>
-          </form>
-        </div>
-
-        <div class="modal-footer">
-          <button class="btn btn-primary" id="addItemBtn">Add</button>
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        </div>
-      </div>
-    </div>
-  </div>
-  <!-- Edit Modal -->
-  <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Edit Item</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <input type="hidden" id="editCID">
-          <div class="mb-3">
-            <label for="editSpec" class="form-label">Specification</label>
-            <input type="text" id="editSpec" class="form-control">
-          </div>
-          <div class="mb-3">
-            <label for="editUnit" class="form-label">Unit of Measurement</label>
-            <input type="text" id="editUnit" class="form-control">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h2>Consumable Items</h2>
+          <div class="input-group w-50">
+            <span class="input-group-text">Search Item</span>
+            <input type="text" id="searchInput" class="form-control" placeholder="Enter item name..." />
           </div>
         </div>
-        <div class="modal-footer">
-          <button class="btn btn-primary" id="saveEditBtn">Save changes</button>
+        <div class="text-center mt-4">
+          <button id="showAddFormBtn" class="btn btn-success btn-lg mb-3">Add Item</button>
         </div>
-      </div>
-    </div>
-  </div>
-  <!-- Action Modal -->
-  <div class="modal fade" id="actionModal" tabindex="-1" aria-labelledby="actionModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content rounded-3">
-        <div class="modal-header">
-          <h5 class="modal-title" id="actionModalLabel">Choose Action</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body d-grid gap-2">
-          <button id="addStockBtn" class="btn btn-success">➕ Receive Item</button>
-          <button id="assignItemBtn" class="btn btn-warning">➖ Assign Item</button>
-          <button id="viewLedgerBtn" class="btn btn-info">📖 View Ledger</button>
-        </div>
-      </div>
-    </div>
-  </div>
 
-  <!-- Add Stock Modal -->
-  <div class="modal fade" id="addStockModal" tabindex="-1" aria-labelledby="addStockModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content rounded-3">
-        <div class="modal-header">
-          <h5 class="modal-title" id="addStockModalLabel">Receive Item</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="table-responsive">
+          <table id="consumableTable" class="table table-bordered table-hover text-center align-middle">
+            <thead class="table-success">
+              <tr>
+                <th>CID</th>
+                <th>Specification</th>
+                <th>Qty</th>
+                <th>UoM</th>
+                <th>Edit</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="consumableBody">
+              <!-- Filled dynamically -->
+            </tbody>
+          </table>
+          <div class="d-flex justify-content-center my-3" id="paginationContainer"></div>
         </div>
-        <div class="modal-body">
-          <label for="stockAmount" class="form-label">Enter quantity to receive:</label>
-          <input type="number" id="stockAmount" class="form-control" min="1" required>
 
-          <label for="stockRemarks" class="form-label mt-3">Remarks (optional):</label>
-          <textarea id="stockRemarks" class="form-control" rows="3" placeholder="Enter remarks..."></textarea>
-        </div>
-        <div class="modal-footer">
-          <button id="confirmAddStockBtn" class="btn btn-success">Confirm</button>
-        </div>
-      </div>
-    </div>
-  </div>
+      <!-- Add Item Modal -->
+      <div class="modal fade" id="addItemModal" tabindex="-1" aria-labelledby="addItemModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="addItemModalLabel">Add Item</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
 
-  <!-- Assign Modal -->
-  <div class="modal fade" id="assignModal" tabindex="-1" aria-labelledby="assignModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Assign Item</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <form id="assignForm">
-            <div class="mb-3">
-              <label for="assignQty" class="form-label">Quantity</label>
-              <input type="number" class="form-control" id="assignQty" min="1" required>
-            </div>
-            <div class="mb-3">
-              <label for="assignTo" class="form-label">Assign to</label>
-              <select class="form-select" id="userSelect" required></select>
-            </div>
-            <div class="mb-3">
-              <label for="assignRemarks" class="form-label">Remarks</label>
-              <textarea class="form-control" id="assignRemarks" rows="3" placeholder="Enter remarks..."></textarea>
-            </div>
-          </form>
-        </div>
-        <div class="modal-footer">
-          <button type="button" id="confirmAssignBtn" class="btn btn-primary">Assign</button>
-        </div>
-      </div>
-    </div>
-  </div>
+          <div class="modal-body">
+            <form id="addItemForm">
+              <div class="mb-3">
+                <label for="newSpec" class="form-label">Specification</label>
+                <input type="text" class="form-control" id="newSpec" placeholder="Enter specification" />
+              </div>
 
-  <!-- Ledger Modal -->
-  <div class="modal fade" id="ledgerModal" tabindex="-1" aria-labelledby="ledgerModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable">
-      <div class="modal-content rounded-3">
-        <div class="modal-header">
-          <h5 class="modal-title" id="ledgerModalLabel">Ledger Entries</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          <div class="px-3 pt-2">
-            <p class="text-muted mb-0">Stocks Left: <strong id="totalQtyDisplay">Loading...</strong></p>
+              <div class="mb-3">
+                <label for="newQty" class="form-label">Quantity</label>
+                <input type="number" class="form-control" id="newQty" placeholder="Enter quantity" />
+              </div>
+
+              <div class="mb-3">
+                <label for="newUnit" class="form-label">Unit</label>
+                <input type="text" class="form-control" id="newUnit" placeholder="Enter unit" />
+              </div>
+            </form>
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn btn-primary" id="addItemBtn">Add</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
           </div>
         </div>
-        <div class="modal-body">
-          <iframe id="pdfPreviewFrame" width="100%" height="600px" frameborder="0"></iframe>
+      </div>
+    </div>
+      <!-- Edit Modal -->
+      <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Edit Item</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <input type="hidden" id="editCID">
+              <div class="mb-3">
+                <label for="editSpec" class="form-label">Specification</label>
+                <input type="text" id="editSpec" class="form-control">
+              </div>
+              <div class="mb-3">
+                <label for="editUnit" class="form-label">Unit of Measurement</label>
+                <input type="text" id="editUnit" class="form-control">
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-primary" id="saveEditBtn">Save changes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Action Modal -->
+      <div class="modal fade" id="actionModal" tabindex="-1" aria-labelledby="actionModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content rounded-3">
+            <div class="modal-header">
+              <h5 class="modal-title" id="actionModalLabel">Choose Action</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body d-grid gap-2">
+              <button id="addStockBtn" class="btn btn-success">➕ Add Stock</button>
+              <button id="assignItemBtn" class="btn btn-warning">➖ Assign Item</button>
+              <button id="viewLedgerBtn" class="btn btn-info">📖 View Ledger</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add Stock Modal -->
+      <div class="modal fade" id="addStockModal" tabindex="-1" aria-labelledby="addStockModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content rounded-3">
+            <div class="modal-header">
+              <h5 class="modal-title" id="addStockModalLabel">Add Stock</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <label for="stockAmount" class="form-label">Enter quantity to add:</label>
+              <input type="number" id="stockAmount" class="form-control" min="1" required>
+
+              <label for="stockRemarks" class="form-label mt-3">Remarks (optional):</label>
+              <textarea id="stockRemarks" class="form-control" rows="3" placeholder="Enter remarks..."></textarea>
+            </div>
+            <div class="modal-footer">
+              <button id="confirmAddStockBtn" class="btn btn-success">Confirm</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Assign Modal -->
+      <div class="modal fade" id="assignModal" tabindex="-1" aria-labelledby="assignModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Assign Item</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <form id="assignForm">
+                <div class="mb-3">
+                  <label for="assignQty" class="form-label">Quantity</label>
+                  <input type="number" class="form-control" id="assignQty" min="1" required>
+                </div>
+                <div class="mb-3">
+                  <label for="assignTo" class="form-label">Assign to</label>
+                  <select class="form-select" id="userSelect" required></select>
+                </div>
+                <div class="mb-3">
+                  <label for="assignRemarks" class="form-label">Remarks</label>
+                  <textarea class="form-control" id="assignRemarks" rows="3" placeholder="Enter remarks..."></textarea>
+                </div>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" id="confirmAssignBtn" class="btn btn-primary">Assign</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ledger Modal -->
+      <div class="modal fade" id="ledgerModal" tabindex="-1" aria-labelledby="ledgerModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+          <div class="modal-content rounded-3">
+            <div class="modal-header">
+              <h5 class="modal-title" id="ledgerModalLabel">Ledger Entries</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              <div class="px-3 pt-2">
+                <p class="text-muted mb-0">Stocks Left: <strong id="totalQtyDisplay">Loading...</strong></p>
+              </div>
+            </div>
+            <div class="modal-body">
+              <iframe id="pdfPreviewFrame" width="100%" height="600px" frameborder="0"></iframe>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
+    <div id="loadingOverlay">
+      <div class="spinner-border text-primary" role="status" id="loadingSpinner">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  </div>
   <!-- Firebase + Bootstrap -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <!-- jsPDF and AutoTable -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
+  <script type="module">
+    import { renderSidebar } from './js/components/sidebar.js';
+    renderSidebar();
+  </script>
   <script type="module" src="js/consumable-data.js"></script>
   <script type="module" src="js/consumable-ui.js"></script>
 </body>

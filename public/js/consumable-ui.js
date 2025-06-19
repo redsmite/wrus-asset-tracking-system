@@ -59,32 +59,6 @@ if (logoutBtnMobile) {
   });
 }
 
-// async function renderConsumableTable() {
-//   const tbody = document.getElementById("consumableBody");
-//   tbody.innerHTML = "";
-
-//   const items = await fetchConsumables();
-
-//   items.forEach(item => {
-//     const row = document.createElement("tr");
-//     row.innerHTML = `
-//   <td>${item.id}</td>
-//   <td>${item.specification}</td>
-//   <td>${item.qty}</td>
-//   <td>${item.unit}</td>
-//   <td>${item.timestamp}</td>
-//   <td>${item.addedBy}</td>
-//   <td>
-//     <button class="btn btn-warning btn-sm edit-btn" data-id="${item.id}" data-spec="${item.specification}" data-unit="${item.unit}" data-bs-toggle="modal" data-bs-target="#editModal">Edit</button>
-//   </td>
-//   <td>
-//     <button class="btn btn-secondary btn-sm action-btn" data-id="${item.id}" data-qty="${item.qty}" data-bs-toggle="modal" data-bs-target="#actionModal">Action</button>
-//   </td>
-//     `;
-//     tbody.appendChild(row);
-//   });
-// }
-
 document.addEventListener("DOMContentLoaded", () => {
   renderConsumableTable();
 });
@@ -121,22 +95,6 @@ document.addEventListener("click", (e) => {
     selectedCID = e.target.dataset.id;
   }
 });
-
-// // Modal button handlers
-// document.getElementById("addStockBtn").addEventListener("click", () => {
-//   //alert("Add stock to CID: " + selectedCID);
-//   // TODO: Open add stock form/modal
-// });
-
-// document.getElementById("assignItemBtn").addEventListener("click", () => {
-//   //alert("Assign item from CID: " + selectedCID);
-//   // TODO: Open assign item form/modal
-// });
-
-// document.getElementById("viewLedgerBtn").addEventListener("click", () => {
-//   //alert("View ledger for CID: " + selectedCID);
-//   // TODO: Show ledger page/modal
-// });
 
 document.addEventListener("click", (e) => {
   if (e.target.classList.contains("action-btn")) {
@@ -204,11 +162,18 @@ const tbody = document.getElementById("consumableBody");
 const searchInput = document.getElementById("searchInput");
 
 async function renderConsumableTable() {
-  currentItems = await fetchConsumables();
-  filteredItems = [...currentItems];
-  currentPage = 1;
-  renderTablePage();
-  renderPagination();
+  const loadingOverlay = document.getElementById('loadingOverlay');
+  loadingOverlay.style.display = 'flex';
+
+  try {
+    currentItems = await fetchConsumables();
+    filteredItems = [...currentItems];
+    currentPage = 1;
+    renderTablePage();
+    renderPagination();
+  } finally {
+    loadingOverlay.style.display = 'none'; // Always hide loading
+  }
 }
 
 // Render a specific page
