@@ -9,3 +9,17 @@
 .btn i {
   vertical-align: middle;
 }
+
+  .modal-body {
+    max-height: 70vh;
+  }
+
+  #scrollableTableWrapper {
+    height: 100%;
+    overflow-x: auto;
+    overflow-y: auto;
+  }
+
+  .property-accountability-table {
+    min-width: 1000px;
+  }

@@ -52,143 +52,202 @@
 
       <!-- Add Item Modal -->
       <div class="modal fade" id="addItemModal" tabindex="-1" aria-labelledby="addItemModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title" id="addItemModalLabel">Add Item</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+          <div class="modal-content shadow-lg rounded-4">
+            
+            <div class="modal-header bg-primary text-white rounded-top-4">
+              <h5 class="modal-title fw-semibold" id="addItemModalLabel">Add New Item</h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
             <div class="modal-body">
               <form id="addItemForm">
-                <div class="mb-3">
-                  <label for="newSpec" class="form-label">Specification</label>
-                  <input type="text" class="form-control" id="newSpec" placeholder="Enter specification" />
-                </div>
+                <div class="row g-3">
+                  
+                  <div class="col-12">
+                    <label for="newSpec" class="form-label fw-semibold">Specification <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="newSpec" placeholder="Enter specification" required />
+                  </div>
 
-                <div class="mb-3">
-                  <label for="newQty" class="form-label">Quantity</label>
-                  <input type="number" class="form-control" id="newQty" placeholder="Enter quantity" />
-                </div>
+                  <div class="col-md-6">
+                    <label for="newQty" class="form-label fw-semibold">Quantity <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control" id="newQty" placeholder="Enter quantity" min="1" required />
+                  </div>
 
-                <div class="mb-3">
-                  <label for="newUnit" class="form-label">Unit of Measurement</label>
-                  <input type="text" class="form-control" id="newUnit" placeholder="Enter unit of measurement" />
-                </div>
+                  <div class="col-md-6">
+                    <label for="newUnit" class="form-label fw-semibold">Unit of Measurement <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="newUnit" placeholder="e.g., pcs, box, set" required />
+                  </div>
 
-                <div class="mb-3">
-                  <label for="newRemarks" class="form-label">Remarks</label>
-                  <textarea class="form-control" id="newRemarks" rows="3" placeholder="Enter remarks (optional)"></textarea>
+                  <div class="col-12">
+                    <label for="newRemarks" class="form-label fw-semibold">Remarks</label>
+                    <textarea class="form-control" id="newRemarks" rows="3" placeholder="Optional notes or details"></textarea>
+                  </div>
+
                 </div>
               </form>
             </div>
 
-            <div class="modal-footer">
-              <button class="btn btn-primary" id="addItemBtn">Add</button>
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <div class="modal-footer bg-light rounded-bottom-4">
+              <button type="button" class="btn btn-primary" id="addItemBtn">
+                <i class="bi bi-plus-lg me-1"></i> Add Item
+              </button>
+              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                <i class="bi bi-x-lg me-1"></i> Cancel
+              </button>
             </div>
+
           </div>
         </div>
       </div>
-      <!-- Edit Modal -->
+
+      <!-- Edit Item Modal -->
       <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title">Edit Item</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+          <div class="modal-content shadow-lg rounded-4">
+            
+            <div class="modal-header bg-warning text-dark rounded-top-4">
+              <h5 class="modal-title fw-semibold">Edit Item</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+
             <div class="modal-body">
-              <input type="hidden" id="editCID">
+              <input type="hidden" id="editCID" />
+
               <div class="mb-3">
-                <label for="editSpec" class="form-label">Specification</label>
-                <input type="text" id="editSpec" class="form-control">
+                <label for="editSpec" class="form-label fw-semibold">Specification <span class="text-danger">*</span></label>
+                <input type="text" id="editSpec" class="form-control" placeholder="Update specification" required />
               </div>
+
               <div class="mb-3">
-                <label for="editUnit" class="form-label">Unit of Measurement</label>
-                <input type="text" id="editUnit" class="form-control">
+                <label for="editUnit" class="form-label fw-semibold">Unit of Measurement <span class="text-danger">*</span></label>
+                <input type="text" id="editUnit" class="form-control" placeholder="e.g., pcs, set, box" required />
               </div>
             </div>
-            <div class="modal-footer">
-              <button class="btn btn-primary" id="saveEditBtn">Save changes</button>
+
+            <div class="modal-footer bg-light rounded-bottom-4">
+              <button type="button" class="btn btn-primary" id="saveEditBtn">
+                <i class="bi bi-save me-1"></i> Save Changes
+              </button>
+              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                <i class="bi bi-x-lg me-1"></i> Cancel
+              </button>
             </div>
+
           </div>
         </div>
       </div>
+
       <!-- Action Modal -->
       <div class="modal fade" id="actionModal" tabindex="-1" aria-labelledby="actionModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content bg-dark text-light rounded-4 shadow">
-            <div class="modal-header border-bottom border-secondary">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+          <div class="modal-content bg-body-tertiary text-dark border border-secondary-subtle rounded-3 shadow-sm">
+            
+            <div class="modal-header border-bottom border-secondary-subtle">
               <h5 class="modal-title d-flex align-items-center gap-2" id="actionModalLabel">
                 <i class="bi bi-tools"></i> Item Actions
               </h5>
-              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body d-grid gap-3 px-4 py-3">
-              <button id="addStockBtn" class="btn btn-success d-flex align-items-center justify-content-center gap-2">
+            
+            <div class="modal-body d-grid gap-2 px-3 py-3">
+
+              <!-- Add Stock -->
+              <button id="addStockBtn" class="btn d-flex align-items-center justify-content-center gap-2 text-success border border-success-subtle bg-success bg-opacity-10 rounded-2">
                 <i class="bi bi-box-arrow-in-down"></i> Add Stock
               </button>
-              <button id="assignItemBtn" class="btn btn-warning d-flex align-items-center justify-content-center gap-2">
+
+              <!-- Assign Item (Primary color) -->
+              <button id="assignItemBtn" class="btn d-flex align-items-center justify-content-center gap-2 text-primary border border-primary-subtle bg-primary bg-opacity-10 rounded-2">
                 <i class="bi bi-box-arrow-up"></i> Assign Item
               </button>
-              <button id="viewLedgerBtn" class="btn btn-info d-flex align-items-center justify-content-center gap-2">
+
+              <!-- View Ledger -->
+              <button id="viewLedgerBtn" class="btn d-flex align-items-center justify-content-center gap-2 text-info border border-info-subtle bg-info bg-opacity-10 rounded-2">
                 <i class="bi bi-journal-text"></i> View Ledger
               </button>
+
             </div>
+
           </div>
         </div>
       </div>
+
 
       <!-- Add Stock Modal -->
       <div class="modal fade" id="addStockModal" tabindex="-1" aria-labelledby="addStockModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-          <div class="modal-content rounded-3">
-            <div class="modal-header">
-              <h5 class="modal-title" id="addStockModalLabel">Add Stock</h5>
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+          <div class="modal-content border border-secondary-subtle rounded-3 shadow-sm">
+            
+            <div class="modal-header border-bottom border-secondary-subtle">
+              <h5 class="modal-title fw-semibold" id="addStockModalLabel">
+                <i class="bi bi-box-arrow-in-down me-2"></i>Add Stock
+              </h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+            
             <div class="modal-body">
-              <label for="stockAmount" class="form-label">Enter quantity to add:</label>
-              <input type="number" id="stockAmount" class="form-control" min="1" required>
+              <div class="mb-3">
+                <label for="stockAmount" class="form-label">Quantity to Add</label>
+                <input type="number" id="stockAmount" class="form-control" min="1" required placeholder="Enter quantity" />
+              </div>
 
-              <label for="stockRemarks" class="form-label mt-3">Remarks (optional):</label>
-              <textarea id="stockRemarks" class="form-control" rows="3" placeholder="Enter remarks..."></textarea>
+              <div class="mb-2">
+                <label for="stockRemarks" class="form-label">Remarks (optional)</label>
+                <textarea id="stockRemarks" class="form-control" rows="3" placeholder="Enter remarks..."></textarea>
+              </div>
             </div>
-            <div class="modal-footer">
-              <button id="confirmAddStockBtn" class="btn btn-success">Confirm</button>
+            
+            <div class="modal-footer border-top border-secondary-subtle">
+              <button id="confirmAddStockBtn" class="btn btn-success w-100">
+                <i class="bi bi-check-circle me-1"></i>Confirm
+              </button>
             </div>
+            
           </div>
         </div>
       </div>
 
-      <!-- Assign Modal -->
+      <!-- Assign Item Modal -->
       <div class="modal fade" id="assignModal" tabindex="-1" aria-labelledby="assignModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title">Assign Item</h5>
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+          <div class="modal-content border border-secondary-subtle rounded-3 shadow-sm">
+            
+            <div class="modal-header border-bottom border-secondary-subtle">
+              <h5 class="modal-title fw-semibold" id="assignModalLabel">
+                <i class="bi bi-box-arrow-up me-2"></i>Assign Item
+              </h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+            
             <div class="modal-body">
               <form id="assignForm">
                 <div class="mb-3">
                   <label for="assignQty" class="form-label">Quantity</label>
-                  <input type="number" class="form-control" id="assignQty" min="1" required>
+                  <input type="number" class="form-control" id="assignQty" min="1" required placeholder="Enter quantity" />
                 </div>
+                
                 <div class="mb-3">
-                  <label for="assignTo" class="form-label">Assign to</label>
-                  <select class="form-select" id="userSelect" required></select>
+                  <label for="userSelect" class="form-label">Assign To</label>
+                  <select class="form-select" id="userSelect" required>
+                    <option value="" disabled selected>Select user</option>
+                    <!-- Options dynamically added via JS -->
+                  </select>
                 </div>
-                <div class="mb-3">
-                  <label for="assignRemarks" class="form-label">Remarks</label>
+                
+                <div class="mb-2">
+                  <label for="assignRemarks" class="form-label">Remarks (optional)</label>
                   <textarea class="form-control" id="assignRemarks" rows="3" placeholder="Enter remarks..."></textarea>
                 </div>
               </form>
             </div>
-            <div class="modal-footer">
-              <button type="button" id="confirmAssignBtn" class="btn btn-primary">Assign</button>
+            
+            <div class="modal-footer border-top border-secondary-subtle">
+              <button type="button" id="confirmAssignBtn" class="btn btn-primary w-100">
+                <i class="bi bi-send-check me-1"></i>Assign
+              </button>
             </div>
+            
           </div>
         </div>
       </div>
