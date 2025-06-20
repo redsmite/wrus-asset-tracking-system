@@ -40,7 +40,7 @@
               <th>Assigned To</th>
               <th>Description</th>
               <th>Date</th>
-              <th>Status</th>
+              <th>Total Cost</th>
               <th>Action</th>
             </tr>
           </thead>
@@ -56,189 +56,243 @@
 
       <!-- Add ICS Modal -->
       <div class="modal fade" id="addICSModal" tabindex="-1" aria-labelledby="addICSModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-          <div class="modal-content">
-            <form id="addICSForm">
-              <div class="modal-header">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+          <div class="modal-content shadow-lg">
+            <form id="addICSForm" class="needs-validation" novalidate>
+              <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title" id="addICSModalLabel">Add ICS Entry</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
 
-              <div class="modal-body row g-3">
+              <div class="modal-body px-4 pt-3 pb-1">
+                <ul class="nav nav-tabs mb-3" id="icsTab" role="tablist">
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="tab-item" data-bs-toggle="tab" data-bs-target="#itemTab" type="button" role="tab">Item Details</button>
+                  </li>
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tab-assignment" data-bs-toggle="tab" data-bs-target="#assignmentTab" type="button" role="tab">Assignment Details</button>
+                  </li>
+                </ul>
 
-                <div class="col-md-6">
-                  <label for="icsNo" class="form-label">ICS/PAR No.</label>
-                  <input type="text" class="form-control" id="icsNo" required />
+                <div class="tab-content" id="icsTabContent">
+                  <!-- Item Details Tab -->
+                  <div class="tab-pane fade show active" id="itemTab" role="tabpanel">
+                    <div class="row g-3">
+                      <div class="col-md-6">
+                        <label for="icsNo" class="form-label">ICS/PAR No.</label>
+                        <input type="text" class="form-control" id="icsNo" required />
+                        <div class="invalid-feedback">ICS/PAR No. is required.</div>
+                      </div>
+
+                      <div class="col-md-6">
+                        <label for="serialNumber" class="form-label">Serial Number</label>
+                        <input type="text" class="form-control" id="serialNumber" />
+                      </div>
+
+                      <div class="col-12">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" rows="2" required></textarea>
+                        <div class="invalid-feedback">Description is required.</div>
+                      </div>
+
+                      <div class="col-md-4">
+                        <label for="qty" class="form-label">Quantity</label>
+                        <input type="number" class="form-control" id="qty" min="0" required />
+                        <div class="invalid-feedback">Quantity is required.</div>
+                      </div>
+
+                      <div class="col-md-4">
+                        <label for="unit" class="form-label">Unit of Measurement</label>
+                        <input type="text" class="form-control" id="unit" required />
+                        <div class="invalid-feedback">Unit is required.</div>
+                      </div>
+
+                      <div class="col-md-4">
+                        <label for="unitCost" class="form-label">Unit Cost (₱)</label>
+                        <input type="number" class="form-control" id="unitCost" min="0" step="0.01" required />
+                        <div class="invalid-feedback">Unit cost is required.</div>
+                      </div>
+
+                      <div class="col-md-6">
+                        <label class="form-label">Total Cost (₱)</label>
+                        <p id="totalCostDisplay" class="form-control-plaintext fw-semibold text-primary">₱0.00</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Assignment Details Tab -->
+                  <div class="tab-pane fade" id="assignmentTab" role="tabpanel">
+                    <div class="row g-3 mt-1">
+                      <div class="col-md-6">
+                        <label for="assignedTo" class="form-label">Assigned To</label>
+                        <select class="form-select" id="assignedTo" required>
+                          <option value="">Select User</option>
+                        </select>
+                        <div class="invalid-feedback">Assigned user is required.</div>
+                      </div>
+
+                      <div class="col-md-6">
+                        <label for="dateIssued" class="form-label">Date Issued</label>
+                        <input type="date" class="form-control" id="dateIssued" required />
+                        <div class="invalid-feedback">Date issued is required.</div>
+                      </div>
+
+                      <div class="col-md-6">
+                        <label for="status" class="form-label">Status</label>
+                        <select class="form-select" id="status" required>
+                          <option value="">Select Status</option>
+                          <option value="Original">Original</option>
+                          <option value="Transferred">Transferred</option>
+                          <option value="RTS">RTS</option>
+                        </select>
+                        <div class="invalid-feedback">Status is required.</div>
+                      </div>
+
+                      <div class="col-md-6">
+                        <label for="attachment" class="form-label">Attach File (PDF, max 1MB)</label>
+                        <input type="file" class="form-control" id="attachment" accept="application/pdf" />
+                      </div>
+
+                      <div class="col-12">
+                        <label for="remarks" class="form-label">Remarks</label>
+                        <textarea class="form-control" id="remarks" rows="2" required></textarea>
+                        <div class="invalid-feedback">Remarks are required.</div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-
-                <div class="col-md-6">
-                  <label for="serialNumber" class="form-label">Serial Number</label>
-                  <input type="text" class="form-control" id="serialNumber" />
-                </div>
-
-                <div class="col-md-6">
-                  <label for="assignedTo" class="form-label">Assigned to</label>
-                  <select class="form-select" id="assignedTo" required>
-                    <option value="">Select User</option>
-                    <!-- Populated via JS -->
-                  </select>
-                </div>
-
-                <div class="col-12">
-                  <label for="description" class="form-label">Description</label>
-                  <textarea class="form-control" id="description" rows="2" required></textarea>
-                </div>
-
-                <div class="col-md-4">
-                  <label for="qty" class="form-label">Qty</label>
-                  <input type="number" class="form-control" id="qty" min="0" required />
-                </div>
-
-                <div class="col-md-4">
-                  <label for="unit" class="form-label">Unit of Measurement</label>
-                  <input type="text" class="form-control" id="unit" required />
-                </div>
-
-                <div class="col-md-4">
-                  <label for="unitCost" class="form-label">Unit Cost (₱)</label>
-                  <input type="number" class="form-control" id="unitCost" min="0" step="0.01" required />
-                </div>
-
-                <div class="col-md-6">
-                  <label class="form-label">Total Cost (₱)</label>
-                  <p id="totalCostDisplay" class="form-control-plaintext fw-bold">₱0.00</p>
-                </div>
-
-                <div class="col-md-6">
-                  <label for="dateIssued" class="form-label">Date Issued</label>
-                  <input type="date" class="form-control" id="dateIssued" required />
-                </div>
-
-                <div class="col-12">
-                  <label for="remarks" class="form-label">Remarks</label>
-                  <textarea class="form-control" id="remarks" rows="2"></textarea>
-                </div>
-
-                <div class="col-md-6">
-                  <label for="status" class="form-label">Status</label>
-                  <select class="form-select" id="status" required>
-                    <option value="">Select Status</option>
-                    <option value="Original">Original</option>
-                    <option value="Transferred">Transferred</option>
-                    <option value="RTS">RTS</option>
-                  </select>
-                </div>
-
-                <div class="col-md-6">
-                  <label for="attachment" class="form-label">Attach File (PDF, max 1MB)</label>
-                  <input type="file" class="form-control" id="attachment" accept="application/pdf" />
-                </div>
-
               </div>
 
-              <div class="modal-footer">
+              <div class="modal-footer px-4 py-3">
                 <button type="submit" class="btn btn-primary">Save ICS</button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
               </div>
-
             </form>
           </div>
         </div>
       </div>
+
       <!-- Edit ICS Modal -->
       <div class="modal fade" id="editICSModal" tabindex="-1" aria-labelledby="editICSModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
           <div class="modal-content">
-            <form id="editICSForm">
-              <div class="modal-header">
+            <form id="editICSForm" class="needs-validation" novalidate>
+              <div class="modal-header bg-warning text-dark">
                 <h5 class="modal-title" id="editICSModalLabel">Edit ICS Entry</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
 
-              <div class="modal-body row g-3">
-
+              <div class="modal-body px-4 pt-3 pb-1">
                 <input type="hidden" id="editDocId">
                 <input type="hidden" id="editCurrentAttachmentUrl">
 
-                <div class="col-md-6">
-                  <label for="editIcsNo" class="form-label">ICS/PAR No.</label>
-                  <input type="text" class="form-control" id="editIcsNo" required />
-                </div>
+                <ul class="nav nav-tabs mb-3" id="editIcsTab" role="tablist">
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="edit-tab-item" data-bs-toggle="tab" data-bs-target="#editItemTab" type="button" role="tab">Item Details</button>
+                  </li>
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="edit-tab-assignment" data-bs-toggle="tab" data-bs-target="#editAssignmentTab" type="button" role="tab">Assignment Details</button>
+                  </li>
+                </ul>
 
-                <div class="col-md-6">
-                  <label for="editSerialNumber" class="form-label">Serial Number</label>
-                  <input type="text" class="form-control" id="editSerialNumber" />
-                </div>
+                <div class="tab-content" id="editIcsTabContent">
+                  <!-- Item Details Tab -->
+                  <div class="tab-pane fade show active" id="editItemTab" role="tabpanel">
+                    <div class="row g-3">
+                      <div class="col-md-6">
+                        <label for="editIcsNo" class="form-label">ICS/PAR No.</label>
+                        <input type="text" class="form-control" id="editIcsNo" required />
+                        <div class="invalid-feedback">ICS/PAR No. is required.</div>
+                      </div>
 
-                <div class="col-md-6">
-                  <label for="editAssignedTo" class="form-label">Assigned to</label>
-                  <select class="form-select" id="editAssignedTo" required>
-                    <option value="">Select User</option>
-                    <!-- Populated via JS -->
-                  </select>
-                </div>
+                      <div class="col-md-6">
+                        <label for="editSerialNumber" class="form-label">Serial Number</label>
+                        <input type="text" class="form-control" id="editSerialNumber" />
+                      </div>
 
-                <div class="col-12">
-                  <label for="editDescription" class="form-label">Description</label>
-                  <textarea class="form-control" id="editDescription" rows="2" required></textarea>
-                </div>
+                      <div class="col-12">
+                        <label for="editDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="editDescription" rows="2" required></textarea>
+                        <div class="invalid-feedback">Description is required.</div>
+                      </div>
 
-                <div class="col-md-4">
-                  <label for="editQty" class="form-label">Qty</label>
-                  <input type="number" class="form-control" id="editQty" min="0" required />
-                </div>
+                      <div class="col-md-4">
+                        <label for="editQty" class="form-label">Quantity</label>
+                        <input type="number" class="form-control" id="editQty" min="0" required />
+                        <div class="invalid-feedback">Quantity is required.</div>
+                      </div>
 
-                <div class="col-md-4">
-                  <label for="editUnit" class="form-label">Unit of Measurement</label>
-                  <input type="text" class="form-control" id="editUnit" required />
-                </div>
+                      <div class="col-md-4">
+                        <label for="editUnit" class="form-label">Unit of Measurement</label>
+                        <input type="text" class="form-control" id="editUnit" required />
+                        <div class="invalid-feedback">Unit is required.</div>
+                      </div>
 
-                <div class="col-md-4">
-                  <label for="editUnitCost" class="form-label">Unit Cost (₱)</label>
-                  <input type="number" class="form-control" id="editUnitCost" min="0" step="0.01" required />
-                </div>
+                      <div class="col-md-4">
+                        <label for="editUnitCost" class="form-label">Unit Cost (₱)</label>
+                        <input type="number" class="form-control" id="editUnitCost" min="0" step="0.01" required />
+                        <div class="invalid-feedback">Unit cost is required.</div>
+                      </div>
 
-                <div class="col-md-6">
-                  <label class="form-label">Total Cost (₱)</label>
-                  <p id="editTotalCostDisplay" class="form-control-plaintext fw-bold">₱0.00</p>
-                </div>
+                      <div class="col-md-6">
+                        <label class="form-label">Total Cost (₱)</label>
+                        <p id="editTotalCostDisplay" class="form-control-plaintext fw-semibold text-primary">₱0.00</p>
+                      </div>
+                    </div>
+                  </div>
 
-                <div class="col-md-6">
-                  <label for="editDateIssued" class="form-label">Date Issued</label>
-                  <input type="date" class="form-control" id="editDateIssued" required />
-                </div>
+                  <!-- Assignment Details Tab -->
+                  <div class="tab-pane fade" id="editAssignmentTab" role="tabpanel">
+                    <div class="row g-3 mt-1">
+                      <div class="col-md-6">
+                        <label for="editAssignedTo" class="form-label">Assigned To</label>
+                        <select class="form-select" id="editAssignedTo" required>
+                          <option value="">Select User</option>
+                        </select>
+                        <div class="invalid-feedback">Assigned user is required.</div>
+                      </div>
 
-                <div class="col-12">
-                  <label for="editRemarks" class="form-label">Remarks</label>
-                  <textarea class="form-control" id="editRemarks" rows="2"></textarea>
-                </div>
+                      <div class="col-md-6">
+                        <label for="editDateIssued" class="form-label">Date Issued</label>
+                        <input type="date" class="form-control" id="editDateIssued" required />
+                        <div class="invalid-feedback">Date issued is required.</div>
+                      </div>
 
-                <div class="col-md-6">
-                  <label for="editStatus" class="form-label">Status</label>
-                  <select class="form-select" id="editStatus" required>
-                    <option value="">Select Status</option>
-                    <option value="Original">Original</option>
-                    <option value="Transferred">Transferred</option>
-                    <option value="RTS">RTS</option>
-                  </select>
-                </div>
+                      <div class="col-md-6">
+                        <label for="editStatus" class="form-label">Status</label>
+                        <select class="form-select" id="editStatus" required>
+                          <option value="">Select Status</option>
+                          <option value="Original">Original</option>
+                          <option value="Transferred">Transferred</option>
+                          <option value="RTS">RTS</option>
+                        </select>
+                        <div class="invalid-feedback">Status is required.</div>
+                      </div>
 
-                <div class="col-md-6">
-                  <label for="editAttachment" class="form-label">Attach File (PDF, max 1MB)</label>
-                  <input type="file" class="form-control" id="editAttachment" accept="application/pdf" />
-                </div>
+                      <div class="col-md-6">
+                        <label for="editAttachment" class="form-label">Attach File (PDF, max 1MB)</label>
+                        <input type="file" class="form-control" id="editAttachment" accept="application/pdf" />
+                      </div>
 
+                      <div class="col-12">
+                        <label for="editRemarks" class="form-label">Remarks</label>
+                        <textarea class="form-control" id="editRemarks" rows="2" required></textarea>
+                        <div class="invalid-feedback">Remarks are required.</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <div class="modal-footer">
+              <div class="modal-footer px-4 py-3">
                 <button type="submit" class="btn btn-primary">Update ICS</button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
               </div>
-
             </form>
           </div>
         </div>
       </div>
+
     </div>
   </div>
 

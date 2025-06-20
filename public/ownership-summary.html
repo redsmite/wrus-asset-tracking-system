@@ -13,7 +13,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
   <link rel="stylesheet" href="css/dashboard.css" />
   <link rel="stylesheet" href="css/ownership-summary.css" />
-  <link rel="stylesheet" href="css/fix-spinner.css" />
+  <link rel="stylesheet" href="css/inventory-summary.css" />
 </head>
 <body>
   <div class="d-flex" id="wrapper">
@@ -32,10 +32,17 @@
     </div>
 
       <!-- 📋 Users Table -->
-      <div class="table-responsive users-table-wrapper">
-        <table class="table table-bordered table-striped">
+      <div class="table-responsive shadow-sm rounded bg-white p-3">
+        <table class="table table-hover table-bordered align-middle mb-0">
+          <thead class="table-primary text-center">
+            <tr>
+              <th>Name</th>
+              <th>Consumable</th>
+              <th>ICS</th>
+            </tr>
+          </thead>
           <tbody id="usersTableBody">
-            <!-- Rows will be injected here by JS -->
+            <!-- JavaScript will inject rows here -->
           </tbody>
         </table>
       </div>

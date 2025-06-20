@@ -1,0 +1,11 @@
+#loadingOverlay {
+  display: flex;
+}
+
+.table td, .table th {
+  vertical-align: middle;
+}
+
+.btn i {
+  vertical-align: middle;
+}

@@ -10,7 +10,7 @@ import { renderSpinner, showSpinner, hideSpinner } from './components/spinner.js
 let users = [];
 let filteredUsers = [];
 let currentPage = 1;
-const usersPerPage = 10;
+const usersPerPage = 8;
 
 let tableBody, searchInput, pageContent, paginationNav, modalElement, bsModal;
 
@@ -107,7 +107,7 @@ function renderPagination(totalPages) {
 function renderTable() {
   showSpinner();
   try {
-    tableBody.innerHTML = "";
+    usersTableBody.innerHTML = "";
 
     const startIndex = (currentPage - 1) * usersPerPage;
     const pageUsers = filteredUsers.slice(startIndex, startIndex + usersPerPage);
@@ -115,28 +115,34 @@ function renderTable() {
     pageUsers.forEach((user) => {
       const row = document.createElement("tr");
 
+      // Name cell
       const nameCell = document.createElement("td");
       nameCell.textContent = `${user.lastName}, ${user.firstName} ${user.middleInitial}.`;
+      nameCell.classList.add("fw-medium", "text-capitalize");
       row.appendChild(nameCell);
 
+      // Consumable button cell
       const consumableCell = document.createElement("td");
       const consumableBtn = document.createElement("button");
-      consumableBtn.textContent = "View Consumable";
-      consumableBtn.className = "btn btn-success golden-button";
+      consumableBtn.className = "btn btn-success btn-sm rounded-pill fw-semibold px-3";
+      consumableBtn.innerHTML = `<i class="bi bi-box-arrow-in-down me-1"></i>View Consumable`;
       consumableBtn.setAttribute("data-id", user.id);
       setupConsumableButton(consumableBtn, user);
+      consumableCell.classList.add("text-center");
       consumableCell.appendChild(consumableBtn);
       row.appendChild(consumableCell);
 
+      // ICS button cell
       const icsCell = document.createElement("td");
       const icsBtn = document.createElement("button");
-      icsBtn.textContent = "View ICS";
-      icsBtn.className = "btn btn-info golden-button";
+      icsBtn.className = "btn btn-info btn-sm rounded-pill fw-semibold px-3 text-white";
+      icsBtn.innerHTML = `<i class="bi bi-card-list me-1"></i>View ICS`;
       icsBtn.setAttribute("data-id", user.id);
+      icsCell.classList.add("text-center");
       icsCell.appendChild(icsBtn);
       row.appendChild(icsCell);
 
-      tableBody.appendChild(row);
+      usersTableBody.appendChild(row);
     });
 
     renderPagination(Math.ceil(filteredUsers.length / usersPerPage));

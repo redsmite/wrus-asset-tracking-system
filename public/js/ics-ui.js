@@ -10,7 +10,7 @@ import { renderSidebar } from './components/sidebar.js';
 import { renderSpinner, showSpinner, hideSpinner } from './components/spinner.js';
 
 let currentPage = 1;
-let rowsPerPage = 8;
+let rowsPerPage = 5;
 let currentData = [];        // All data fetched from Firestore
 let filteredData = [];       // Data after filtering
 let usersMapGlobal = {};     // For use in renderFilteredTable
@@ -145,13 +145,23 @@ function setupICSFormSubmit() {
 async function handleICSFormSubmit(e) {
   e.preventDefault();
 
+  const form = document.getElementById('addICSForm');
+
+  // Trigger Bootstrap validation UI
+  form.classList.add('was-validated');
+
+  // STOP if form is invalid
+  if (!form.checkValidity()) {
+    hideSpinner(); // in case spinner was triggered elsewhere
+    return;
+  }
+
   showSpinner();
 
   const fileInput = document.getElementById('attachment');
   let fileURL = null;
 
   try {
-    // Upload file to Supabase (if selected)
     if (fileInput.files.length > 0) {
       const file = fileInput.files[0];
       fileURL = await uploadFileAndGetURL(file);
@@ -165,7 +175,8 @@ async function handleICSFormSubmit(e) {
 
     await addICSEntry(icsData);
 
-    document.getElementById('addICSForm').reset();
+    form.reset();
+    form.classList.remove('was-validated'); // Reset validation state
     bootstrap.Modal.getOrCreateInstance(document.getElementById('addICSModal')).hide();
     document.getElementById('editAttachment').value = '';
     document.getElementById('attachment').value = '';
@@ -202,9 +213,7 @@ async function renderICSTable(dataSet = null, page = 1) {
   showSpinner();
 
   const tableBody = document.querySelector("#icsTableBody");
-  const pagination = document.getElementById("paginationControls");
-  tableBody.innerHTML = ""; // Avoid overwriting with "Loading..."
-  pagination.innerHTML = "";
+  tableBody.innerHTML = "";
 
   try {
     if (!dataSet) {
@@ -224,28 +233,38 @@ async function renderICSTable(dataSet = null, page = 1) {
       return;
     }
 
-    const totalPages = Math.ceil(dataToUse.length / rowsPerPage);
     currentPage = page;
 
     const startIndex = (page - 1) * rowsPerPage;
     const paginatedItems = dataToUse.slice(startIndex, startIndex + rowsPerPage);
 
     const rowsHtml = paginatedItems.map(entry => {
-      const { ICSno, description, dateIssued, status, assignedTo } = entry.data;
+      const { ICSno, description, dateIssued, assignedTo, attachmentURL, totalCost } = entry.data;
       const assignedName = usersMap[assignedTo] || "Unknown User";
+
+      // Format total cost
+      const formattedCost = typeof totalCost === 'number'
+        ? `₱${totalCost.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        : '₱0.00';
+
       return `
         <tr>
           <td>${ICSno || '(no ICSno)'}</td>
           <td>${assignedName}</td>
           <td>${description || ''}</td>
           <td>${dateIssued || ''}</td>
-          <td>${status || ''}</td>
+          <td>${formattedCost}</td>
           <td>
-            <button class="btn btn-sm btn-primary d-flex align-items-center gap-1" data-id="${entry.id}">
-              <i class="bi bi-pencil-square"></i>
-            </button>
-            <button class="btn btn-sm btn-secondary d-flex align-items-center gap-1" data-id="${entry.id}">
-            <i class="bi bi-eye"></i></button>
+            <div class="d-flex gap-1">
+              <button class="btn btn-sm btn-primary flex-fill d-flex align-items-center justify-content-center" data-id="${entry.id}">
+                <i class="bi bi-pencil-square"></i>
+              </button>
+              <a href="${attachmentURL || '#'}" target="_blank"
+                class="btn btn-sm btn-secondary flex-fill d-flex align-items-center justify-content-center"
+                data-id="${entry.id}">
+                <i class="bi bi-eye"></i>
+              </a>
+            </div>
           </td>
         </tr>`;
     }).join("");
@@ -263,14 +282,30 @@ async function renderICSTable(dataSet = null, page = 1) {
       });
     });
 
-    // Pagination logic...
-    // [omitted for brevity — keep your original logic]
-    
+    renderPaginationControls(dataToUse, page);
+
   } catch (err) {
     console.error("Error rendering ICS table:", err);
     tableBody.innerHTML = "<tr><td colspan='6'>Error loading data.</td></tr>";
   } finally {
     hideSpinner();
+  }
+}
+
+function renderPaginationControls(dataSet, currentPage) {
+  const pagination = document.getElementById("paginationControls");
+  pagination.innerHTML = "";
+
+  const totalPages = Math.ceil(dataSet.length / rowsPerPage);
+
+  for (let i = 1; i <= totalPages; i++) {
+    const btn = document.createElement("button");
+    btn.className = `btn btn-sm mx-1 ${i === currentPage ? "btn-primary" : "btn-outline-primary"}`;
+    btn.textContent = i;
+    btn.addEventListener("click", () => {
+      renderICSTable(dataSet, i);
+    });
+    pagination.appendChild(btn);
   }
 }
 
@@ -327,11 +362,18 @@ function setupEditICSFormSubmit() {
 async function handleEditICSSubmit(e) {
   e.preventDefault();
 
+  const form = document.getElementById('editICSForm');
+  if (!form.checkValidity()) {
+    form.classList.add('was-validated');
+    return;
+  }
+
   showSpinner();
 
   const docId = document.getElementById('editDocId').value;
   if (!docId) {
     alert("Document ID missing. Please reload and try again.");
+    hideSpinner();
     return;
   }
 
@@ -339,9 +381,7 @@ async function handleEditICSSubmit(e) {
   const newFile = fileInput.files[0];
   let attachmentURL = document.getElementById('editCurrentAttachmentUrl').value;
 
-  // If a new file is selected, delete old and upload new
   if (newFile) {
-    // Delete the old file (if exists)
     if (attachmentURL) {
       const deleted = await deleteFileFromStorage(attachmentURL);
       if (!deleted) {
@@ -349,10 +389,10 @@ async function handleEditICSSubmit(e) {
       }
     }
 
-    // Upload new file
     const uploadedUrl = await uploadFileAndGetURL(newFile);
     if (!uploadedUrl) {
       alert('New file upload failed.');
+      hideSpinner();
       return;
     }
     attachmentURL = uploadedUrl;
@@ -378,11 +418,12 @@ async function handleEditICSSubmit(e) {
     bootstrap.Modal.getOrCreateInstance(document.getElementById('editICSModal')).hide();
     document.getElementById('editAttachment').value = '';
     document.getElementById('attachment').value = '';
-    renderICSTable(null, currentPage);// Refresh view
+    renderICSTable(null, currentPage);
   } catch (err) {
     console.error("❌ Failed to update ICS entry:", err);
     alert("Update failed. Check console for details.");
   } finally {
     hideSpinner();
+    form.classList.remove('was-validated');
   }
 }
