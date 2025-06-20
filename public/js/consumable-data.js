@@ -371,6 +371,12 @@ export async function generateLedgerPDFBlob(selectedCID, ledgerEntries, totalQty
 export async function renderLedgerTable(selectedCID) {
   const totalQtyDisplay = document.getElementById("totalQtyDisplay");
 
+  if (!selectedCID || typeof selectedCID !== "string" || selectedCID.trim() === "") {
+    console.error("Invalid selectedCID:", selectedCID);
+    totalQtyDisplay.textContent = "Invalid CID";
+    return { totalQty: 0, ledgerEntries: [] };
+  }
+
   try {
     // Fetch total quantity
     const consumableSnap = await getDoc(doc(db, "consumable", selectedCID));

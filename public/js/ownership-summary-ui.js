@@ -2,7 +2,8 @@ import {
   fetchUsers,
   fetchConsumablesMap,
   fetchLedgerByUser,
-  generateConsumablePDF
+  generateConsumablePDF,
+  getICSDataByUserId
 } from "./ownership-summary-data.js";
 import { renderSidebar } from './components/sidebar.js';
 import { renderSpinner, showSpinner, hideSpinner } from './components/spinner.js';
@@ -124,8 +125,8 @@ function renderTable() {
       // Consumable button cell
       const consumableCell = document.createElement("td");
       const consumableBtn = document.createElement("button");
-      consumableBtn.className = "btn btn-success btn-sm rounded-pill fw-semibold px-3";
-      consumableBtn.innerHTML = `<i class="bi bi-box-arrow-in-down me-1"></i>View Consumable`;
+      consumableBtn.className = "btn btn-outline-success btn-sm px-2 py-1 fw-semibold border-1 rounded custom-btn-success";
+      consumableBtn.innerHTML = `<i class="bi bi-box-arrow-in-down me-1"></i>Consumable`;
       consumableBtn.setAttribute("data-id", user.id);
       setupConsumableButton(consumableBtn, user);
       consumableCell.classList.add("text-center");
@@ -135,9 +136,16 @@ function renderTable() {
       // ICS button cell
       const icsCell = document.createElement("td");
       const icsBtn = document.createElement("button");
-      icsBtn.className = "btn btn-info btn-sm rounded-pill fw-semibold px-3 text-white";
-      icsBtn.innerHTML = `<i class="bi bi-card-list me-1"></i>View ICS`;
+      icsBtn.className = "btn btn-outline-primary btn-sm px-2 py-1 fw-semibold border-1 rounded custom-btn-info text-primary";
+      icsBtn.innerHTML = `<i class="bi bi-card-list me-1"></i>ICS`;
       icsBtn.setAttribute("data-id", user.id);
+      icsBtn.addEventListener("click", () => {
+        showPropertyModal({
+          lastName: user.lastName,
+          firstName: user.firstName,
+          middleInitial: user.middleInitial
+        }, user.id);
+      });
       icsCell.classList.add("text-center");
       icsCell.appendChild(icsBtn);
       row.appendChild(icsCell);
@@ -182,3 +190,47 @@ document.addEventListener("DOMContentLoaded", async () => {
   setupSearchHandler();
   renderTable();
 });
+
+async function showPropertyModal(userFullName, userId) {
+  // Set full name
+  document.getElementById("fullName").textContent =
+    `${userFullName.lastName}, ${userFullName.firstName} ${userFullName.middleInitial}.`;
+
+  const icsTableBody = document.getElementById("icsTableBody");
+  const totalAmountSpan = document.getElementById("totalAmount");
+
+  icsTableBody.innerHTML = "";
+  totalAmountSpan.textContent = "₱0.00";
+
+  const icsItems = await getICSDataByUserId(userId);
+  let totalAmount = 0;
+
+  icsItems.forEach(item => {
+    totalAmount += item.totalCost;
+
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${item.qty}</td>
+      <td>${item.unit}</td>
+      <td>${item.description}</td>
+      <td>${item.serialNo}</td>
+      <td>₱${item.unitCost.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+      <td>₱${item.totalCost.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+      <td>${item.ICSno}</td>
+      <td>${item.dateIssued}</td>
+      <td>${item.remarks}</td>
+      <td>
+        ${item.attachmentURL
+          ? `<a href="${item.attachmentURL}" target="_blank" class="btn btn-sm btn-outline-primary">View PDF</a>`
+          : '<span class="text-muted">N/A</span>'}
+      </td>
+    `;
+    icsTableBody.appendChild(row);
+  });
+
+  totalAmountSpan.textContent = `₱${totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+
+  // Show the modal
+  const modal = new bootstrap.Modal(document.getElementById("propertyModal"));
+  modal.show();
+}

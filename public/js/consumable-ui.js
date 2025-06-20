@@ -16,6 +16,7 @@ let selectedCID = null;
 let currentItems = [];
 let filteredItems = [];
 let currentPage = 1;
+let currentQty = 0;
 const pageSize = 8;
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -44,7 +45,9 @@ function initializeEventListeners() {
 
   document.addEventListener("click", (e) => {
     if (e.target.classList.contains("edit-btn")) {
-      document.getElementById("editCID").value = e.target.dataset.id;
+      const id = e.target.dataset.id;
+      selectedCID = id; // ✅ This is the missing link
+      document.getElementById("editCID").value = id;
       document.getElementById("editSpec").value = e.target.dataset.spec;
       document.getElementById("editUnit").value = e.target.dataset.unit;
     }
@@ -89,12 +92,14 @@ async function handleAddItem() {
 
 async function handleSaveEdit() {
   showSpinner();
-  try{
+  try {
     const cid = document.getElementById("editCID").value;
     const spec = document.getElementById("editSpec").value.trim();
     const unit = document.getElementById("editUnit").value.trim();
 
     if (!spec || !unit) return;
+
+    selectedCID = cid; // ✅ Make sure global selectedCID gets updated
 
     await updateConsumable(cid, { specification: spec, unit });
     bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
@@ -244,6 +249,20 @@ function renderTablePage() {
     tbody.appendChild(row);
   });
 }
+
+document.querySelectorAll(".view-ledger-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    selectedCID = btn.getAttribute("data-id");
+    handleViewLedger(selectedCID);
+  });
+});
+
+document.querySelectorAll(".assign-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    selectedCID = btn.getAttribute("data-id");
+    openAssignModal(); // this function already uses selectedCID
+  });
+});
 
 function renderPagination() {
   const paginationContainer = document.getElementById("paginationContainer");

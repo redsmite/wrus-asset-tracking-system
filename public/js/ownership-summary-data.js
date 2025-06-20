@@ -181,3 +181,28 @@ export async function generateConsumablePDF(user, entriesArray, consumablesMap) 
     modalBody.innerHTML = `<embed src="${blobUrl}" type="application/pdf" width="100%" height="600px" />`;
   }
 }
+
+export async function getICSDataByUserId(userId) {
+  const querySnapshot = await getDocs(
+    query(collection(db, "ICS"), where("assignedTo", "==", userId))
+  );
+
+  const items = [];
+  querySnapshot.forEach((doc) => {
+    const data = doc.data();
+    items.push({
+      qty: data.qty || 0,
+      unit: data.unit || "",
+      description: data.description || "",
+      serialNo: data.serialNo || "",
+      unitCost: parseFloat(data.unitCost) || 0,
+      totalCost: parseFloat(data.totalCost) || 0,
+      ICSno: data.ICSno || "",
+      dateIssued: data.dateIssued || "",
+      remarks: data.remarks || "",
+      attachmentURL: data.attachmentURL || "",
+    });
+  });
+  console.log("ICS Items fetched:", items);
+  return items;
+}
