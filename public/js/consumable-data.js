@@ -32,7 +32,7 @@ export async function generateConsumableID() {
 }
 
 // ✅ Named export
-export async function addConsumable(spec, qty, unit, addedBy) {
+export async function addConsumable(spec, qty, unit, addedBy, remarks) {
   const id = await generateConsumableID();
 
   const newItem = {
@@ -51,7 +51,7 @@ export async function addConsumable(spec, qty, unit, addedBy) {
     cid: id,
     modifiedBy: addedBy,
     amount: Number(qty),
-    remarks: "Opening stock",
+    remarks: remarks || "Opening stock", // Fallback if remarks is empty
     action: "Add Stock",
     dateModified: new Date()
   };
@@ -101,34 +101,6 @@ export async function updateConsumable(cid, updatedData) {
   const docRef = doc(db, "consumable", cid);
   await updateDoc(docRef, updatedData);
 }
-
-// document.getElementById("confirmAddStockBtn").addEventListener("click", async () => {
-//   const amount = parseInt(document.getElementById("stockAmount").value);
-//   if (!amount || amount <= 0 || !selectedCID) return alert("Invalid amount.");
-
-//   const consumableRef = doc(db, "consumables", selectedCID);
-//   const snapshot = await getDoc(consumableRef);
-//   if (!snapshot.exists()) return alert("Item not found.");
-
-//   const newQty = (snapshot.data().qty || 0) + amount;
-//   await updateDoc(consumableRef, { qty: newQty });
-
-//   const year = new Date().getFullYear();
-//   const ledgerRef = collection(db, "ledger");
-//   await addDoc(ledgerRef, {
-//     LID: `${year}-${Math.floor(100 + Math.random() * 900)}`, // Format: 2025-XXX
-//     cid: selectedCID,
-//     modifiedBy: localStorage.getItem("userFullName") || "Unknown",
-//     dateModified: serverTimestamp(),
-//     action: "Add Stock",
-//     assignedTo: "",
-//     amount: amount,
-//   });
-
-//   const modal = bootstrap.Modal.getInstance(document.getElementById("addStockModal"));
-//   modal.hide();
-//   renderConsumableTable();
-// });
 
 export async function addStock(cid, amount, remarks = "") {
   const consumableRef = doc(db, "consumable", cid);
@@ -322,7 +294,7 @@ export async function generateLedgerPDFBlob(selectedCID, ledgerEntries, totalQty
   const addStockEntries = ledgerEntries.filter(e => e.action === "Add Stock");
   if (addStockEntries.length > 0) {
     pdfDoc.setFont("helvetica", "bold");
-    pdfDoc.text("Items Received", 14, currentY);
+    pdfDoc.text("Add to Stock", 14, currentY);
     currentY += 6;
 
     const inventoryTable = addStockEntries.map(entry => ([
