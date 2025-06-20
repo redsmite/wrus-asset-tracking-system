@@ -44,17 +44,20 @@ function initializeEventListeners() {
   document.getElementById("logoutBtnMobile")?.addEventListener("click", handleLogout);
 
   document.addEventListener("click", (e) => {
-    if (e.target.classList.contains("edit-btn")) {
-      const id = e.target.dataset.id;
-      selectedCID = id; // ✅ This is the missing link
+    const editBtn = e.target.closest(".edit-btn");
+    const actionBtn = e.target.closest(".action-btn");
+
+    if (editBtn) {
+      const id = editBtn.dataset.id;
+      selectedCID = id;
       document.getElementById("editCID").value = id;
-      document.getElementById("editSpec").value = e.target.dataset.spec;
-      document.getElementById("editUnit").value = e.target.dataset.unit;
+      document.getElementById("editSpec").value = editBtn.dataset.spec;
+      document.getElementById("editUnit").value = editBtn.dataset.unit;
     }
 
-    if (e.target.classList.contains("action-btn")) {
-      selectedCID = e.target.dataset.id;
-      currentQty = parseInt(e.target.dataset.qty || "0");
+    if (actionBtn) {
+      selectedCID = actionBtn.dataset.id;
+      currentQty = parseInt(actionBtn.dataset.qty || "0");
     }
   });
 }
@@ -249,20 +252,6 @@ function renderTablePage() {
     tbody.appendChild(row);
   });
 }
-
-document.querySelectorAll(".view-ledger-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    selectedCID = btn.getAttribute("data-id");
-    handleViewLedger(selectedCID);
-  });
-});
-
-document.querySelectorAll(".assign-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    selectedCID = btn.getAttribute("data-id");
-    openAssignModal(); // this function already uses selectedCID
-  });
-});
 
 function renderPagination() {
   const paginationContainer = document.getElementById("paginationContainer");
