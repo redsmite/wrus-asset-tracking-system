@@ -28,6 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
           const userRole = userData.role?.toLowerCase();
           const userStatus = userData.status?.toLowerCase();
+          const userType = userData.type || ''; // 👈 extract type
 
           // 🚫 Block login if non-admin and status is inactive
           if (userRole !== "admin" && userStatus === "inactive") {
@@ -42,10 +43,10 @@ document.addEventListener("DOMContentLoaded", () => {
             const fullName = `${userData.firstName} ${userData.middleInitial}. ${userData.lastName}`;
 
             localStorage.setItem("userFullName", fullName);
-            localStorage.setItem("loggedInUser", docSnap.id); // Optional: legacy key
+            localStorage.setItem("loggedInUser", docSnap.id);
             localStorage.setItem("userRole", userRole);
-            localStorage.setItem("wrusUserId", docSnap.id); // ✅ Unique key
-
+            localStorage.setItem("wrusUserId", docSnap.id);
+            localStorage.setItem("userType", userType);
 
             window.location.href = userRole === "admin" ? "admin-dashboard.html" : "dashboard.html";
           } else {

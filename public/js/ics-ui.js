@@ -17,21 +17,36 @@ let filteredData = [];       // Data after filtering
 let usersMapGlobal = {};     // For use in renderFilteredTable
 
 document.addEventListener('DOMContentLoaded', () => {
+
   if (localStorage.getItem('userRole') === 'admin'){
     renderAdminSidebar();
   } else {
     renderSidebar();
   }
-  renderSpinner();
-  setupLogoutButtons();
-  setupAddBtn();
-  setupAddQtyAndCostListeners();
-  setupEditQtyAndCostListeners();
-  setupFileValidation();
-  setupICSFormSubmit();
-  renderICSTable();
-  document.getElementById("searchBar").addEventListener("input", applySearchFilter);
-  setupEditICSFormSubmit();
+
+  const userType = localStorage.getItem("userType");
+  
+  if (userType !== "Permanent") {
+
+  const pageContent = document.getElementById("page-content");
+    if (pageContent) {
+      pageContent.innerHTML = "<p class='text-danger'>Access denied.</p>";
+    }
+
+  } else {
+
+  
+    renderSpinner();
+    setupLogoutButtons();
+    setupAddBtn();
+    setupAddQtyAndCostListeners();
+    setupEditQtyAndCostListeners();
+    setupFileValidation();
+    setupICSFormSubmit();
+    renderICSTable();
+    document.getElementById("searchBar").addEventListener("input", applySearchFilter);
+    setupEditICSFormSubmit();
+  }
 });
 
 // 🔹 Logout button setup
