@@ -212,7 +212,7 @@ export async function getICSDataByUserId(userId) {
 export async function generatePdfICS(userId) {
   try {
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ orientation: "landscape" });
+    const doc = new jsPDF({ orientation: "portrait" }); // Portrait mode
 
     if (typeof doc.autoTable !== "function") {
       throw new Error("autoTable plugin not loaded.");
@@ -237,6 +237,7 @@ export async function generatePdfICS(userId) {
       ? `${user.lastName}, ${user.firstName} ${user.middleInitial}.`
       : "";
     const label = "Property Accountability of ";
+    const fullText = `${label}${fullName}`;
 
     // Fetch ICS data
     const allItems = await getICSDataByUserId(userId);
@@ -265,22 +266,13 @@ export async function generatePdfICS(userId) {
     doc.setFont("helvetica", "bold");
     doc.text(today, 14 + dateLabelWidth + 2, 36);
 
-    // Custom Title (mixed color: black + blue)
+    // Custom Title
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(12);
-
-    const labelWidth = doc.getTextWidth(label);
-    const fullTextWidth = doc.getTextWidth(label + fullName);
+    doc.setFontSize(10); // Smaller font
+    const fullTextWidth = doc.getTextWidth(fullText);
     const centerX = doc.internal.pageSize.getWidth() / 2;
     const startX = centerX - (fullTextWidth / 2);
-
-    doc.setTextColor(0, 0, 0); // black
-    doc.text(label, startX, 45);
-
-    doc.setTextColor(0, 0, 255); // blue
-    doc.text(fullName, startX + labelWidth, 45);
-
-    doc.setTextColor(0, 0, 0); // reset to black
+    doc.text(fullText, startX, 45);
 
     // Table
     const headers = [
@@ -310,9 +302,10 @@ export async function generatePdfICS(userId) {
       startY: 50,
       styles: {
         font: "helvetica",
-        fontSize: 10,
+        fontSize: 7, // smaller font size
         lineColor: [0, 0, 0],
-        lineWidth: 0.1
+        lineWidth: 0.1,
+        cellPadding: { top: 1, bottom: 1, left: 2, right: 2 } // reduced padding
       },
       headStyles: {
         fillColor: [220, 220, 220],
@@ -322,12 +315,20 @@ export async function generatePdfICS(userId) {
       tableLineWidth: 0.1
     });
 
+
+    // Total Amount
+    const totalAmount = icsItems.reduce((sum, item) => sum + item.totalCost, 0);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9); // Smaller font
+    const totalAmountText = `Total Amount PHP: ${totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    doc.text(totalAmountText, 14, doc.lastAutoTable.finalY + 10); // Left-aligned
+
     // Watermark
     const pageCount = doc.getNumberOfPages();
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
-    const watermarkWidth = 100;
-    const watermarkHeight = 100;
+    const watermarkWidth = 60;
+    const watermarkHeight = 60;
     const x = (pageWidth - watermarkWidth) / 2;
     const y = (pageHeight - watermarkHeight) / 2;
 
@@ -362,4 +363,6 @@ export async function generatePdfICS(userId) {
     alert("Failed to generate PDF. Please try again.");
   }
 }
+
+
 

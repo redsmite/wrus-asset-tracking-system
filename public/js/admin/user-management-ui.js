@@ -135,7 +135,6 @@ async function renderUsersTable(page = 1, searchQuery = "") {
         <td>${user.firstName || ''}</td>
         <td>${user.middleInitial || ''}</td>
         <td>${user.type || ''}</td>
-        <td>${user.status || ''}</td>
         <td>
           <button class="btn btn-sm btn-outline-primary edit-btn" data-id="${user.id}">
             <i class="bi bi-pencil-square me-1"></i> Edit
