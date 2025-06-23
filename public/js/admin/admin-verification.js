@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", () => {
+export function adminVerification(){
   const user = localStorage.getItem("loggedInUser");
   const userRole = localStorage.getItem("userRole");
 
@@ -35,4 +35,4 @@ document.addEventListener("DOMContentLoaded", () => {
       window.location.href = "index.html";
     });
   }
-});
+}
