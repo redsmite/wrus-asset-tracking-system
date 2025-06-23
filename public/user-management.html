@@ -6,8 +6,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>User Management</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
   <link rel="stylesheet" href="../admin/user-management.css" />
+  <link rel="stylesheet" href="css/dashboard.css">
 </head>
 
 <body>
@@ -53,139 +55,282 @@
     <!-- Page Content -->
     <div class="container-fluid p-4" id="page-content">
 
-      <div class="input-group mb-3 w-50">
-        <span class="input-group-text" id="search-icon"><i class="bi bi-search"></i></span>
-        <input
-          type="text"
-          id="searchInput"
-          class="form-control"
-          placeholder="Search by username or name..."
-          aria-label="Search"
-          aria-describedby="search-icon"
-        />
+      <div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
+        <div class="input-group me-3 mb-2" style="min-width: 400px;">
+          <span class="input-group-text" id="search-icon"><i class="bi bi-search"></i></span>
+          <input
+            type="text"
+            id="searchInput"
+            class="form-control"
+            placeholder="Search by username or name..."
+            aria-label="Search"
+            aria-describedby="search-icon"
+          />
+        </div>
+
+        <h1 class="h4 mb-2 me-auto ms-3">User Management</h1>
+
+        <button id="showAddUserFormBtn" class="btn btn-outline-success mb-2">
+          <i class="bi bi-person-plus me-1"></i> Add User
+        </button>
       </div>
 
-        <h1 class="mb-4">User Management</h1>
-
-        <button id="showAddUserFormBtn" class="btn btn-success mb-3">Add User</button>
-
-        <!-- Data Table -->
-        <table class="table table-bordered">
-          <thead>
-            <tr>
-              <th>Username</th>
-              <th>Last Name</th>
-              <th>First Name</th>
-              <th>Middle Initial</th>
-              <th>Status</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody id="usersTableBody"></tbody>
-        </table>
-        <div id="paginationControls" class="mt-3 text-center"></div>
+      <!-- Data Table -->
+      <table class="table table-hover table-striped table-bordered align-middle text-center shadow-sm rounded">
+        <thead class="table-primary">
+          <tr>
+            <th>Username</th>
+            <th>Last Name</th>
+            <th>First Name</th>
+            <th>Middle Initial</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="usersTableBody"></tbody>
+      </table>
+      <div id="paginationControls" class="mt-3 text-center"></div>
 
       <!-- Add User Modal -->
       <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <form id="addUserForm">
-              <div class="modal-header">
-                <h5 class="modal-title" id="addUserModalLabel">Add User</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-              </div>
-              <div class="modal-body">
-                <div class="mb-2">
-                  <label for="username" class="form-label">Username</label>
-                  <input type="text" class="form-control" id="username" placeholder="Username" required />
-                </div>
-
-                <div class="mb-2">
-                  <label for="lastName" class="form-label">Last Name</label>
-                  <input type="text" class="form-control" id="lastName" placeholder="Last Name" required />
-                </div>
-
-                <div class="mb-2">
-                  <label for="firstName" class="form-label">First Name</label>
-                  <input type="text" class="form-control" id="firstName" placeholder="First Name" required />
-                </div>
-
-                <div class="mb-2">
-                  <label for="middleInitial" class="form-label">Middle Initial</label>
-                  <input type="text" class="form-control" id="middleInitial" placeholder="Middle Initial" maxlength="1" />
-                </div>
-
-                <div class="mb-3">
-                  <label for="password" class="form-label">Password</label>
-                  <input type="password" class="form-control" id="password" placeholder="Password" required />
-                </div>
-
-                <div class="mb-3">
-                  <label for="confirmPassword" class="form-label">Confirm Password</label>
-                  <input type="password" class="form-control" id="confirmPassword" placeholder="Confirm Password" required />
-                </div>
-
-                <label class="form-label">Status</label>
-                <div class="form-check">
-                  <input class="form-check-input" type="radio" name="status" id="statusActive" value="active" checked />
-                  <label class="form-check-label" for="statusActive">Active</label>
-                </div>
-                <div class="form-check mb-3">
-                  <input class="form-check-input" type="radio" name="status" id="statusInactive" value="inactive" />
-                  <label class="form-check-label" for="statusInactive">Inactive</label>
-                </div>
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+          <div class="modal-content shadow rounded-3">
+            <form id="addUserForm" class="needs-validation" novalidate>
+              <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-semibold" id="addUserModalLabel">Add New User</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
 
-              <div class="modal-footer">
-                <button type="submit" class="btn btn-primary">Add User</button>
+              <div class="modal-body px-4 py-3">
+                <!-- Nav tabs -->
+                <ul class="nav nav-tabs mb-3" id="userTab" role="tablist">
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="account-tab" data-bs-toggle="tab" data-bs-target="#accountTab" type="button" role="tab">Account</button>
+                  </li>
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="info-tab" data-bs-toggle="tab" data-bs-target="#infoTab" type="button" role="tab">Personal Info</button>
+                  </li>
+                </ul>
+
+                <!-- Tab panes -->
+                <div class="tab-content">
+                  <!-- Account Tab -->
+                  <div class="tab-pane fade show active" id="accountTab" role="tabpanel">
+                    <div class="row g-3">
+                      <div class="col-md-12">
+                        <label for="username" class="form-label">Username <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="username" required />
+                        <div class="invalid-feedback">Username is required.</div>
+                      </div>
+                      <div class="col-md-12">
+                        <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
+                        <input type="password" class="form-control" id="password" required />
+                        <div class="invalid-feedback">Password is required.</div>
+                      </div>
+                      <div class="col-md-12">
+                        <label for="confirmPassword" class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                        <input type="password" class="form-control" id="confirmPassword" required />
+                        <div class="invalid-feedback">Please confirm your password.</div>
+                      </div>
+                      <div class="col-md-12 pt-2">
+                        <label class="form-label d-block">Status</label>
+                        <div class="form-check form-check-inline">
+                          <input class="form-check-input" type="radio" name="status" id="statusActive" checked value="active" required />
+                          <label selected class="form-check-label" for="statusActive">Active</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                          <input class="form-check-input" type="radio" name="status" id="statusInactive" value="inactive" />
+                          <label class="form-check-label" for="statusInactive">Inactive</label>
+                        </div>
+                        <div class="invalid-feedback">Status is required.</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Personal Info Tab -->
+                  <div class="tab-pane fade" id="infoTab" role="tabpanel">
+                    <div class="row g-3 pt-2">
+                      <div class="col-md-6">
+                        <label for="lastName" class="form-label">Last Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="lastName" required />
+                        <div class="invalid-feedback">Last name is required.</div>
+                      </div>
+                      <div class="col-md-6">
+                        <label for="firstName" class="form-label">First Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="firstName" required />
+                        <div class="invalid-feedback">First name is required.</div>
+                      </div>
+                      <div class="col-md-6">
+                        <label for="middleInitial" class="form-label">Middle Initial</label>
+                        <input type="text" class="form-control" id="middleInitial" maxlength="1" />
+                      </div>
+                      <div class="col-md-6">
+                        <label for="natureOfAppointment" class="form-label">Nature of Appointment <span class="text-danger">*</span></label>
+                        <select class="form-select" id="natureOfAppointment" required>
+                          <option value="" disabled selected>Select an option</option>
+                          <option value="Permanent">Permanent</option>
+                          <option value="COS">COS</option>
+                          <option value="Temporary">Temporary</option>
+                          <option value="Coterminous">Coterminous</option>
+                          <option value="Fixed Term">Fixed Term</option>
+                          <option value="Substitute">Substitute</option>
+                          <option value="Provisional">Provisional</option>
+                        </select>
+                        <div class="invalid-feedback">Please select nature of appointment.</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="modal-footer px-4 py-3">
+                <button type="submit" class="btn btn-success w-100 fw-semibold">Add User</button>
               </div>
             </form>
           </div>
         </div>
       </div>
 
-      <!-- Edit modal-->
-      <div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <form id="editUserForm">
-              <div class="modal-header">
-                <h5 class="modal-title" id="editUserModalLabel">Edit User</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-              </div>
-              <div class="modal-body">
-                <input type="hidden" id="editUserId" />
-                <input type="text" class="form-control mb-2" id="editUsername" placeholder="Username" required />
-                <input type="text" class="form-control mb-2" id="editLastName" placeholder="Last Name" required />
-                <input type="text" class="form-control mb-2" id="editFirstName" placeholder="First Name" required />
-                <input type="text" class="form-control mb-2" id="editMiddleInitial" placeholder="Middle Initial" maxlength="1" />
+<!-- Edit User Modal with Tabs -->
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content shadow-lg border-0">
+      <form id="editUserForm">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="editUserModalLabel">
+            <i class="bi bi-pencil-square me-2"></i>Edit User
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
 
-                <label class="form-label">Status:</label>
+        <div class="modal-body">
+          <input type="hidden" id="editUserId" />
+
+          <!-- Nav tabs -->
+          <ul class="nav nav-tabs mb-3" id="editUserTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button
+                class="nav-link active"
+                id="edit-account-tab"
+                data-bs-toggle="tab"
+                data-bs-target="#editAccountTab"
+                type="button"
+                role="tab"
+                aria-controls="editAccountTab"
+                aria-selected="true"
+              >
+                Account Info
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button
+                class="nav-link"
+                id="edit-personal-tab"
+                data-bs-toggle="tab"
+                data-bs-target="#editPersonalTab"
+                type="button"
+                role="tab"
+                aria-controls="editPersonalTab"
+                aria-selected="false"
+              >
+                Personal Info
+              </button>
+            </li>
+          </ul>
+
+          <!-- Tab panes -->
+          <div class="tab-content">
+            <!-- Account Info Tab -->
+            <div
+              class="tab-pane fade show active"
+              id="editAccountTab"
+              role="tabpanel"
+              aria-labelledby="edit-account-tab"
+            >
+              <div class="mb-3">
+                <label for="editUsername" class="form-label">Username</label>
+                <input type="text" class="form-control" id="editUsername" required />
+              </div>
+
+              <div class="mb-3">
+                <label for="editPassword" class="form-label">New Password</label>
+                <input type="password" class="form-control" id="editPassword" placeholder="Leave blank to keep current" />
+              </div>
+
+              <div class="mb-3">
+                <label for="editConfirmPassword" class="form-label">Confirm Password</label>
+                <input type="password" class="form-control" id="editConfirmPassword" placeholder="Leave blank to keep current" />
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Status</label>
                 <div class="form-check">
                   <input class="form-check-input" type="radio" name="editStatus" id="editStatusActive" value="active" />
                   <label class="form-check-label" for="editStatusActive">Active</label>
                 </div>
-                <div class="form-check mb-2">
+                <div class="form-check">
                   <input class="form-check-input" type="radio" name="editStatus" id="editStatusInactive" value="inactive" />
                   <label class="form-check-label" for="editStatusInactive">Inactive</label>
                 </div>
+              </div>
+            </div>
 
-                <input type="password" class="form-control mb-2" id="editPassword" placeholder="New Password" />
-                <input type="password" class="form-control mb-3" id="editConfirmPassword" placeholder="Confirm New Password" />
+            <!-- Personal Info Tab -->
+            <div
+              class="tab-pane fade"
+              id="editPersonalTab"
+              role="tabpanel"
+              aria-labelledby="edit-personal-tab"
+            >
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="editLastName" class="form-label">Last Name</label>
+                  <input type="text" class="form-control" id="editLastName" required />
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="editFirstName" class="form-label">First Name</label>
+                  <input type="text" class="form-control" id="editFirstName" required />
+                </div>
               </div>
 
-              <div class="modal-footer">
-                <button type="submit" class="btn btn-success">Update User</button>
+              <div class="mb-3">
+                <label for="editMiddleInitial" class="form-label">Middle Initial</label>
+                <input type="text" class="form-control" id="editMiddleInitial" maxlength="1" />
               </div>
-            </form>
+
+              <div class="mb-3">
+                <label for="editNatureOfAppointment" class="form-label">Nature of Appointment</label>
+                <select class="form-select" id="editNatureOfAppointment" required>
+                  <option value="" disabled selected>Select an option</option>
+                  <option value="Permanent">Permanent</option>
+                  <option value="COS">COS</option>
+                  <option value="Temporary">Temporary</option>
+                  <option value="Coterminous">Coterminous</option>
+                  <option value="Fixed Term">Fixed Term</option>
+                  <option value="Substitute">Substitute</option>
+                  <option value="Provisional">Provisional</option>
+                </select>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success w-100">
+            <i class="bi bi-save me-1"></i>Update User
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
   <script type="module" src="js/admin/admin-verification.js"></script>
  <script type="module" src="js/admin/user-management-ui.js"></script>
 

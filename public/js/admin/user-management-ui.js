@@ -1,116 +1,155 @@
 import bcrypt from "https://esm.sh/bcryptjs@2.4.3";
 import { addUser, fetchUsers, updateUser } from './user-management-data.js';
+import { renderSpinner, showSpinner, hideSpinner } from '../components/spinner.js'
 
 let currentPage = 1;
 const usersPerPage = 7;
 let allUsers = [];
 
 document.addEventListener('DOMContentLoaded', () => {
+  renderSpinner();
   renderUsersTable();
-  addUserUI();
+  handleAddUserModal();
+  setupAddUserForm();
   handleSearchBar();
 });
 
-function addUserUI (){
-const showAddUserBtn = document.getElementById('showAddUserFormBtn');
+function handleAddUserModal(){
+  document.getElementById('showAddUserFormBtn').addEventListener('click', () => {
+    const modalElement = document.getElementById('addUserModal');
+    const modal = new bootstrap.Modal(modalElement);
+    modal.show();
+  });
+}
+
+function setupAddUserForm() {
+  const addUserForm = document.getElementById("addUserForm");
   const addUserModalEl = document.getElementById('addUserModal');
 
-  if (showAddUserBtn && addUserModalEl) {
-    showAddUserBtn.addEventListener('click', () => {
-      const modal = new bootstrap.Modal(addUserModalEl);
-      modal.show();
-    });
-  }
+  addUserForm.addEventListener("submit", async function (event) {
+    event.preventDefault();
+    event.stopPropagation();
 
-  // Add user form submission
-  const addUserForm = document.getElementById("addUserForm");
+    const password = document.getElementById("password");
+    const confirmPassword = document.getElementById("confirmPassword");
 
-  addUserForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
+    // ✅ Custom password match check
+    if (password.value !== confirmPassword.value) {
+      confirmPassword.setCustomValidity("Passwords do not match");
+    } else {
+      confirmPassword.setCustomValidity("");
+    }
 
-    const password = document.getElementById("password").value.trim();
-    const confirmPassword = document.getElementById("confirmPassword").value.trim();
+    // ✅ Bootstrap validation styling
+    this.classList.add("was-validated");
 
-    if (password !== confirmPassword) {
-      alert("Passwords do not match.");
+    if (!this.checkValidity()) {
       return;
     }
 
-    const username = document.getElementById("username").value.trim();
-    const lastName = document.getElementById("lastName").value.trim();
-    const firstName = document.getElementById("firstName").value.trim();
-    const middleInitial = document.getElementById("middleInitial").value.trim();
-    const status = document.querySelector('input[name="status"]:checked').value;
-
+    showSpinner();
     try {
-      const hashedPassword = await bcrypt.hash(password, 10);
+      const username = document.getElementById("username").value.trim();
+      const lastName = document.getElementById("lastName").value.trim();
+      const firstName = document.getElementById("firstName").value.trim();
+      const middleInitial = document.getElementById("middleInitial").value.trim();
+      const natureOfAppointment = document.getElementById("natureOfAppointment").value.trim();
+      const status = document.querySelector('input[name="status"]:checked')?.value;
+
+      if (!natureOfAppointment) {
+        alert("Please select the nature of appointment.");
+        return;
+      }
+
+      const existingUsers = await fetchUsers();
+      const usernameExists = existingUsers.some(
+        user => user.username?.toLowerCase() === username.toLowerCase()
+      );
+
+      if (usernameExists) {
+        alert("Username already exists.");
+        return;
+      }
+
+      const hashedPassword = await bcrypt.hash(password.value, 10);
 
       await addUser({
         username,
         lastName,
         firstName,
         middleInitial,
+        natureOfAppointment,
         password: hashedPassword,
         status,
         role: 'user'
       });
 
+      alert('User successfully added');
+      await renderUsersTable(); // Ensure it's awaited
       addUserForm.reset();
-      const modal = bootstrap.Modal.getInstance(document.getElementById("addUserModal"));
+      addUserForm.classList.remove("was-validated");
+      const modal = bootstrap.Modal.getInstance(addUserModalEl);
       modal.hide();
-    } catch (error) {
-      console.error("Error creating user:", error);
-      alert("Error creating user.");
+    } catch (err) {
+      console.error("Error creating user:", err.message);
+      alert("Error creating user: " + err.message);
+    } finally {
+      hideSpinner();
     }
   });
 }
+
 async function renderUsersTable(page = 1, searchQuery = "") {
-  const usersTableBody = document.getElementById("usersTableBody");
+  showSpinner();
+  try {
+    const usersTableBody = document.getElementById("usersTableBody");
 
-  if (allUsers.length === 0) {
-    try {
-      allUsers = await fetchUsers();
-    } catch (error) {
-      console.error("Error fetching users:", error);
-      return;
+    // ✅ Always refresh users list
+    allUsers = await fetchUsers();
+
+    let filteredUsers = allUsers.filter(user => user.type && user.type.trim() !== "");
+
+    if (searchQuery) {
+      filteredUsers = filteredUsers.filter(user =>
+        (user.username || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (user.firstName || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (user.lastName || "").toLowerCase().includes(searchQuery.toLowerCase())
+      );
     }
+
+    const start = (page - 1) * usersPerPage;
+    const end = start + usersPerPage;
+    const paginatedUsers = filteredUsers.slice(start, end);
+
+    usersTableBody.innerHTML = "";
+
+    paginatedUsers.forEach(user => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${user.username || ''}</td>
+        <td>${user.lastName || ''}</td>
+        <td>${user.firstName || ''}</td>
+        <td>${user.middleInitial || ''}</td>
+        <td>${user.type || ''}</td>
+        <td>${user.status || ''}</td>
+        <td>
+          <button class="btn btn-sm btn-outline-primary edit-btn" data-id="${user.id}">
+            <i class="bi bi-pencil-square me-1"></i> Edit
+          </button>
+        </td>
+
+      `;
+      usersTableBody.appendChild(row);
+    });
+
+    handleEditButtons();
+    handleEditSubmit();
+    renderPaginationControls(Math.ceil(filteredUsers.length / usersPerPage), page, searchQuery);
+
+  } finally {
+    hideSpinner();
   }
-
-  let filteredUsers = allUsers;
-
-  if (searchQuery) {
-    filteredUsers = allUsers.filter(user =>
-      (user.username || "").toLowerCase().includes(searchQuery) ||
-      (user.firstName || "").toLowerCase().includes(searchQuery) ||
-      (user.lastName || "").toLowerCase().includes(searchQuery)
-    );
-  }
-
-  const start = (page - 1) * usersPerPage;
-  const end = start + usersPerPage;
-  const paginatedUsers = filteredUsers.slice(start, end);
-
-  usersTableBody.innerHTML = "";
-
-  paginatedUsers.forEach(user => {
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${user.username || ''}</td>
-      <td>${user.lastName || ''}</td>
-      <td>${user.firstName || ''}</td>
-      <td>${user.middleInitial || ''}</td>
-      <td>${user.status || ''}</td>
-      <td><button class="btn btn-sm btn-primary edit-btn" data-id="${user.id}">Edit</button></td>
-    `;
-    usersTableBody.appendChild(row);
-  });
-
-  handleEditButtons();
-  handleEditSubmit();
-
-  renderPaginationControls(Math.ceil(filteredUsers.length / usersPerPage), page, searchQuery);
 }
-
 
 function handleEditButtons() {
   document.querySelectorAll(".edit-btn").forEach(button => {
@@ -128,6 +167,9 @@ function handleEditButtons() {
       document.getElementById("editFirstName").value = user.firstName || '';
       document.getElementById("editMiddleInitial").value = user.middleInitial || '';
 
+      // Set nature of appointment
+      document.getElementById("editNatureOfAppointment").value = user.type || '';
+      // Set status
       if (user.status === "active") {
         document.getElementById("editStatusActive").checked = true;
       } else {
@@ -145,19 +187,42 @@ function handleEditButtons() {
   });
 }
 
-function handleEditSubmit(){
-  document.getElementById("editUserForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
+function handleEditSubmit() {
+  const form = document.getElementById("editUserForm");
 
+  // Avoid double-binding
+  form.removeEventListener("submit", editSubmitHandler);
+  form.addEventListener("submit", editSubmitHandler);
+}
+
+async function editSubmitHandler(e) {
+  e.preventDefault();
+  showSpinner();
+
+  try {
     const id = document.getElementById("editUserId").value;
     const username = document.getElementById("editUsername").value.trim();
     const lastName = document.getElementById("editLastName").value.trim();
     const firstName = document.getElementById("editFirstName").value.trim();
     const middleInitial = document.getElementById("editMiddleInitial").value.trim();
-    const status = document.querySelector('input[name="editStatus"]:checked').value;
+    const status = document.querySelector('input[name="editStatus"]:checked')?.value;
+    const type = document.getElementById("editNatureOfAppointment")?.value;
 
     const password = document.getElementById("editPassword").value.trim();
     const confirmPassword = document.getElementById("editConfirmPassword").value.trim();
+
+    // ✅ Check if username already exists (excluding current user)
+    const users = await fetchUsers();
+    const usernameExists = users.some(
+      (user) =>
+        (user.username || '').toLowerCase() === username.toLowerCase() &&
+        user.id !== id
+    );
+
+    if (usernameExists) {
+      alert("Username already exists. Please choose another one.");
+      return;
+    }
 
     let updateData = {
       username,
@@ -165,6 +230,7 @@ function handleEditSubmit(){
       firstName,
       middleInitial,
       status,
+      type
     };
 
     if (password || confirmPassword) {
@@ -178,12 +244,28 @@ function handleEditSubmit(){
 
     await updateUser(id, updateData);
 
-    // Hide modal and refresh table
-    bootstrap.Modal.getInstance(document.getElementById("editUserModal")).hide();
-    await renderUsersTable(); // refresh updated list
-    handleEditButtons(); // rebind buttons
-  });
+    alert("User updated successfully");
 
+    // ✅ Hide modal properly
+    const modalEl = document.getElementById("editUserModal");
+    const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
+    modalInstance.hide();
+
+    // ✅ Force cleanup in case of lingering backdrop/modal-open class
+    setTimeout(() => {
+      document.body.classList.remove("modal-open");
+      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
+    }, 300);
+
+    await renderUsersTable();
+    handleEditButtons();
+
+  } catch (error) {
+    console.error("Error submitting edit form:", error);
+    alert("An error occurred while updating the user.");
+  } finally {
+    hideSpinner();
+  }
 }
 
 function renderPaginationControls(totalPages, current, searchQuery = "") {
