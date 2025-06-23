@@ -3,7 +3,8 @@ import {
   fetchConsumablesMap,
   fetchLedgerByUser,
   generateConsumablePDF,
-  getICSDataByUserId
+  getICSDataByUserId,
+  generatePdfICS
 } from "./ownership-summary-data.js";
 import { renderSidebar } from './components/sidebar.js';
 import { renderSpinner, showSpinner, hideSpinner } from './components/spinner.js';
@@ -42,6 +43,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   setupLogoutButtons();
   setupSearchHandler();
   renderTable();
+  handleGenerateICSPDF();
 });
 
 
@@ -196,6 +198,10 @@ async function showPropertyModal(userFullName, userId) {
   document.getElementById("fullName").textContent =
     `${userFullName.lastName}, ${userFullName.firstName} ${userFullName.middleInitial}.`;
 
+  // ✅ Set userId as data attribute
+  const generateBtn = document.getElementById("generatePdfBtn");
+  generateBtn.dataset.userid = userId;
+
   const icsTableBody = document.getElementById("icsTableBody");
   const totalAmountSpan = document.getElementById("totalAmount");
 
@@ -231,7 +237,15 @@ async function showPropertyModal(userFullName, userId) {
 
   totalAmountSpan.textContent = `₱${totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
 
-  // Show the modal
   const modal = new bootstrap.Modal(document.getElementById("propertyModal"));
   modal.show();
 }
+
+function handleGenerateICSPDF() {
+  document.getElementById("generatePdfBtn").addEventListener("click", () => {
+    const userId = document.getElementById("generatePdfBtn").dataset.userid;
+    console.log("User ID for PDF:", userId);
+    generatePdfICS(userId);
+  });
+}
+

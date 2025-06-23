@@ -10,7 +10,7 @@ import { renderSidebar } from './components/sidebar.js';
 import { renderSpinner, showSpinner, hideSpinner } from './components/spinner.js';
 
 let currentPage = 1;
-let rowsPerPage = 5;
+let rowsPerPage = 10;
 let currentData = [];        // All data fetched from Firestore
 let filteredData = [];       // Data after filtering
 let usersMapGlobal = {};     // For use in renderFilteredTable
