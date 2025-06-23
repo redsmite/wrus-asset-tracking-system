@@ -7,6 +7,7 @@ import {
   updateICSEntry
 } from './ics-data.js';
 import { renderSidebar } from './components/sidebar.js';
+import { renderAdminSidebar } from './admin/admin-sidebar.js';
 import { renderSpinner, showSpinner, hideSpinner } from './components/spinner.js';
 
 let currentPage = 1;
@@ -16,7 +17,11 @@ let filteredData = [];       // Data after filtering
 let usersMapGlobal = {};     // For use in renderFilteredTable
 
 document.addEventListener('DOMContentLoaded', () => {
-  renderSidebar();
+  if (localStorage.getItem('userRole') === 'admin'){
+    renderAdminSidebar();
+  } else {
+    renderSidebar();
+  }
   renderSpinner();
   setupLogoutButtons();
   setupAddBtn();
@@ -63,19 +68,40 @@ function loadUsers(selectElementId = 'assignedTo', selectedUserId = '') {
     const select = document.getElementById(selectElementId);
     select.innerHTML = '<option value="">Select User</option>';
 
+    const currentUserId = localStorage.getItem('wrusUserId');
+
     getUsers().then(users => {
-      users.forEach(user => {
-        if (user.status === 'active' && user.type === 'Permanent') {
-          const option = document.createElement('option');
-          option.value = user.id;
-          option.textContent = `${user.lastName}, ${user.firstName} ${user.middleInitial}.`;
-          if (user.id === selectedUserId) {
-            option.selected = true;
+      // 🔓 Admin case: populate full list
+      if (currentUserId === 'admin') {
+        users.forEach(user => {
+          if (user.status === 'active' && user.type === 'Permanent') {
+            const option = document.createElement('option');
+            option.value = user.id;
+            option.textContent = `${user.lastName}, ${user.firstName} ${user.middleInitial}.`;
+            if (user.id === selectedUserId) {
+              option.selected = true;
+            }
+            select.appendChild(option);
           }
+        });
+
+        select.disabled = false; // Make sure admin dropdown is enabled
+      } else {
+        // 🔒 Regular user: only load their own option
+        const currentUser = users.find(user => user.id === currentUserId);
+
+        if (currentUser && currentUser.status === 'active' && currentUser.type === 'Permanent') {
+          const option = document.createElement('option');
+          option.value = currentUser.id;
+          option.textContent = `${currentUser.lastName}, ${currentUser.firstName} ${currentUser.middleInitial}.`;
+          option.selected = true;
           select.appendChild(option);
         }
-      });
-      resolve(); // ✅ resolve after population
+
+        select.disabled = true; // Lock dropdown for regular users
+      }
+
+      resolve(); // ✅ Done
     });
   });
 }
@@ -212,6 +238,7 @@ function collectICSFormData() {
 async function renderICSTable(dataSet = null, page = 1) {
   showSpinner();
 
+  const userId = localStorage.getItem("wrusUserId");
   const tableBody = document.querySelector("#icsTableBody");
   tableBody.innerHTML = "";
 
@@ -225,8 +252,13 @@ async function renderICSTable(dataSet = null, page = 1) {
       currentData = icsSnapshot;
     }
 
-    const dataToUse = dataSet || currentData;
+    let dataToUse = dataSet || currentData;
     const usersMap = usersMapGlobal;
+
+    // 🚫 Filter based on user role
+    if (userId !== "admin") {
+      dataToUse = dataToUse.filter(entry => entry.data.assignedTo === userId);
+    }
 
     if (dataToUse.length === 0) {
       tableBody.innerHTML = "<tr><td colspan='6'>No ICS entries found.</td></tr>";
@@ -242,7 +274,6 @@ async function renderICSTable(dataSet = null, page = 1) {
       const { ICSno, description, dateIssued, assignedTo, attachmentURL, totalCost } = entry.data;
       const assignedName = usersMap[assignedTo] || "Unknown User";
 
-      // Format total cost
       const formattedCost = typeof totalCost === 'number'
         ? `₱${totalCost.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
         : '₱0.00';
@@ -291,6 +322,7 @@ async function renderICSTable(dataSet = null, page = 1) {
     hideSpinner();
   }
 }
+
 
 function renderPaginationControls(dataSet, currentPage) {
   const pagination = document.getElementById("paginationControls");

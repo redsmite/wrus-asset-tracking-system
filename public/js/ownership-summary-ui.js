@@ -7,6 +7,7 @@ import {
   generatePdfICS
 } from "./ownership-summary-data.js";
 import { renderSidebar } from './components/sidebar.js';
+import { renderAdminSidebar } from './admin/admin-sidebar.js';
 import { renderSpinner, showSpinner, hideSpinner } from './components/spinner.js';
 
 let users = [];
@@ -18,7 +19,15 @@ let tableBody, searchInput, pageContent, paginationNav, modalElement, bsModal;
 
 //INITIALIZE
 document.addEventListener("DOMContentLoaded", async () => {
-  renderSidebar();
+  if(localStorage.getItem('userRole')==='admin'){
+
+    renderAdminSidebar();
+
+  } else {
+    
+    renderSidebar();
+
+  }
   renderSpinner();
 
   users = await fetchUsers();
@@ -135,11 +144,19 @@ function renderPagination(totalPages) {
 
 function renderTable() {
   showSpinner();
+
   try {
     usersTableBody.innerHTML = "";
 
+    const currentUserId = localStorage.getItem('wrusUserId');
+
+    // ✅ Admin sees all, others see only their own record
+    const visibleUsers = currentUserId === 'admin'
+      ? filteredUsers
+      : filteredUsers.filter(user => user.id === currentUserId);
+
     const startIndex = (currentPage - 1) * usersPerPage;
-    const pageUsers = filteredUsers.slice(startIndex, startIndex + usersPerPage);
+    const pageUsers = visibleUsers.slice(startIndex, startIndex + usersPerPage);
 
     pageUsers.forEach((user) => {
       const row = document.createElement("tr");
@@ -179,7 +196,6 @@ function renderTable() {
         icsCell.appendChild(icsBtn);
         row.appendChild(icsCell);
       } else {
-        // Empty cell to preserve column alignment
         const emptyCell = document.createElement("td");
         row.appendChild(emptyCell);
       }
@@ -187,7 +203,7 @@ function renderTable() {
       usersTableBody.appendChild(row);
     });
 
-    renderPagination(Math.ceil(filteredUsers.length / usersPerPage));
+    renderPagination(Math.ceil(visibleUsers.length / usersPerPage));
   } finally {
     hideSpinner();
   }

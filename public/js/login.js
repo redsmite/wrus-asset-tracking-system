@@ -40,9 +40,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
           if (isMatch) {
             const fullName = `${userData.firstName} ${userData.middleInitial}. ${userData.lastName}`;
+
             localStorage.setItem("userFullName", fullName);
-            localStorage.setItem("loggedInUser", docSnap.id);
+            localStorage.setItem("loggedInUser", docSnap.id); // Optional: legacy key
             localStorage.setItem("userRole", userRole);
+            localStorage.setItem("wrusUserId", docSnap.id); // ✅ Unique key
+
 
             window.location.href = userRole === "admin" ? "admin-dashboard.html" : "dashboard.html";
           } else {
