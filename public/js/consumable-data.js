@@ -172,6 +172,9 @@ export async function handleAssignConsumable(selectedCID) {
     return;
   }
 
+  const confirmAssign = confirm("Are you sure you want to assign this item?\nThis action cannot be undone.");
+  if (!confirmAssign) return;
+
   try {
     const consumableRef = doc(db, "consumable", selectedCID);
     const consumableSnap = await getDoc(consumableRef);
@@ -196,7 +199,7 @@ export async function handleAssignConsumable(selectedCID) {
       cid: selectedCID,
       dateModified: serverTimestamp(),
       modifiedBy: localStorage.getItem("userFullName"),
-      remarks: remarks  // ✅ Save remarks
+      remarks: remarks
     });
 
     await updateDoc(consumableRef, {

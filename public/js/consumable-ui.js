@@ -123,12 +123,21 @@ async function handleAddStock() {
   const amount = parseInt(document.getElementById("stockAmount").value);
   const remarks = document.getElementById("stockRemarks").value;
 
-  if (!amount || amount <= 0 || !selectedCID) return alert("Invalid amount.");
+  if (!amount || amount <= 0 || !selectedCID) {
+    hideSpinner();
+    return alert("Invalid amount.");
+  }
+
+  const confirmAdd = confirm("Are you sure you want to add to this stock?\nThis action cannot be undone.");
+  if (!confirmAdd) {
+    hideSpinner();
+    return; // User cancelled
+  }
 
   try {
     await addStock(selectedCID, amount, remarks);
     bootstrap.Modal.getInstance(document.getElementById("addStockModal")).hide();
-    alert("Items received successfully");
+    alert("Items add successfully");
     renderConsumableTable();
   } catch (err) {
     console.error("Error adding stock:", err.message);
