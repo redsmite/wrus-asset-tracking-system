@@ -29,6 +29,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   }
   renderSpinner();
+  hideSearchIfNotAdmin();
 
   users = await fetchUsers();
   filteredUsers = [...users];
@@ -54,6 +55,16 @@ document.addEventListener("DOMContentLoaded", async () => {
   renderTable();
   handleGenerateICSPDF();
 });
+
+function hideSearchIfNotAdmin() {
+  const userRole = localStorage.getItem("userRole");
+  if (userRole !== "admin") {
+    const searchInput = document.getElementById("searchInput");
+    if (searchInput) {
+      searchInput.style.display = "none";
+    }
+  }
+}
 
 
 function setupLogoutButtons() {
@@ -150,10 +161,13 @@ function renderTable() {
 
     const currentUserId = localStorage.getItem('wrusUserId');
 
-    // ✅ Admin sees all, others see only their own record
+    // ✅ Admin sees all users
+    // ✅ Non-admin sees their own record + users with missing `type`
     const visibleUsers = currentUserId === 'admin'
       ? filteredUsers
-      : filteredUsers.filter(user => user.id === currentUserId);
+      : filteredUsers.filter(user =>
+          user.id === currentUserId || (!user.type || user.type.trim() === '')
+        );
 
     const startIndex = (currentPage - 1) * usersPerPage;
     const pageUsers = visibleUsers.slice(startIndex, startIndex + usersPerPage);
@@ -178,7 +192,7 @@ function renderTable() {
       consumableCell.appendChild(consumableBtn);
       row.appendChild(consumableCell);
 
-      // ICS button cell — only if user.type === 'Permanent'
+      // ICS button cell — only if type is exactly 'Permanent'
       if (user.type === 'Permanent') {
         const icsCell = document.createElement("td");
         const icsBtn = document.createElement("button");
