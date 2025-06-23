@@ -15,9 +15,35 @@ const usersPerPage = 8;
 
 let tableBody, searchInput, pageContent, paginationNav, modalElement, bsModal;
 
-// ────────────────────────────
-// Event Listeners and Helpers
-// ────────────────────────────
+//INITIALIZE
+document.addEventListener("DOMContentLoaded", async () => {
+  renderSidebar();
+  renderSpinner();
+
+  users = await fetchUsers();
+  filteredUsers = [...users];
+
+  tableBody = document.getElementById("usersTableBody");
+  searchInput = document.getElementById("searchInput");
+  pageContent = document.getElementById("page-content");
+  modalElement = document.getElementById("consumableModal");
+
+  if (!modalElement) {
+    console.error("Modal element #consumableModal not found in DOM!");
+    return;
+  }
+
+  bsModal = new bootstrap.Modal(modalElement);
+
+  paginationNav = document.createElement("nav");
+  paginationNav.className = "d-flex justify-content-center mt-3";
+  pageContent.appendChild(paginationNav);
+
+  setupLogoutButtons();
+  setupSearchHandler();
+  renderTable();
+});
+
 
 function setupLogoutButtons() {
   const handleLogout = () => {
@@ -133,22 +159,28 @@ function renderTable() {
       consumableCell.appendChild(consumableBtn);
       row.appendChild(consumableCell);
 
-      // ICS button cell
-      const icsCell = document.createElement("td");
-      const icsBtn = document.createElement("button");
-      icsBtn.className = "btn btn-outline-primary btn-sm px-2 py-1 fw-semibold border-1 rounded custom-btn-info text-primary";
-      icsBtn.innerHTML = `<i class="bi bi-card-list me-1"></i>ICS`;
-      icsBtn.setAttribute("data-id", user.id);
-      icsBtn.addEventListener("click", () => {
-        showPropertyModal({
-          lastName: user.lastName,
-          firstName: user.firstName,
-          middleInitial: user.middleInitial
-        }, user.id);
-      });
-      icsCell.classList.add("text-center");
-      icsCell.appendChild(icsBtn);
-      row.appendChild(icsCell);
+      // ICS button cell — only if user.type === 'Permanent'
+      if (user.type === 'Permanent') {
+        const icsCell = document.createElement("td");
+        const icsBtn = document.createElement("button");
+        icsBtn.className = "btn btn-outline-primary btn-sm px-2 py-1 fw-semibold border-1 rounded custom-btn-info text-primary";
+        icsBtn.innerHTML = `<i class="bi bi-card-list me-1"></i>ICS`;
+        icsBtn.setAttribute("data-id", user.id);
+        icsBtn.addEventListener("click", () => {
+          showPropertyModal({
+            lastName: user.lastName,
+            firstName: user.firstName,
+            middleInitial: user.middleInitial
+          }, user.id);
+        });
+        icsCell.classList.add("text-center");
+        icsCell.appendChild(icsBtn);
+        row.appendChild(icsCell);
+      } else {
+        // Empty cell to preserve column alignment
+        const emptyCell = document.createElement("td");
+        row.appendChild(emptyCell);
+      }
 
       usersTableBody.appendChild(row);
     });
@@ -158,38 +190,6 @@ function renderTable() {
     hideSpinner();
   }
 }
-
-// ────────────────────────────
-// DOMContentLoaded
-// ────────────────────────────
-
-document.addEventListener("DOMContentLoaded", async () => {
-  renderSidebar();
-  renderSpinner();
-
-  users = await fetchUsers();
-  filteredUsers = [...users];
-
-  tableBody = document.getElementById("usersTableBody");
-  searchInput = document.getElementById("searchInput");
-  pageContent = document.getElementById("page-content");
-  modalElement = document.getElementById("consumableModal");
-
-  if (!modalElement) {
-    console.error("Modal element #consumableModal not found in DOM!");
-    return;
-  }
-
-  bsModal = new bootstrap.Modal(modalElement);
-
-  paginationNav = document.createElement("nav");
-  paginationNav.className = "d-flex justify-content-center mt-3";
-  pageContent.appendChild(paginationNav);
-
-  setupLogoutButtons();
-  setupSearchHandler();
-  renderTable();
-});
 
 async function showPropertyModal(userFullName, userId) {
   // Set full name
@@ -202,7 +202,8 @@ async function showPropertyModal(userFullName, userId) {
   icsTableBody.innerHTML = "";
   totalAmountSpan.textContent = "₱0.00";
 
-  const icsItems = await getICSDataByUserId(userId);
+  const allICSItems = await getICSDataByUserId(userId);
+  const icsItems = allICSItems.filter(item => item.status !== 'RTS');
   let totalAmount = 0;
 
   icsItems.forEach(item => {

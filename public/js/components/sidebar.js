@@ -21,7 +21,7 @@ export function renderSidebar(containerId = 'sidebarContainer') {
           <li class="nav-item mb-2"><a href="ics.html" class="nav-link text-white">ICS</a></li>
           <li class="nav-item mb-2"><a href="ownership-summary.html" class="nav-link text-white">Inventory Summary</a></li>
         </ul>
-        <button id="logoutBtn" class="btn btn-light mt-auto">Logout</button>
+        <button id="logoutBtn" class="btn btn-light mt-auto"><i class="bi bi-box-arrow-right me-1"></i>Logout</button>
       </div>
 
       <!-- Offcanvas Sidebar -->
@@ -37,7 +37,7 @@ export function renderSidebar(containerId = 'sidebarContainer') {
             <li class="nav-item mb-2"><a href="ics.html" class="nav-link text-white">ICS</a></li>
             <li class="nav-item mb-2"><a href="ownership-summary.html" class="nav-link text-white">Inventory Summary</a></li>
           </ul>
-          <button id="logoutBtnMobile" class="btn btn-light mt-auto">Logout</button>
+          <button id="logoutBtnMobile" class="btn btn-light mt-auto"><i class="bi bi-box-arrow-right me-1"></i>Logout</button>
         </div>
       </div>
     </div>

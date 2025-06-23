@@ -20,7 +20,8 @@ export async function fetchUsers() {
       id: doc.id,
       lastName: data.lastName || '',
       firstName: data.firstName || '',
-      middleInitial: data.middleInitial || ''
+      middleInitial: data.middleInitial || '',
+      type: data.type || ''
     });
   });
 
@@ -201,8 +202,10 @@ export async function getICSDataByUserId(userId) {
       dateIssued: data.dateIssued || "",
       remarks: data.remarks || "",
       attachmentURL: data.attachmentURL || "",
+      status: data.status || ""  // ✅ Include status field
     });
   });
+
   console.log("ICS Items fetched:", items);
   return items;
 }

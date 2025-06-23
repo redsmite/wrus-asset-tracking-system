@@ -65,7 +65,7 @@ function loadUsers(selectElementId = 'assignedTo', selectedUserId = '') {
 
     getUsers().then(users => {
       users.forEach(user => {
-        if (user.status === 'active') {
+        if (user.status === 'active' && user.type === 'Permanent') {
           const option = document.createElement('option');
           option.value = user.id;
           option.textContent = `${user.lastName}, ${user.firstName} ${user.middleInitial}.`;
@@ -75,7 +75,7 @@ function loadUsers(selectElementId = 'assignedTo', selectedUserId = '') {
           select.appendChild(option);
         }
       });
-      resolve(); // ✅ important: resolve only after it's populated
+      resolve(); // ✅ resolve after population
     });
   });
 }

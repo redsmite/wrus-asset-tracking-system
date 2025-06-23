@@ -28,8 +28,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const welcomeText = document.getElementById("welcomeText");
   const userFullName = localStorage.getItem("userFullName");
 
-  console.log("Loaded full name:", userFullName);
-
   if (welcomeText && userFullName) {
     welcomeText.textContent = `Welcome ${userFullName}`;
   }
