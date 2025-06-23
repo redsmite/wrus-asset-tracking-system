@@ -18,15 +18,17 @@ let usersMapGlobal = {};     // For use in renderFilteredTable
 
 document.addEventListener('DOMContentLoaded', () => {
 
-  if (localStorage.getItem('userRole') === 'admin'){
+  const userRole = localStorage.getItem('userRole');
+  const userType = localStorage.getItem("userType");
+
+  if (userRole === 'admin'){
     renderAdminSidebar();
   } else {
     renderSidebar();
   }
 
-  const userType = localStorage.getItem("userType");
   
-  if (userType !== "Permanent") {
+  if (userType !== "Permanent" && userRole !== 'admin') {
 
   const pageContent = document.getElementById("page-content");
     if (pageContent) {
