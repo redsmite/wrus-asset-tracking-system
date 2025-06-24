@@ -129,24 +129,26 @@ export async function populateUserSelect() {
 
   userSelect.innerHTML = ''; // Clear existing options
 
-  // Optional: add a disabled "Select user" placeholder
+  // Add a disabled "Select user" placeholder
   const defaultOption = document.createElement("option");
   defaultOption.disabled = true;
   defaultOption.selected = true;
   defaultOption.textContent = 'Select user';
   userSelect.appendChild(defaultOption);
 
-  // Fetch and append users with status 'active' from Firestore
-  const usersSnapshot = await getDocs(collection(db, "users"));
+  // Query Firestore ordered by timestamp ascending
+  const q = query(collection(db, "users"), orderBy("timestamp", "asc"));
+  const usersSnapshot = await getDocs(q);
+
   usersSnapshot.forEach(doc => {
     const user = doc.data();
-    
+
     // Only include users with status 'active'
     if (user.status === 'active') {
-      const fullName = `${user.lastName}, ${user.firstName} ${user.middleInitial}.`;
+      const fullName = `${user.lastName}, ${user.firstName} ${user.middleInitial || ''}.`;
       const option = document.createElement("option");
       option.value = doc.id;
-      option.textContent = fullName;
+      option.textContent = fullName.trim();
       userSelect.appendChild(option);
     }
   });

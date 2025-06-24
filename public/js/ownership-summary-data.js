@@ -4,10 +4,12 @@ import {
   getDocs,
   query,
   where,
+  orderBy
 } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
 
 export async function fetchUsers() {
-  const querySnapshot = await getDocs(collection(db, "users"));
+  const q = query(collection(db, "users"), orderBy("timestamp", "asc"));
+  const querySnapshot = await getDocs(q);
   const users = [];
 
   querySnapshot.forEach((doc) => {
@@ -18,10 +20,12 @@ export async function fetchUsers() {
 
     users.push({
       id: doc.id,
+      username: data.username || '',
       lastName: data.lastName || '',
       firstName: data.firstName || '',
       middleInitial: data.middleInitial || '',
-      type: data.type || ''
+      type: data.type || '',
+      status: data.status || ''
     });
   });
 
@@ -184,9 +188,13 @@ export async function generateConsumablePDF(user, entriesArray, consumablesMap) 
 }
 
 export async function getICSDataByUserId(userId) {
-  const querySnapshot = await getDocs(
-    query(collection(db, "ICS"), where("assignedTo", "==", userId))
+  const q = query(
+    collection(db, "ICS"),
+    where("assignedTo", "==", userId),
+    orderBy("timestamp", "asc") // ✅ Sort by timestamp ascending
   );
+
+  const querySnapshot = await getDocs(q);
 
   const items = [];
   querySnapshot.forEach((doc) => {
@@ -202,7 +210,8 @@ export async function getICSDataByUserId(userId) {
       dateIssued: data.dateIssued || "",
       remarks: data.remarks || "",
       attachmentURL: data.attachmentURL || "",
-      status: data.status || ""  // ✅ Include status field
+      status: data.status || "",
+      timestamp: data.timestamp || null  // 🔥 Optionally include for debugging
     });
   });
 

@@ -4,14 +4,17 @@ import {
   doc,
   addDoc,
   updateDoc,
-  serverTimestamp
+  serverTimestamp,
+  query,
+  orderBy
 } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
 import { db } from "./firebaseConfig.js";
 
 // Fetch all users
 export async function getUsers() {
   const usersRef = collection(db, "users");
-  const snapshot = await getDocs(usersRef);
+  const q = query(usersRef, orderBy("timestamp", "asc"));
+  const snapshot = await getDocs(q);
   const users = [];
 
   snapshot.forEach(doc => {
@@ -41,7 +44,9 @@ export async function getUsersMap() {
 // Fetch all ICS entries
 export async function getICSListWithDocIds() {
   const icsRef = collection(db, "ICS");
-  const snapshot = await getDocs(icsRef);
+  const q = query(icsRef, orderBy("timestamp", "desc")); // ✅ Order by timestamp descending
+  const snapshot = await getDocs(q);
+
   const result = [];
 
   snapshot.forEach(docSnap => {

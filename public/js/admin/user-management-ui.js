@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderAdminSidebar();
   adminVerification();
   renderSpinner();
-  renderUsersTable();
+  loadUsers(); 
   handleAddUserModal();
   setupAddUserForm();
   handleSearchBar();
@@ -82,14 +82,14 @@ function setupAddUserForm() {
         lastName,
         firstName,
         middleInitial,
-        natureOfAppointment,
+        type: natureOfAppointment,
         password: hashedPassword,
         status,
-        role: 'user'
+        role: 'user',
       });
 
       alert('User successfully added');
-      await renderUsersTable(); // Ensure it's awaited
+      await loadUsers();
       addUserForm.reset();
       addUserForm.classList.remove("was-validated");
       const modal = bootstrap.Modal.getInstance(addUserModalEl);
@@ -103,56 +103,57 @@ function setupAddUserForm() {
   });
 }
 
-async function renderUsersTable(page = 1, searchQuery = "") {
+async function loadUsers() {
   showSpinner();
   try {
-    const usersTableBody = document.getElementById("usersTableBody");
-
-    // ✅ Always refresh users list
     allUsers = await fetchUsers();
-
-    let filteredUsers = allUsers.filter(user => user.type && user.type.trim() !== "");
-
-    if (searchQuery) {
-      filteredUsers = filteredUsers.filter(user =>
-        (user.username || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (user.firstName || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (user.lastName || "").toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    const start = (page - 1) * usersPerPage;
-    const end = start + usersPerPage;
-    const paginatedUsers = filteredUsers.slice(start, end);
-
-    usersTableBody.innerHTML = "";
-
-    paginatedUsers.forEach(user => {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${user.username || ''}</td>
-        <td>${user.lastName || ''}</td>
-        <td>${user.firstName || ''}</td>
-        <td>${user.middleInitial || ''}</td>
-        <td>${user.type || ''}</td>
-        <td>
-          <button class="btn btn-sm btn-outline-primary edit-btn" data-id="${user.id}">
-            <i class="bi bi-pencil-square me-1"></i> Edit
-          </button>
-        </td>
-
-      `;
-      usersTableBody.appendChild(row);
-    });
-
-    handleEditButtons();
-    handleEditSubmit();
-    renderPaginationControls(Math.ceil(filteredUsers.length / usersPerPage), page, searchQuery);
-
+    renderUsersTable();
   } finally {
     hideSpinner();
   }
 }
+
+function renderUsersTable(page = 1, searchQuery = "") {
+  const usersTableBody = document.getElementById("usersTableBody");
+
+  let filteredUsers = allUsers.filter(user => user.type && user.type.trim() !== "");
+
+  if (searchQuery) {
+    filteredUsers = filteredUsers.filter(user =>
+      (user.username || "").toLowerCase().includes(searchQuery) ||
+      (user.firstName || "").toLowerCase().includes(searchQuery) ||
+      (user.lastName || "").toLowerCase().includes(searchQuery)
+    );
+  }
+
+  const start = (page - 1) * usersPerPage;
+  const end = start + usersPerPage;
+  const paginatedUsers = filteredUsers.slice(start, end);
+
+  usersTableBody.innerHTML = "";
+
+  paginatedUsers.forEach(user => {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${user.username || ''}</td>
+      <td>${user.lastName || ''}</td>
+      <td>${user.firstName || ''}</td>
+      <td>${user.middleInitial || ''}</td>
+      <td>${user.type || ''}</td>
+      <td>
+        <button class="btn btn-sm btn-outline-primary edit-btn" data-id="${user.id}">
+          <i class="bi bi-pencil-square me-1"></i> Edit
+        </button>
+      </td>
+    `;
+    usersTableBody.appendChild(row);
+  });
+
+  handleEditButtons();
+  handleEditSubmit();
+  renderPaginationControls(Math.ceil(filteredUsers.length / usersPerPage), page, searchQuery);
+}
+
 
 function handleEditButtons() {
   document.querySelectorAll(".edit-btn").forEach(button => {
@@ -260,7 +261,7 @@ async function editSubmitHandler(e) {
       document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
     }, 300);
 
-    await renderUsersTable();
+    await loadUsers();
     handleEditButtons();
 
   } catch (error) {
@@ -287,8 +288,8 @@ function renderPaginationControls(totalPages, current, searchQuery = "") {
   }
 }
 
-function handleSearchBar(){
-    document.getElementById("searchInput").addEventListener("input", (e) => {
+function handleSearchBar() {
+  document.getElementById("searchInput").addEventListener("input", (e) => {
     const query = e.target.value.trim().toLowerCase();
     currentPage = 1;
     renderUsersTable(currentPage, query);
