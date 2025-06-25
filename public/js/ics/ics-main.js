@@ -6,8 +6,7 @@ import {
   getICSListWithDocIds,
   updateICSEntry
 } from './ics-data.js';
-import { renderSidebar } from '../components/sidebar.js';
-import { renderAdminSidebar } from '../admin/admin-sidebar.js';
+import { Sidebar } from '../components/sidebar.js';
 import { Spinner } from '../components/spinner.js';
 
 let currentPage = 1;
@@ -21,12 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const userRole = localStorage.getItem('userRole');
   const userType = localStorage.getItem("userType");
 
-  if (userRole === 'admin'){
-    renderAdminSidebar();
-  } else {
-    renderSidebar();
-  }
-
+  Sidebar.render();
   
   if (userType !== "Permanent" && userRole !== 'admin') {
 

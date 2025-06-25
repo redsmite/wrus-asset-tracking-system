@@ -1,50 +1,75 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const user = localStorage.getItem("loggedInUser");
+import { Sidebar } from "./components/sidebar.js";
 
+document.addEventListener('DOMContentLoaded', () => {
+  checkAuthentication();
+  setupLogoutButtons();
+  displayWelcomeText();
+  Sidebar.render();
+
+  // 🕒 Initialize Date and Time
+  updateDateTime();
+  setInterval(updateDateTime, 1000);
+
+  // 🌦️ Initialize Weather
+  fetchWeather();
+
+  // 🌐 Initialize Network Speed
+  checkNetworkSpeed();
+  setInterval(checkNetworkSpeed, 30000);
+});
+
+
+// 🔐 Authentication Check
+function checkAuthentication() {
+  const user = localStorage.getItem("loggedInUser");
   if (!user) {
     window.location.href = "index.html";
-    return;
   }
+}
 
- const logoutBtn = document.getElementById("logoutBtn");
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", () => {
-      localStorage.removeItem("loggedInUser");
-      localStorage.removeItem("userFullName");
-      window.location.href = "index.html";
-    });
-  }
+// 🚪 Setup Logout Buttons
+function setupLogoutButtons() {
+  const logout = () => {
+    localStorage.removeItem("loggedInUser");
+    localStorage.removeItem("userFullName");
+    window.location.href = "index.html";
+  };
 
+  const logoutBtn = document.getElementById("logoutBtn");
   const logoutBtnMobile = document.getElementById("logoutBtnMobile");
-  if (logoutBtnMobile) {
-    logoutBtnMobile.addEventListener("click", () => {
-      localStorage.removeItem("loggedInUser");
-      localStorage.removeItem("userFullName");
-      window.location.href = "index.html";
-    });
-  }
 
-  // ✅ Load full name from localStorage and display it
+  if (logoutBtn) logoutBtn.addEventListener("click", logout);
+  if (logoutBtnMobile) logoutBtnMobile.addEventListener("click", logout);
+}
+
+// 🙋‍♂️ Display Welcome Text
+function displayWelcomeText() {
   const welcomeText = document.getElementById("welcomeText");
   const userFullName = localStorage.getItem("userFullName");
 
   if (welcomeText && userFullName) {
     welcomeText.textContent = `Welcome ${userFullName}`;
   }
-});
+}
 
-// 🕒 Live date and time updater
-  function updateDateTime() {
-    const now = new Date();
-    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    document.getElementById('date').textContent = now.toLocaleDateString(undefined, options);
-    document.getElementById('time').textContent = now.toLocaleTimeString();
+// 🕒 Update Date & Time
+function updateDateTime() {
+  const now = new Date();
+  const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+
+  const dateElement = document.getElementById('date');
+  const timeElement = document.getElementById('time');
+
+  if (dateElement) {
+    dateElement.textContent = now.toLocaleDateString(undefined, dateOptions);
   }
 
-  setInterval(updateDateTime, 1000); // update every second
-  updateDateTime(); // initial call
+  if (timeElement) {
+    timeElement.textContent = now.toLocaleTimeString();
+  }
+}
 
-  // 🌤️ Weather from OpenWeatherMap API
+// 🌤️ Fetch Weather Info
 async function fetchWeather() {
   const apiKey = 'a04baf582971a40d96b801d76ef3a92a';
   const city = 'Manila';
@@ -56,32 +81,45 @@ async function fetchWeather() {
 
     const data = await response.json();
 
-    if (response.status !== 200) {
+    if (!response.ok) {
       throw new Error(data.message || 'Failed to fetch weather');
     }
 
     const weather = data.weather[0].description;
     const temp = data.main.temp;
 
-    document.getElementById('weather').textContent = weather.charAt(0).toUpperCase() + weather.slice(1);
-    document.getElementById('temperature').textContent = `${temp} °C`;
+    const weatherElement = document.getElementById('weather');
+    const tempElement = document.getElementById('temperature');
+
+    if (weatherElement) {
+      weatherElement.textContent = weather.charAt(0).toUpperCase() + weather.slice(1);
+    }
+    if (tempElement) {
+      tempElement.textContent = `${temp} °C`;
+    }
 
   } catch (error) {
-    document.getElementById('weather').textContent = 'Unable to fetch weather';
-    document.getElementById('temperature').textContent = '';
-    console.error(error);
+    const weatherElement = document.getElementById('weather');
+    const tempElement = document.getElementById('temperature');
+
+    if (weatherElement) weatherElement.textContent = 'Unable to fetch weather';
+    if (tempElement) tempElement.textContent = '';
+
+    console.error('Weather fetch error:', error);
   }
 }
 
+// ⚡ Check Network Speed
 function checkNetworkSpeed() {
   const image = new Image();
-  const startTime = new Date().getTime();
-  const cacheBuster = '?nn=' + startTime;
-  const testImageUrl = "https://www.google.com/images/phd/px.gif" + cacheBuster; // ~43 bytes
+  const startTime = Date.now();
+  const cacheBuster = `?nn=${startTime}`;
+  const testImageUrl = "https://www.google.com/images/phd/px.gif" + cacheBuster;
 
-  image.onload = function () {
-    const endTime = new Date().getTime();
+  image.onload = () => {
+    const endTime = Date.now();
     const duration = (endTime - startTime) / 1000;
+
     const bitsLoaded = 43 * 8; // 43 bytes × 8 bits
     const speedBps = bitsLoaded / duration;
     const speedKbps = speedBps / 1024;
@@ -91,17 +129,18 @@ function checkNetworkSpeed() {
       ? `${speedMbps.toFixed(2)} Mbps`
       : `${speedKbps.toFixed(2)} Kbps`;
 
-    document.getElementById('speed-value').textContent = displaySpeed;
+    const speedElement = document.getElementById('speed-value');
+    if (speedElement) {
+      speedElement.textContent = displaySpeed;
+    }
   };
 
-  image.onerror = function () {
-    document.getElementById('speed-value').textContent = "Error checking speed";
+  image.onerror = () => {
+    const speedElement = document.getElementById('speed-value');
+    if (speedElement) {
+      speedElement.textContent = "Error checking speed";
+    }
   };
 
   image.src = testImageUrl;
 }
-
-fetchWeather();
-// Check immediately, then every 30 seconds
-checkNetworkSpeed();
-setInterval(checkNetworkSpeed, 30000);

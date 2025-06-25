@@ -6,8 +6,7 @@ import {
   getICSDataByUserId,
   generatePdfICS
 } from "./summary-data.js";
-import { renderSidebar } from '../components/sidebar.js';
-import { renderAdminSidebar } from '../admin/admin-sidebar.js';
+import { Sidebar } from '../components/sidebar.js';
 import { Spinner } from '../components/spinner.js';
 
 let users = [];
@@ -19,15 +18,7 @@ let tableBody, searchInput, pageContent, paginationNav, modalElement, bsModal;
 
 //INITIALIZE
 document.addEventListener("DOMContentLoaded", async () => {
-  if(localStorage.getItem('userRole')==='admin'){
-
-    renderAdminSidebar();
-
-  } else {
-    
-    renderSidebar();
-
-  }
+  Sidebar.render();
   Spinner.render();
   hideSearchIfNotAdmin();
 

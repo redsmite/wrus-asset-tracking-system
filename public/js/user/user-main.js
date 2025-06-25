@@ -2,14 +2,14 @@ import bcrypt from "https://esm.sh/bcryptjs@2.4.3";
 import { addUser, fetchUsers, updateUser } from './user-data.js';
 import { Spinner } from '../components/spinner.js';
 import { adminVerification } from '../admin/admin-verification.js';
-import { renderAdminSidebar } from '../admin/admin-sidebar.js';
+import { Sidebar } from '../components/sidebar.js';
 
 let currentPage = 1;
 const usersPerPage = 7;
 let allUsers = [];
 
 document.addEventListener('DOMContentLoaded', () => {
-  renderAdminSidebar();
+  Sidebar.render();
   adminVerification();
   Spinner.render();
   loadUsers(); 

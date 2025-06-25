@@ -9,8 +9,7 @@ import {
   renderLedgerTable,
   generateLedgerPDFBlob
 } from "./consumable-data.js";
-import { renderSidebar } from '../components/sidebar.js';
-import { renderAdminSidebar } from "../admin/admin-sidebar.js";
+import { Sidebar } from '../components/sidebar.js';
 import { Spinner } from '../components/spinner.js';
 
 let selectedCID = null;
@@ -21,11 +20,7 @@ let currentQty = 0;
 const pageSize = 8;
 
 document.addEventListener("DOMContentLoaded", () => {
-  if (localStorage.getItem('userRole') === 'admin'){
-    renderAdminSidebar();
-  } else {
-    renderSidebar();
-  }
+  Sidebar.render();
   Spinner.render();
   initializeEventListeners();
   renderConsumableTable();
