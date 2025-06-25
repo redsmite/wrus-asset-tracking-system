@@ -361,7 +361,12 @@ export async function generatePdfICS(userId) {
       const blob = doc.output("blob");
       const blobUrl = URL.createObjectURL(blob);
       const modalBody = document.querySelector("#ICS-pdfModal .modal-body");
-      modalBody.innerHTML = `<embed src="${blobUrl}" type="application/pdf" width="100%" height="600px" />`;
+      modalBody.innerHTML = `
+        <div class="w-100" style="height:100vh;">
+          <embed src="${blobUrl}" type="application/pdf" class="w-100 h-100" />
+        </div>
+      `;
+
 
       const modal = new bootstrap.Modal(document.getElementById("ICS-pdfModal"));
       modal.show();

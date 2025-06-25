@@ -16,13 +16,13 @@ export const Sidebar = {
           { href: 'user-management.html', label: 'User Management' },
           { href: 'consumable.html', label: 'Consumable' },
           { href: 'ics.html', label: 'ICS' },
-          { href: 'ownership-summary.html', label: 'Inventory Summary' },
+          { href: 'inventory-summary.html', label: 'Inventory Summary' },
         ]
       : [
           { href: 'dashboard.html', label: 'Dashboard' },
           { href: 'consumable.html', label: 'Consumable' },
           { href: 'ics.html', label: 'ICS' },
-          { href: 'ownership-summary.html', label: 'Inventory Summary' },
+          { href: 'inventory-summary.html', label: 'Inventory Summary' },
         ];
 
     const linkItems = links

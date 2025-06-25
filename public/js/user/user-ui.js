@@ -1,24 +1,22 @@
 import bcrypt from "https://esm.sh/bcryptjs@2.4.3";
 import { addUser, fetchUsers, updateUser } from './user-data.js';
 import { Spinner } from '../components/spinner.js';
-import { adminVerification } from '../admin/admin-verification.js';
-import { Sidebar } from '../components/sidebar.js';
 
-let currentPage = 1;
-const usersPerPage = 7;
-let allUsers = [];
+export let currentPage = 1;
+export const usersPerPage = 7;
+export let allUsers = [];
 
-document.addEventListener('DOMContentLoaded', () => {
-  Sidebar.render();
-  adminVerification();
-  Spinner.render();
-  loadUsers(); 
-  handleAddUserModal();
-  setupAddUserForm();
-  handleSearchBar();
-});
+export async function loadUsers() {
+  Spinner.show();
+  try {
+    allUsers = await fetchUsers();
+    renderUsersTable();
+  } finally {
+    Spinner.hide();
+  }
+}
 
-function handleAddUserModal(){
+export function handleAddUserModal() {
   document.getElementById('showAddUserFormBtn').addEventListener('click', () => {
     const modalElement = document.getElementById('addUserModal');
     const modal = new bootstrap.Modal(modalElement);
@@ -26,7 +24,7 @@ function handleAddUserModal(){
   });
 }
 
-function setupAddUserForm() {
+export function setupAddUserForm() {
   const addUserForm = document.getElementById("addUserForm");
   const addUserModalEl = document.getElementById('addUserModal');
 
@@ -37,19 +35,15 @@ function setupAddUserForm() {
     const password = document.getElementById("password");
     const confirmPassword = document.getElementById("confirmPassword");
 
-    // ✅ Custom password match check
     if (password.value !== confirmPassword.value) {
       confirmPassword.setCustomValidity("Passwords do not match");
     } else {
       confirmPassword.setCustomValidity("");
     }
 
-    // ✅ Bootstrap validation styling
     this.classList.add("was-validated");
 
-    if (!this.checkValidity()) {
-      return;
-    }
+    if (!this.checkValidity()) return;
 
     Spinner.show();
     try {
@@ -103,17 +97,7 @@ function setupAddUserForm() {
   });
 }
 
-async function loadUsers() {
-  Spinner.show();
-  try {
-    allUsers = await fetchUsers();
-    renderUsersTable();
-  } finally {
-    Spinner.hide();
-  }
-}
-
-function renderUsersTable(page = 1, searchQuery = "") {
+export function renderUsersTable(page = 1, searchQuery = "") {
   const usersTableBody = document.getElementById("usersTableBody");
 
   let filteredUsers = allUsers.filter(user => user.type && user.type.trim() !== "");
@@ -154,8 +138,7 @@ function renderUsersTable(page = 1, searchQuery = "") {
   renderPaginationControls(Math.ceil(filteredUsers.length / usersPerPage), page, searchQuery);
 }
 
-
-function handleEditButtons() {
+export function handleEditButtons() {
   document.querySelectorAll(".edit-btn").forEach(button => {
     button.addEventListener("click", async () => {
       const userId = button.getAttribute("data-id");
@@ -164,37 +147,29 @@ function handleEditButtons() {
       const user = users.find(u => u.id === userId);
       if (!user) return;
 
-      // Fill modal fields
       document.getElementById("editUserId").value = user.id;
       document.getElementById("editUsername").value = user.username || '';
       document.getElementById("editLastName").value = user.lastName || '';
       document.getElementById("editFirstName").value = user.firstName || '';
       document.getElementById("editMiddleInitial").value = user.middleInitial || '';
-
-      // Set nature of appointment
       document.getElementById("editNatureOfAppointment").value = user.type || '';
-      // Set status
       if (user.status === "active") {
         document.getElementById("editStatusActive").checked = true;
       } else {
         document.getElementById("editStatusInactive").checked = true;
       }
 
-      // Clear password fields
       document.getElementById("editPassword").value = '';
       document.getElementById("editConfirmPassword").value = '';
 
-      // Show modal
       const modal = new bootstrap.Modal(document.getElementById("editUserModal"));
       modal.show();
     });
   });
 }
 
-function handleEditSubmit() {
+export function handleEditSubmit() {
   const form = document.getElementById("editUserForm");
-
-  // Avoid double-binding
   form.removeEventListener("submit", editSubmitHandler);
   form.addEventListener("submit", editSubmitHandler);
 }
@@ -215,7 +190,6 @@ async function editSubmitHandler(e) {
     const password = document.getElementById("editPassword").value.trim();
     const confirmPassword = document.getElementById("editConfirmPassword").value.trim();
 
-    // ✅ Check if username already exists (excluding current user)
     const users = await fetchUsers();
     const usernameExists = users.some(
       (user) =>
@@ -250,12 +224,10 @@ async function editSubmitHandler(e) {
 
     alert("User updated successfully");
 
-    // ✅ Hide modal properly
     const modalEl = document.getElementById("editUserModal");
     const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
     modalInstance.hide();
 
-    // ✅ Force cleanup in case of lingering backdrop/modal-open class
     setTimeout(() => {
       document.body.classList.remove("modal-open");
       document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
@@ -263,7 +235,6 @@ async function editSubmitHandler(e) {
 
     await loadUsers();
     handleEditButtons();
-
   } catch (error) {
     console.error("Error submitting edit form:", error);
     alert("An error occurred while updating the user.");
@@ -272,7 +243,7 @@ async function editSubmitHandler(e) {
   }
 }
 
-function renderPaginationControls(totalPages, current, searchQuery = "") {
+export function renderPaginationControls(totalPages, current, searchQuery = "") {
   const paginationContainer = document.getElementById("paginationControls");
   paginationContainer.innerHTML = "";
 
@@ -288,7 +259,7 @@ function renderPaginationControls(totalPages, current, searchQuery = "") {
   }
 }
 
-function handleSearchBar() {
+export function handleSearchBar() {
   document.getElementById("searchInput").addEventListener("input", (e) => {
     const query = e.target.value.trim().toLowerCase();
     currentPage = 1;

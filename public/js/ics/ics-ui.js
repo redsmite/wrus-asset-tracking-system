@@ -6,7 +6,6 @@ import {
   getICSListWithDocIds,
   updateICSEntry
 } from './ics-data.js';
-import { Sidebar } from '../components/sidebar.js';
 import { Spinner } from '../components/spinner.js';
 
 let currentPage = 1;
@@ -15,54 +14,8 @@ let currentData = [];        // All data fetched from Firestore
 let filteredData = [];       // Data after filtering
 let usersMapGlobal = {};     // For use in renderFilteredTable
 
-document.addEventListener('DOMContentLoaded', () => {
-
-  const userRole = localStorage.getItem('userRole');
-  const userType = localStorage.getItem("userType");
-
-  Sidebar.render();
-  
-  if (userType !== "Permanent" && userRole !== 'admin') {
-
-  const pageContent = document.getElementById("page-content");
-    if (pageContent) {
-      pageContent.innerHTML = "<p class='text-danger'>Access denied.</p>";
-    }
-
-  } else {
-
-  
-    Spinner.render();
-    setupLogoutButtons();
-    setupAddBtn();
-    setupAddQtyAndCostListeners();
-    setupEditQtyAndCostListeners();
-    setupFileValidation();
-    setupICSFormSubmit();
-    renderICSTable();
-    document.getElementById("searchBar").addEventListener("input", applySearchFilter);
-    setupEditICSFormSubmit();
-  }
-});
-
-// 🔹 Logout button setup
-function setupLogoutButtons() {
-  const logoutBtn = document.getElementById("logoutBtn");
-  const logoutBtnMobile = document.getElementById("logoutBtnMobile");
-
-  [logoutBtn, logoutBtnMobile].forEach(btn => {
-    if (btn) {
-      btn.addEventListener("click", () => {
-        localStorage.removeItem("loggedInUser");
-        localStorage.removeItem("userFullName");
-        window.location.href = "index.html";
-      });
-    }
-  });
-}
-
 // 🔹 Show modal and load users
-function setupAddBtn() {
+export function setupAddBtn() {
   const addBtn = document.getElementById('addBtn');
   if (addBtn) {
     addBtn.addEventListener('click', () => {
@@ -118,7 +71,7 @@ function loadUsers(selectElementId = 'assignedTo', selectedUserId = '') {
 }
 
 // 🔹 Set up qty & cost listeners to auto-update total
-function setupAddQtyAndCostListeners() {
+export function setupAddQtyAndCostListeners() {
   const qtyInput = document.getElementById('qty');
   const unitCostInput = document.getElementById('unitCost');
 
@@ -138,7 +91,7 @@ function updateAddTotalCost() {
 }
 
 
-function setupEditQtyAndCostListeners() {
+export function setupEditQtyAndCostListeners() {
   const qtyInput = document.getElementById('editQty');
   const unitCostInput = document.getElementById('editUnitCost');
 
@@ -158,7 +111,7 @@ function updateEditTotalCost() {
 }
 
 // 🔹 File size validation (max 1MB)
-function setupFileValidation() {
+export function setupFileValidation() {
   const fileInput = document.getElementById('attachment');
   if (fileInput) {
     fileInput.addEventListener('change', function () {
@@ -172,7 +125,7 @@ function setupFileValidation() {
 }
 
 // 🔹 Submit handler for ICS form
-function setupICSFormSubmit() {
+export function setupICSFormSubmit() {
   const addICSForm = document.getElementById('addICSForm');
   if (addICSForm) {
     addICSForm.addEventListener('submit', handleICSFormSubmit);
@@ -246,7 +199,7 @@ function collectICSFormData() {
 }
 
 // 🔹 Render ICS Table
-async function renderICSTable(dataSet = null, page = 1) {
+export async function renderICSTable(dataSet = null, page = 1) {
   Spinner.show();
 
   const userId = localStorage.getItem("wrusUserId");
@@ -352,7 +305,7 @@ function renderPaginationControls(dataSet, currentPage) {
   }
 }
 
-function applySearchFilter() {
+export function applySearchFilter() {
   const query = document.getElementById("searchBar").value.trim().toLowerCase();
 
   filteredData = currentData.filter(entry => {
@@ -395,7 +348,7 @@ async function populateEditModal(icsItem) {
   await loadUsers('editAssignedTo', data.assignedTo);
 }
 
-function setupEditICSFormSubmit() {
+export function setupEditICSFormSubmit() {
   const editICSForm = document.getElementById('editICSForm');
   if (editICSForm) {
     editICSForm.addEventListener('submit', handleEditICSSubmit);

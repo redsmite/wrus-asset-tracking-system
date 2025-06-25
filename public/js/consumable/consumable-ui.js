@@ -9,24 +9,17 @@ import {
   renderLedgerTable,
   generateLedgerPDFBlob
 } from "./consumable-data.js";
-import { Sidebar } from '../components/sidebar.js';
-import { Spinner } from '../components/spinner.js';
+import { Spinner } from "../components/spinner.js";
 
-let selectedCID = null;
-let currentItems = [];
-let filteredItems = [];
-let currentPage = 1;
-let currentQty = 0;
-const pageSize = 8;
+export let selectedCID = null;
+export let currentItems = [];
+export let filteredItems = [];
+export let currentPage = 1;
+export let currentQty = 0;
+export const pageSize = 8;
 
-document.addEventListener("DOMContentLoaded", () => {
-  Sidebar.render();
-  Spinner.render();
-  initializeEventListeners();
-  renderConsumableTable();
-});
-
-function initializeEventListeners() {
+// ---------- Event Listeners ----------
+export function initializeEventListeners() {
   document.getElementById("showAddFormBtn")?.addEventListener("click", () => {
     new bootstrap.Modal(document.getElementById("addItemModal")).show();
   });
@@ -39,9 +32,6 @@ function initializeEventListeners() {
   document.getElementById("confirmAssignBtn")?.addEventListener("click", handleConfirmAssign);
   document.getElementById("viewLedgerBtn")?.addEventListener("click", handleViewLedger);
   document.getElementById("searchInput")?.addEventListener("input", handleSearchInput);
-
-  document.getElementById("logoutBtn")?.addEventListener("click", handleLogout);
-  document.getElementById("logoutBtnMobile")?.addEventListener("click", handleLogout);
 
   document.addEventListener("click", (e) => {
     const editBtn = e.target.closest(".edit-btn");
@@ -62,9 +52,10 @@ function initializeEventListeners() {
   });
 }
 
+// ---------- Item Handling ----------
 const addItemModal = new bootstrap.Modal(document.getElementById("addItemModal"));
 
-async function handleAddItem() {
+export async function handleAddItem() {
   Spinner.show();
 
   try {
@@ -93,7 +84,7 @@ async function handleAddItem() {
   }
 }
 
-async function handleSaveEdit() {
+export async function handleSaveEdit() {
   Spinner.show();
   try {
     const cid = document.getElementById("editCID").value;
@@ -102,7 +93,7 @@ async function handleSaveEdit() {
 
     if (!spec || !unit) return;
 
-    selectedCID = cid; // ✅ Make sure global selectedCID gets updated
+    selectedCID = cid;
 
     await updateConsumable(cid, { specification: spec, unit });
     bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
@@ -112,13 +103,14 @@ async function handleSaveEdit() {
   }
 }
 
-function openAddStockModal() {
+// ---------- Stock Handling ----------
+export function openAddStockModal() {
   bootstrap.Modal.getInstance(document.getElementById("actionModal")).hide();
   document.getElementById("stockAmount").value = "";
   new bootstrap.Modal(document.getElementById("addStockModal")).show();
 }
 
-async function handleAddStock() {
+export async function handleAddStock() {
   Spinner.show();
   const amount = parseInt(document.getElementById("stockAmount").value);
   const remarks = document.getElementById("stockRemarks").value;
@@ -131,13 +123,13 @@ async function handleAddStock() {
   const confirmAdd = confirm("Are you sure you want to add to this stock?\nThis action cannot be undone.");
   if (!confirmAdd) {
     Spinner.hide();
-    return; // User cancelled
+    return;
   }
 
   try {
     await addStock(selectedCID, amount, remarks);
     bootstrap.Modal.getInstance(document.getElementById("addStockModal")).hide();
-    alert("Items add successfully");
+    alert("Items added successfully");
     renderConsumableTable();
   } catch (err) {
     console.error("Error adding stock:", err.message);
@@ -147,15 +139,16 @@ async function handleAddStock() {
   }
 }
 
-async function openAssignModal() {
+// ---------- Assignment ----------
+export async function openAssignModal() {
   if (!selectedCID) return console.warn("No CID selected.");
   await populateUserSelect();
   new bootstrap.Modal(document.getElementById("assignModal")).show();
 }
 
-async function handleConfirmAssign() {
+export async function handleConfirmAssign() {
   Spinner.show();
-  try{
+  try {
     await handleAssignConsumable(selectedCID);
     renderConsumableTable();
   } finally {
@@ -163,7 +156,8 @@ async function handleConfirmAssign() {
   }
 }
 
-async function handleViewLedger() {
+// ---------- Ledger ----------
+export async function handleViewLedger() {
   Spinner.show();
 
   try {
@@ -179,13 +173,8 @@ async function handleViewLedger() {
   }
 }
 
-function handleLogout() {
-  localStorage.removeItem("loggedInUser");
-  localStorage.removeItem("userFullName");
-  window.location.href = "index.html";
-}
-
-function handleSearchInput() {
+// ---------- Search ----------
+export function handleSearchInput() {
   const term = document.getElementById("searchInput").value.trim().toLowerCase();
   filteredItems = currentItems.filter(item =>
     item.specification.toLowerCase().includes(term)
@@ -195,7 +184,8 @@ function handleSearchInput() {
   renderPagination();
 }
 
-async function renderConsumableTable() {
+// ---------- Table Rendering ----------
+export async function renderConsumableTable() {
   Spinner.show();
 
   try {
@@ -212,7 +202,7 @@ async function renderConsumableTable() {
   }
 }
 
-function renderTablePage() {
+export function renderTablePage() {
   const tbody = document.getElementById("consumableBody");
   tbody.innerHTML = "";
 
@@ -232,28 +222,22 @@ function renderTablePage() {
       <td>${item.qty}</td>
       <td>${item.unit}</td>
       <td>
-      <button 
-        class="btn btn-warning btn-sm edit-btn" 
-        data-id="${item.id}" 
-        data-spec="${item.specification}" 
-        data-unit="${item.unit}" 
-        data-bs-toggle="modal" 
-        data-bs-target="#editModal"
-      >
-        <i class="bi bi-pencil-square"></i>
-      </button>
+        <button class="btn btn-warning btn-sm edit-btn" 
+          data-id="${item.id}" 
+          data-spec="${item.specification}" 
+          data-unit="${item.unit}" 
+          data-bs-toggle="modal" 
+          data-bs-target="#editModal">
+          <i class="bi bi-pencil-square"></i>
+        </button>
       </td>
       <td>
-        <button 
-          class="btn btn-secondary btn-sm action-btn" 
+        <button class="btn btn-secondary btn-sm action-btn" 
           data-id="${item.id}" 
           data-qty="${item.qty}" 
           data-bs-toggle="modal" 
           data-bs-target="#actionModal"
-          data-bs-toggle="tooltip" 
-          data-bs-placement="top" 
-          title="Perform Action"
-        >
+          title="Perform Action">
           <i class="bi bi-gear"></i>
         </button>
       </td>
@@ -262,7 +246,7 @@ function renderTablePage() {
   });
 }
 
-function renderPagination() {
+export function renderPagination() {
   const paginationContainer = document.getElementById("paginationContainer");
   if (!paginationContainer) return;
 
