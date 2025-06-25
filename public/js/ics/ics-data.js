@@ -6,7 +6,8 @@ import {
   updateDoc,
   serverTimestamp,
   query,
-  orderBy
+  orderBy,
+  deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
 import { db } from "../firebaseConfig.js";
 
@@ -83,4 +84,14 @@ export async function addICSEntry(icsData) {
 export async function updateICSEntry(docId, updatedData) {
   const docRef = doc(db, "ICS", docId);
   await updateDoc(docRef, updatedData);
+}
+
+export async function deleteICS(docId) {
+  try {
+    await deleteDoc(doc(db, "ICS", docId));
+    console.log(`Document ${docId} deleted successfully.`);
+  } catch (error) {
+    console.error("Error deleting ICS document:", error);
+    throw error;
+  }
 }

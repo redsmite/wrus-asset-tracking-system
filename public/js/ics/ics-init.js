@@ -8,7 +8,8 @@ import {
   setupEditICSFormSubmit,
   setupICSFormSubmit,
   renderICSTable,
-  applySearchFilter
+  applySearchFilter,
+  initDeleteICSButton
 } from './ics-ui.js'
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -39,6 +40,7 @@ function initializePage() {
   setupFileValidation();
   setupICSFormSubmit();
   renderICSTable();
+  initDeleteICSButton();
   document.getElementById("searchBar").addEventListener("input", applySearchFilter);
   setupEditICSFormSubmit();
 }

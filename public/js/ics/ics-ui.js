@@ -4,7 +4,8 @@ import {
   addICSEntry,
   getUsersMap,
   getICSListWithDocIds,
-  updateICSEntry
+  updateICSEntry,
+  deleteICS
 } from './ics-data.js';
 import { Spinner } from '../components/spinner.js';
 
@@ -410,6 +411,7 @@ async function handleEditICSSubmit(e) {
   };
 
   try {
+    alert('ICS entry update successful');
     await updateICSEntry(docId, updatedData);
     bootstrap.Modal.getOrCreateInstance(document.getElementById('editICSModal')).hide();
     document.getElementById('editAttachment').value = '';
@@ -421,5 +423,48 @@ async function handleEditICSSubmit(e) {
   } finally {
     Spinner.hide();
     form.classList.remove('was-validated');
+  }
+}
+
+export function initDeleteICSButton() {
+  const deleteButton = document.getElementById("deleteICSButton");
+
+  Spinner.show();
+
+  try{ 
+    if (!deleteButton) {
+      console.warn("Delete button not found in DOM.");
+      return;
+    }
+
+    deleteButton.addEventListener("click", async () => {
+      const docId = document.getElementById("editDocId")?.value;
+      let attachmentURL = document.getElementById('editCurrentAttachmentUrl').value;
+
+      if (!docId) {
+        console.error("No docId found for deletion.");
+        return;
+      }
+
+      const confirmDelete = confirm(`Are you sure you want to delete this ICS entry?\nThis action is irreversible`);
+      if (!confirmDelete) return;
+
+      try {
+        if (attachmentURL) {
+          const deleted = await deleteFileFromStorage(attachmentURL);
+          if (!deleted) {
+            console.warn("Attachment might not have been deleted.");
+          }
+        }
+        await deleteICS(docId);
+        bootstrap.Modal.getInstance(document.getElementById("editICSModal")).hide();
+        await renderICSTable(); // Refresh the table
+      } catch (error) {
+        console.error("Failed to delete ICS entry:", error);
+        alert("Failed to delete ICS entry.");
+      }
+    });
+  } finally {
+    Spinner.hide();
   }
 }
