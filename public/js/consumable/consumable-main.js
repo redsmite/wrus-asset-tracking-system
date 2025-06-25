@@ -9,9 +9,9 @@ import {
   renderLedgerTable,
   generateLedgerPDFBlob
 } from "./consumable-data.js";
-import { renderSidebar } from './components/sidebar.js';
-import { renderAdminSidebar } from "./admin/admin-sidebar.js";
-import { renderSpinner, showSpinner, hideSpinner } from './components/spinner.js';
+import { renderSidebar } from '../components/sidebar.js';
+import { renderAdminSidebar } from "../admin/admin-sidebar.js";
+import { Spinner } from '../components/spinner.js';
 
 let selectedCID = null;
 let currentItems = [];
@@ -26,7 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
   } else {
     renderSidebar();
   }
-  renderSpinner(); 
+  Spinner.render();
   initializeEventListeners();
   renderConsumableTable();
 });
@@ -70,7 +70,7 @@ function initializeEventListeners() {
 const addItemModal = new bootstrap.Modal(document.getElementById("addItemModal"));
 
 async function handleAddItem() {
-  showSpinner();
+  Spinner.show();
 
   try {
     const spec = document.getElementById("newSpec").value.trim();
@@ -94,12 +94,12 @@ async function handleAddItem() {
     addItemModal.hide();
     renderConsumableTable();
   } finally {
-    hideSpinner();
+    Spinner.hide();
   }
 }
 
 async function handleSaveEdit() {
-  showSpinner();
+  Spinner.show();
   try {
     const cid = document.getElementById("editCID").value;
     const spec = document.getElementById("editSpec").value.trim();
@@ -113,7 +113,7 @@ async function handleSaveEdit() {
     bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
     renderConsumableTable();
   } finally {
-    hideSpinner();
+    Spinner.hide();
   }
 }
 
@@ -124,18 +124,18 @@ function openAddStockModal() {
 }
 
 async function handleAddStock() {
-  showSpinner();
+  Spinner.show();
   const amount = parseInt(document.getElementById("stockAmount").value);
   const remarks = document.getElementById("stockRemarks").value;
 
   if (!amount || amount <= 0 || !selectedCID) {
-    hideSpinner();
+    Spinner.hide();
     return alert("Invalid amount.");
   }
 
   const confirmAdd = confirm("Are you sure you want to add to this stock?\nThis action cannot be undone.");
   if (!confirmAdd) {
-    hideSpinner();
+    Spinner.hide();
     return; // User cancelled
   }
 
@@ -148,7 +148,7 @@ async function handleAddStock() {
     console.error("Error adding stock:", err.message);
     alert("Something went wrong. Please try again.");
   } finally {
-    hideSpinner();
+    Spinner.hide();
   }
 }
 
@@ -159,17 +159,17 @@ async function openAssignModal() {
 }
 
 async function handleConfirmAssign() {
-  showSpinner();
+  Spinner.show();
   try{
     await handleAssignConsumable(selectedCID);
     renderConsumableTable();
   } finally {
-    hideSpinner();
+    Spinner.hide();
   }
 }
 
 async function handleViewLedger() {
-  showSpinner();
+  Spinner.show();
 
   try {
     const { totalQty, ledgerEntries } = await renderLedgerTable(selectedCID);
@@ -180,7 +180,7 @@ async function handleViewLedger() {
     console.error("Error generating ledger:", err);
     alert("Failed to generate ledger.");
   } finally {
-    hideSpinner();
+    Spinner.hide();
   }
 }
 
@@ -201,7 +201,7 @@ function handleSearchInput() {
 }
 
 async function renderConsumableTable() {
-  showSpinner();
+  Spinner.show();
 
   try {
     currentItems = await fetchConsumables();
@@ -213,7 +213,7 @@ async function renderConsumableTable() {
     console.error("Error fetching consumables:", err);
     document.getElementById("consumableBody").innerHTML = `<tr><td colspan="8">Error loading items.</td></tr>`;
   } finally {
-    hideSpinner();
+    Spinner.hide();
   }
 }
 

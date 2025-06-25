@@ -1,8 +1,8 @@
 import bcrypt from "https://esm.sh/bcryptjs@2.4.3";
-import { addUser, fetchUsers, updateUser } from './user-management-data.js';
-import { renderSpinner, showSpinner, hideSpinner } from '../components/spinner.js';
-import { adminVerification } from './admin-verification.js';
-import { renderAdminSidebar } from './admin-sidebar.js';
+import { addUser, fetchUsers, updateUser } from './user-data.js';
+import { Spinner } from '../components/spinner.js';
+import { adminVerification } from '../admin/admin-verification.js';
+import { renderAdminSidebar } from '../admin/admin-sidebar.js';
 
 let currentPage = 1;
 const usersPerPage = 7;
@@ -11,7 +11,7 @@ let allUsers = [];
 document.addEventListener('DOMContentLoaded', () => {
   renderAdminSidebar();
   adminVerification();
-  renderSpinner();
+  Spinner.render();
   loadUsers(); 
   handleAddUserModal();
   setupAddUserForm();
@@ -51,7 +51,7 @@ function setupAddUserForm() {
       return;
     }
 
-    showSpinner();
+    Spinner.show();
     try {
       const username = document.getElementById("username").value.trim();
       const lastName = document.getElementById("lastName").value.trim();
@@ -98,18 +98,18 @@ function setupAddUserForm() {
       console.error("Error creating user:", err.message);
       alert("Error creating user: " + err.message);
     } finally {
-      hideSpinner();
+      Spinner.hide();
     }
   });
 }
 
 async function loadUsers() {
-  showSpinner();
+  Spinner.show();
   try {
     allUsers = await fetchUsers();
     renderUsersTable();
   } finally {
-    hideSpinner();
+    Spinner.hide();
   }
 }
 
@@ -201,7 +201,7 @@ function handleEditSubmit() {
 
 async function editSubmitHandler(e) {
   e.preventDefault();
-  showSpinner();
+  Spinner.show();
 
   try {
     const id = document.getElementById("editUserId").value;
@@ -268,7 +268,7 @@ async function editSubmitHandler(e) {
     console.error("Error submitting edit form:", error);
     alert("An error occurred while updating the user.");
   } finally {
-    hideSpinner();
+    Spinner.hide();
   }
 }
 

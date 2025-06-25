@@ -8,7 +8,7 @@ import {
   query,
   orderBy
 } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
-import { db } from "./firebaseConfig.js";
+import { db } from "../firebaseConfig.js";
 
 // Fetch all users
 export async function getUsers() {

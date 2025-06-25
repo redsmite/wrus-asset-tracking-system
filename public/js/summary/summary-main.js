@@ -5,10 +5,10 @@ import {
   generateConsumablePDF,
   getICSDataByUserId,
   generatePdfICS
-} from "./ownership-summary-data.js";
-import { renderSidebar } from './components/sidebar.js';
-import { renderAdminSidebar } from './admin/admin-sidebar.js';
-import { renderSpinner, showSpinner, hideSpinner } from './components/spinner.js';
+} from "./summary-data.js";
+import { renderSidebar } from '../components/sidebar.js';
+import { renderAdminSidebar } from '../admin/admin-sidebar.js';
+import { Spinner } from '../components/spinner.js';
 
 let users = [];
 let filteredUsers = [];
@@ -28,7 +28,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderSidebar();
 
   }
-  renderSpinner();
+  Spinner.render();
   hideSearchIfNotAdmin();
 
   users = await fetchUsers();
@@ -92,7 +92,7 @@ function setupSearchHandler() {
 
 function setupConsumableButton(button, user) {
   button.addEventListener("click", async () => {
-    showSpinner();
+    Spinner.show();
     try {
       const [consumablesMap, ledgerEntries] = await Promise.all([
         fetchConsumablesMap(),
@@ -108,7 +108,7 @@ function setupConsumableButton(button, user) {
       await generateConsumablePDF(user, ledgerEntries, consumablesMap);
       bsModal.show();
     } finally {
-      hideSpinner();
+      Spinner.hide();
     }
   });
 }
@@ -154,8 +154,7 @@ function renderPagination(totalPages) {
 }
 
 function renderTable() {
-  showSpinner();
-
+  Spinner.show();
   try {
     usersTableBody.innerHTML = "";
 
@@ -219,7 +218,7 @@ function renderTable() {
 
     renderPagination(Math.ceil(visibleUsers.length / usersPerPage));
   } finally {
-    hideSpinner();
+    Spinner.hide();
   }
 }
 

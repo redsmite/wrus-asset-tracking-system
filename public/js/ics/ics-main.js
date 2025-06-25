@@ -1,4 +1,4 @@
-import { uploadFileAndGetURL, deleteFileFromStorage } from './upload/upload.js';
+import { uploadFileAndGetURL, deleteFileFromStorage } from '../upload/upload.js';
 import {
   getUsers,
   addICSEntry,
@@ -6,9 +6,9 @@ import {
   getICSListWithDocIds,
   updateICSEntry
 } from './ics-data.js';
-import { renderSidebar } from './components/sidebar.js';
-import { renderAdminSidebar } from './admin/admin-sidebar.js';
-import { renderSpinner, showSpinner, hideSpinner } from './components/spinner.js';
+import { renderSidebar } from '../components/sidebar.js';
+import { renderAdminSidebar } from '../admin/admin-sidebar.js';
+import { Spinner } from '../components/spinner.js';
 
 let currentPage = 1;
 let rowsPerPage = 10;
@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
   } else {
 
   
-    renderSpinner();
+    Spinner.render();
     setupLogoutButtons();
     setupAddBtn();
     setupAddQtyAndCostListeners();
@@ -195,11 +195,11 @@ async function handleICSFormSubmit(e) {
 
   // STOP if form is invalid
   if (!form.checkValidity()) {
-    hideSpinner(); // in case spinner was triggered elsewhere
+    Spinner.hide();
     return;
   }
 
-  showSpinner();
+  Spinner.show();
 
   const fileInput = document.getElementById('attachment');
   let fileURL = null;
@@ -229,7 +229,7 @@ async function handleICSFormSubmit(e) {
     console.error(err);
     alert("Failed to save. Please try again.");
   } finally {
-    hideSpinner();
+    Spinner.hide();
   }
 }
 
@@ -253,7 +253,7 @@ function collectICSFormData() {
 
 // 🔹 Render ICS Table
 async function renderICSTable(dataSet = null, page = 1) {
-  showSpinner();
+  Spinner.show();
 
   const userId = localStorage.getItem("wrusUserId");
   const tableBody = document.querySelector("#icsTableBody");
@@ -336,7 +336,7 @@ async function renderICSTable(dataSet = null, page = 1) {
     console.error("Error rendering ICS table:", err);
     tableBody.innerHTML = "<tr><td colspan='6'>Error loading data.</td></tr>";
   } finally {
-    hideSpinner();
+    Spinner.hide();
   }
 }
 
@@ -417,12 +417,12 @@ async function handleEditICSSubmit(e) {
     return;
   }
 
-  showSpinner();
+  Spinner.show();
 
   const docId = document.getElementById('editDocId').value;
   if (!docId) {
     alert("Document ID missing. Please reload and try again.");
-    hideSpinner();
+    Spinner.hide();
     return;
   }
 
@@ -441,7 +441,7 @@ async function handleEditICSSubmit(e) {
     const uploadedUrl = await uploadFileAndGetURL(newFile);
     if (!uploadedUrl) {
       alert('New file upload failed.');
-      hideSpinner();
+      Spinner.hide();
       return;
     }
     attachmentURL = uploadedUrl;
@@ -472,7 +472,7 @@ async function handleEditICSSubmit(e) {
     console.error("❌ Failed to update ICS entry:", err);
     alert("Update failed. Check console for details.");
   } finally {
-    hideSpinner();
+    Spinner.hide();
     form.classList.remove('was-validated');
   }
 }
