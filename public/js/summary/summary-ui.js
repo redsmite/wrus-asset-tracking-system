@@ -1,12 +1,9 @@
-import {
-  fetchUsers,
-  fetchConsumablesMap,
-  fetchLedgerByUser,
-  generateConsumablePDF,
-  getICSDataByUserId,
-  generatePdfICS
-} from "./summary-data.js";
-
+import { generatePdfICS } from "../pdf/ics-pdf.js";
+import { generateConsumablePDF } from "../pdf/user-consumable-pdf.js"
+import { Consumable } from "../consumable/consumable-data.js";
+import { Ledger } from "../ledger/ledger-data.js";
+import { ICS } from "../ics/ics-data.js";
+import { Users } from "../user/user-data.js";
 import { Sidebar } from '../components/sidebar.js';
 import { Spinner } from '../components/spinner.js';
 
@@ -49,7 +46,7 @@ export function initUI() {
 export async function loadData() {
   Spinner.show();
   try {
-    users = await fetchUsers();
+    users = await Users.fetchUsersSummary();
     filteredUsers = [...users];
   } finally {
     Spinner.hide();
@@ -129,8 +126,8 @@ function createConsumableCell(user) {
     Spinner.show();
     try {
       const [consumablesMap, ledgerEntries] = await Promise.all([
-        fetchConsumablesMap(),
-        fetchLedgerByUser(user.id)
+        Consumable.fetchConsumablesMap(),
+        Ledger.fetchLedgerByUser(user.id)
       ]);
 
       ledgerEntries.sort((a, b) => (b.dateModified?.toMillis() || 0) - (a.dateModified?.toMillis() || 0));
@@ -228,7 +225,7 @@ async function showPropertyModal(userFullName, userId) {
   icsTableBody.innerHTML = "";
   totalAmountSpan.textContent = "₱0.00";
 
-  const allICSItems = await getICSDataByUserId(userId);
+  const allICSItems = await ICS.getICSDataByUserId(userId);
   const icsItems = allICSItems.filter(item => item.status !== 'RTS');
 
   let totalAmount = 0;

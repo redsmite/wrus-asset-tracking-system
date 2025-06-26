@@ -53,5 +53,40 @@ export const Users = {
       throw error;
     }
   },
+  async getUsersMap() {
+    const snapshot = await getDocs(this.collectionRef);
+    const usersMap = {};
+
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      usersMap[doc.id] = `${data.lastName}, ${data.firstName} ${data.middleInitial || ''}.`.trim();
+    });
+
+    return usersMap;
+  },
+  async fetchUsersSummary() {
+    const q = query(collection(db, "users"), orderBy("timestamp", "asc"));
+    const querySnapshot = await getDocs(q);
+    const users = [];
+
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+
+      // Skip if role is admin
+      if (doc.id.toLowerCase() === "admin") return;
+
+      users.push({
+        id: doc.id,
+        username: data.username || '',
+        lastName: data.lastName || '',
+        firstName: data.firstName || '',
+        middleInitial: data.middleInitial || '',
+        type: data.type || '',
+        status: data.status || ''
+      });
+    });
+
+    return users;
+  }
 };
 

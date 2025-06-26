@@ -1,9 +1,7 @@
-import {
-  Consumable,
-  populateUserSelect,
-  fetchLedgerDataByCID
-} from "./consumable-data.js";
-import { generateLedgerPDFBlob } from './ledger-pdf.js';
+import { Consumable } from "./consumable-data.js";
+import { Ledger } from "../ledger/ledger-data.js"
+import { generateLedgerPDFBlob } from '../pdf/item-consumable-pdf.js';
+import { Users } from "../user/user-data.js"; 
 import { Spinner } from "../components/spinner.js";
 
 export let selectedCID = null;
@@ -141,6 +139,33 @@ export async function openAssignModal() {
   new bootstrap.Modal(document.getElementById("assignModal")).show();
 }
 
+async function populateUserSelect() {
+  const userSelect = document.getElementById("userSelect");
+  if (!userSelect) return;
+
+  userSelect.innerHTML = '';
+
+  // Default placeholder option
+  const defaultOption = document.createElement("option");
+  defaultOption.disabled = true;
+  defaultOption.selected = true;
+  defaultOption.textContent = 'Select user';
+  userSelect.appendChild(defaultOption);
+
+  // Fetch users
+  const users = await Users.fetchAllAsc();
+
+  users.forEach(user => {
+    if (user.status === 'active') {
+      const fullName = `${user.lastName}, ${user.firstName} ${user.middleInitial || ''}.`;
+      const option = document.createElement("option");
+      option.value = user.id;
+      option.textContent = fullName.trim();
+      userSelect.appendChild(option);
+    }
+  });
+}
+
 export async function handleConfirmAssign() {
   Spinner.show();
   try {
@@ -183,7 +208,7 @@ export async function handleViewLedger() {
   Spinner.show();
   const totalQtyDisplay = document.getElementById("totalQtyDisplay");
   try {
-    const { totalQty, ledgerEntries } = await fetchLedgerDataByCID(selectedCID);
+    const { totalQty, ledgerEntries } = await Ledger.fetchLedgerDataByCID(selectedCID);
     totalQtyDisplay.textContent = totalQty !== null ? totalQty : "Not found";
     const blob = await generateLedgerPDFBlob(selectedCID, ledgerEntries, totalQty);
     document.getElementById("pdfPreviewFrame").src = URL.createObjectURL(blob);

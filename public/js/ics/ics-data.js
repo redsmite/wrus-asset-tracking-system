@@ -7,91 +7,90 @@ import {
   serverTimestamp,
   query,
   orderBy,
-  deleteDoc
+  deleteDoc,
+  where
 } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
 import { db } from "../firebaseConfig.js";
 
-// Fetch all users
-export async function getUsers() {
-  const usersRef = collection(db, "users");
-  const q = query(usersRef, orderBy("timestamp", "asc"));
-  const snapshot = await getDocs(q);
-  const users = [];
+export const ICS = {
+  collectionRef: collection(db, "ICS"),
 
-  snapshot.forEach(doc => {
-    const data = doc.data();
-    users.push({
+  // 🔸 Fetch all ICS entries with document IDs
+  async fetchAll() {
+    const q = query(this.collectionRef, orderBy("timestamp", "desc"));
+    const snapshot = await getDocs(q);
+
+    return snapshot.docs.map(doc => ({
       id: doc.id,
-      ...data,
-    });
-  });
+      data: doc.data(),
+    }));
+  },
 
-  return users;
-}
+  // 🔸 Add a new ICS entry
+  async add(icsData) {
+    try {
+      if (!icsData.ICSno || typeof icsData.ICSno !== 'string' || icsData.ICSno.trim() === '') {
+        alert('ICS No. is required.');
+        return;
+      }
 
-export async function getUsersMap() {
-  const usersRef = collection(db, "users");
-  const snapshot = await getDocs(usersRef);
-  const usersMap = {};
+      const dataToSave = {
+        ...icsData,
+        timestamp: serverTimestamp(),
+      };
 
-  snapshot.forEach(doc => {
-    const data = doc.data();
-    usersMap[doc.id] = `${data.lastName}, ${data.firstName} ${data.middleInitial || ''}.`;
-  });
-
-  return usersMap;
-}
-
-// Fetch all ICS entries
-export async function getICSListWithDocIds() {
-  const icsRef = collection(db, "ICS");
-  const q = query(icsRef, orderBy("timestamp", "desc")); // ✅ Order by timestamp descending
-  const snapshot = await getDocs(q);
-
-  const result = [];
-
-  snapshot.forEach(docSnap => {
-    result.push({
-      id: docSnap.id,
-      data: docSnap.data()
-    });
-  });
-
-  return result;
-}
-
-// Add ICS entry
-export async function addICSEntry(icsData) {
-  try {
-    if (!icsData.ICSno || typeof icsData.ICSno !== 'string' || icsData.ICSno.trim() === '') {
-      alert('ICS No. is required.');
-      return;
+      await addDoc(this.collectionRef, dataToSave);
+      alert('ICS entry saved successfully!');
+    } catch (err) {
+      console.error("Error adding ICS entry:", err);
+      alert('Error saving ICS entry. Check console for details.');
     }
+  },
 
-    const dataToSave = {
-      ...icsData,
-      timestamp: serverTimestamp(), // 🔹 Add server-generated timestamp
-    };
+  // 🔸 Update an existing ICS entry
+  async update(docId, updatedData) {
+    const docRef = doc(this.collectionRef, docId);
+    await updateDoc(docRef, updatedData);
+  },
 
-    await addDoc(collection(db, 'ICS'), dataToSave);
-    alert('ICS entry saved successfully!');
-  } catch (err) {
-    console.error("Error adding ICS entry:", err);
-    alert('Error saving ICS entry. Check console for details.');
+  // 🔸 Delete an ICS entry
+  async delete(docId) {
+    try {
+      await deleteDoc(doc(this.collectionRef, docId));
+    } catch (error) {
+      console.error("Error deleting ICS document:", error);
+      throw error;
+    }
+  },
+
+  async getICSDataByUserId(userId) {
+    const q = query(
+      collection(db, "ICS"),
+      where("assignedTo", "==", userId),
+      orderBy("timestamp", "asc") // ✅ Sort by timestamp ascending
+    );
+
+    const querySnapshot = await getDocs(q);
+
+    const items = [];
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      items.push({
+        qty: data.qty || 0,
+        unit: data.unit || "",
+        description: data.description || "",
+        serialNo: data.serialNo || "",
+        unitCost: parseFloat(data.unitCost) || 0,
+        totalCost: parseFloat(data.totalCost) || 0,
+        ICSno: data.ICSno || "",
+        dateIssued: data.dateIssued || "",
+        remarks: data.remarks || "",
+        attachmentURL: data.attachmentURL || "",
+        status: data.status || "",
+        timestamp: data.timestamp || null  // 🔥 Optionally include for debugging
+      });
+    });
+
+    return items;
   }
-}
-
-export async function updateICSEntry(docId, updatedData) {
-  const docRef = doc(db, "ICS", docId);
-  await updateDoc(docRef, updatedData);
-}
-
-export async function deleteICS(docId) {
-  try {
-    await deleteDoc(doc(db, "ICS", docId));
-    console.log(`Document ${docId} deleted successfully.`);
-  } catch (error) {
-    console.error("Error deleting ICS document:", error);
-    throw error;
-  }
-}
+};

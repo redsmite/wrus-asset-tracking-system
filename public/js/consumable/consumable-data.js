@@ -1,6 +1,5 @@
 import { db } from "../firebaseConfig.js";
-import { Ledger } from "./ledger-data.js";
-import { Users } from "../user/user-data.js"; 
+import { Ledger } from "../ledger/ledger-data.js";
 import {
   collection,
   query,
@@ -85,27 +84,27 @@ export const Consumable = {
   },
 
   async update(cid, updatedData) {
-    const docRef = doc(this.collectionRef, cid);
-    await updateDoc(docRef, updatedData);
-  },
+      const docRef = doc(this.collectionRef, cid);
+      await updateDoc(docRef, updatedData);
+    },
 
   async addStock(cid, amount, remarks = "") {
-    const docRef = doc(this.collectionRef, cid);
-    const snapshot = await getDoc(docRef);
+      const docRef = doc(this.collectionRef, cid);
+      const snapshot = await getDoc(docRef);
 
-    if (!snapshot.exists()) throw new Error("Item not found");
+      if (!snapshot.exists()) throw new Error("Item not found");
 
-    const newQty = (snapshot.data().qty || 0) + amount;
-    await updateDoc(docRef, { qty: newQty });
+      const newQty = (snapshot.data().qty || 0) + amount;
+      await updateDoc(docRef, { qty: newQty });
 
-    await Ledger.addEntry({
-      cid,
-      modifiedBy: localStorage.getItem("userFullName") || "Unknown",
-      amount,
-      remarks,
-      action: "Add Stock",
-    });
-  },
+      await Ledger.addEntry({
+        cid,
+        modifiedBy: localStorage.getItem("userFullName") || "Unknown",
+        amount,
+        remarks,
+        action: "Add Stock",
+      });
+    },
 
   async assignItem(cid, amount, assignedTo, remarks = "") {
     const docRef = doc(this.collectionRef, cid);
@@ -142,75 +141,17 @@ export const Consumable = {
 
   const data = snapshot.data();
   return data.qty ?? 0;
-}
+  },
+  async fetchConsumablesMap() {
+    const snapshot = await getDocs(collection(db, "consumable"));
+    const map = {};
+    snapshot.forEach((doc) => {
+      const d = doc.data();
+      map[doc.id] = {
+        specification: d.specification || "",
+        unit: d.unit || "",
+      };
+    });
+    return map;
+  }
 };
-
-export async function populateUserSelect() {
-  const userSelect = document.getElementById("userSelect");
-  if (!userSelect) return;
-
-  userSelect.innerHTML = '';
-
-  // Default placeholder option
-  const defaultOption = document.createElement("option");
-  defaultOption.disabled = true;
-  defaultOption.selected = true;
-  defaultOption.textContent = 'Select user';
-  userSelect.appendChild(defaultOption);
-
-  // Fetch users
-  const users = await Users.fetchAllAsc();
-
-  users.forEach(user => {
-    if (user.status === 'active') {
-      const fullName = `${user.lastName}, ${user.firstName} ${user.middleInitial || ''}.`;
-      const option = document.createElement("option");
-      option.value = user.id;
-      option.textContent = fullName.trim();
-      userSelect.appendChild(option);
-    }
-  });
-}
-
-export async function fetchLedgerDataByCID(selectedCID) {
-  if (!selectedCID || typeof selectedCID !== "string" || selectedCID.trim() === "") {
-    console.error("Invalid selectedCID:", selectedCID);
-    totalQtyDisplay.textContent = "Invalid CID";
-    return { totalQty: 0, ledgerEntries: [] };
-  }
-
-  try {
-    const totalQty = await Consumable.getQty(selectedCID);
-    totalQtyDisplay.textContent = (totalQty !== null) ? totalQty : "Not found";
-
-    const { ledgerEntries, userIds } = await Ledger.getEntriesByCID(selectedCID);
-
-    const userMap = {};
-    await Promise.all(userIds.map(async userId => {
-      try {
-        const userDoc = await getDoc(doc(db, "users", userId));
-        if (userDoc.exists()) {
-          const u = userDoc.data();
-          userMap[userId] = `${u.lastName}, ${u.firstName} ${u.middleInitial}.`;
-        } else {
-          userMap[userId] = "Unknown User";
-        }
-      } catch {
-        userMap[userId] = "Error";
-      }
-    }));
-
-    // ✅ Enrich ledger with user names
-    const enrichedEntries = ledgerEntries.map(entry => ({
-      ...entry,
-      assignedTo: entry.assignedTo ? (userMap[entry.assignedTo] || "—") : "—"
-    }));
-
-    return { totalQty: totalQty ?? 0, ledgerEntries: enrichedEntries };
-
-  } catch (error) {
-    console.error("Failed to load ledger or total qty:", error);
-    totalQtyDisplay.textContent = "Error";
-    return { totalQty: 0, ledgerEntries: [] };
-  }
-}

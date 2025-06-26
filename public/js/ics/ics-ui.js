@@ -1,12 +1,6 @@
 import { uploadFileAndGetURL, deleteFileFromStorage } from '../upload/upload.js';
-import {
-  getUsers,
-  addICSEntry,
-  getUsersMap,
-  getICSListWithDocIds,
-  updateICSEntry,
-  deleteICS
-} from './ics-data.js';
+import { ICS } from './ics-data.js';
+import { Users } from '../user/user-data.js';
 import { Spinner } from '../components/spinner.js';
 
 let currentPage = 1;
@@ -35,7 +29,7 @@ function loadUsers(selectElementId = 'assignedTo', selectedUserId = '') {
 
     const currentUserId = localStorage.getItem('wrusUserId');
 
-    getUsers().then(users => {
+    Users.fetchAllAsc().then(users => {
       // 🔓 Admin case: populate full list
       if (currentUserId === 'admin') {
         users.forEach(user => {
@@ -164,7 +158,7 @@ async function handleICSFormSubmit(e) {
       icsData.attachmentURL = fileURL;
     }
 
-    await addICSEntry(icsData);
+    await ICS.add(icsData);
 
     form.reset();
     form.classList.remove('was-validated'); // Reset validation state
@@ -210,8 +204,8 @@ export async function renderICSTable(dataSet = null, page = 1) {
   try {
     if (!dataSet) {
       const [usersMap, icsSnapshot] = await Promise.all([
-        getUsersMap(),
-        getICSListWithDocIds()
+        Users.getUsersMap(),
+        ICS.fetchAll()
       ]);
       usersMapGlobal = usersMap;
       currentData = icsSnapshot;
@@ -412,7 +406,7 @@ async function handleEditICSSubmit(e) {
 
   try {
     alert('ICS entry update successful');
-    await updateICSEntry(docId, updatedData);
+    await ICS.update(docId, updatedData);
     bootstrap.Modal.getOrCreateInstance(document.getElementById('editICSModal')).hide();
     document.getElementById('editAttachment').value = '';
     document.getElementById('attachment').value = '';
@@ -456,7 +450,8 @@ export function initDeleteICSButton() {
             console.warn("Attachment might not have been deleted.");
           }
         }
-        await deleteICS(docId);
+        await ICS.delete(docId);
+        alert('ICS entry deleted successfully');
         bootstrap.Modal.getInstance(document.getElementById("editICSModal")).hide();
         await renderICSTable(); // Refresh the table
       } catch (error) {
