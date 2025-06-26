@@ -1,4 +1,6 @@
 import { db } from "../firebaseConfig.js";
+import { Ledger } from "./ledger-data.js";
+import { Users } from "../user/user-data.js"; 
 import {
   collection,
   query,
@@ -8,374 +10,169 @@ import {
   orderBy,
   setDoc,
   where,
-  serverTimestamp,
-  addDoc,
   getDoc
 } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
 
-// ✅ Named export
-export async function generateConsumableID() {
-  const year = new Date().getFullYear();
-  const prefix = `${year}-`;
+export const Consumable = {
+  collectionRef: collection(db, "consumable"),
 
-  const q = query(
-    collection(db, "consumable"),
-    where("__name__", ">=", prefix),
-    where("__name__", "<", `${year + 1}-`)
-  );
+  async generateID() {
+    const year = new Date().getFullYear();
+    const prefix = `${year}-`;
 
-  const snapshot = await getDocs(q);
-  const count = snapshot.size + 1;
+    const q = query(
+      this.collectionRef,
+      where("__name__", ">=", prefix),
+      where("__name__", "<", `${year + 1}-`)
+    );
 
-  const padded = String(count).padStart(3, "0");
-  return `${year}-${padded}`;
-}
+    const snapshot = await getDocs(q);
+    const count = snapshot.size + 1;
+    const padded = String(count).padStart(3, "0");
+    return `${year}-${padded}`;
+  },
 
-// ✅ Named export
-export async function addConsumable(spec, qty, unit, addedBy, remarks) {
-  const id = await generateConsumableID();
+  async add(spec, qty, unit, addedBy, remarks) {
+    const id = await this.generateID();
 
-  const newItem = {
-    specification: spec,
-    qty: Number(qty),
-    unit,
-    addedBy,
-    timestamp: new Date()
-  };
+    const newItem = {
+      specification: spec,
+      qty: Number(qty),
+      unit,
+      addedBy,
+      timestamp: new Date(),
+    };
 
-  const docRef = doc(db, "consumable", id);
-  await setDoc(docRef, newItem);
+    const docRef = doc(this.collectionRef, id);
+    await setDoc(docRef, newItem);
 
-  // Add entry to the ledger
-  const ledgerEntry = {
-    cid: id,
-    modifiedBy: addedBy,
-    amount: Number(qty),
-    remarks: remarks || "Opening stock", // Fallback if remarks is empty
-    action: "Add Stock",
-    dateModified: new Date()
-  };
+    await Ledger.addEntry({
+      cid: id,
+      modifiedBy: addedBy,
+      amount: Number(qty),
+      remarks: remarks || "Opening stock",
+      action: "Add Stock",
+    });
 
-  const ledgerRef = doc(collection(db, "ledger"));
-  await setDoc(ledgerRef, ledgerEntry);
+    return id;
+  },
 
-  return id;
-}
+  async isSpecDuplicate(spec) {
+    const specLower = spec.toLowerCase();
+    const snapshot = await getDocs(this.collectionRef);
 
-export async function isSpecDuplicate(spec) {
-  const specLower = spec.toLowerCase();
-  const snapshot = await getDocs(collection(db, "consumable"));
+    return snapshot.docs.some(doc => {
+      const existingSpec = (doc.data().specification || "").toLowerCase();
+      return existingSpec === specLower;
+    });
+  },
 
-  for (const doc of snapshot.docs) {
-    const existingSpec = doc.data().specification || "";
-    if (existingSpec.toLowerCase() === specLower) {
-      return true;
+  async fetchAll() {
+    const q = query(this.collectionRef, orderBy("timestamp", "desc"));
+    const snapshot = await getDocs(q);
+
+    return snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        specification: data.specification,
+        qty: data.qty,
+        unit: data.unit,
+        addedBy: data.addedBy,
+        timestamp: data.timestamp?.toDate().toLocaleString() || "N/A",
+      };
+    });
+  },
+
+  async update(cid, updatedData) {
+    const docRef = doc(this.collectionRef, cid);
+    await updateDoc(docRef, updatedData);
+  },
+
+  async addStock(cid, amount, remarks = "") {
+    const docRef = doc(this.collectionRef, cid);
+    const snapshot = await getDoc(docRef);
+
+    if (!snapshot.exists()) throw new Error("Item not found");
+
+    const newQty = (snapshot.data().qty || 0) + amount;
+    await updateDoc(docRef, { qty: newQty });
+
+    await Ledger.addEntry({
+      cid,
+      modifiedBy: localStorage.getItem("userFullName") || "Unknown",
+      amount,
+      remarks,
+      action: "Add Stock",
+    });
+  },
+
+  async assignItem(cid, amount, assignedTo, remarks = "") {
+    const docRef = doc(this.collectionRef, cid);
+    const snapshot = await getDoc(docRef);
+
+    if (!snapshot.exists()) throw new Error("Item not found");
+
+    const currentQty = snapshot.data().qty || 0;
+
+    if (amount > currentQty) {
+      throw new Error(`Cannot assign more than available quantity (${currentQty}).`);
     }
+
+    const newQty = currentQty - amount;
+    await updateDoc(docRef, { qty: newQty });
+
+    await Ledger.addEntry({
+      cid,
+      modifiedBy: localStorage.getItem("userFullName") || "Unknown",
+      amount,
+      remarks,
+      action: "Assign Item",
+      assignedTo,
+    });
+  },
+
+  async getQty(cid) {
+  const docRef = doc(this.collectionRef, cid);
+  const snapshot = await getDoc(docRef);
+
+  if (!snapshot.exists()) {
+    return null; // Or throw new Error("Item not found");
   }
 
-  return false;
+  const data = snapshot.data();
+  return data.qty ?? 0;
 }
-
-export async function fetchConsumables() {
-  const consumablesRef = collection(db, "consumable");
-  const q = query(consumablesRef, orderBy("timestamp", "desc"));
-  const snapshot = await getDocs(q);
-
-  const items = [];
-  snapshot.forEach(doc => {
-    const data = doc.data();
-    items.push({
-      id: doc.id, // CID
-      specification: data.specification,
-      qty: data.qty,
-      unit: data.unit,
-      addedBy: data.addedBy,
-      timestamp: data.timestamp?.toDate().toLocaleString() || "N/A"
-    });
-  });
-
-  return items;
-}
-
-export async function updateConsumable(cid, updatedData) {
-  const docRef = doc(db, "consumable", cid);
-  await updateDoc(docRef, updatedData);
-}
-
-export async function addStock(cid, amount, remarks = "") {
-  const consumableRef = doc(db, "consumable", cid);
-
-  const snapshot = await getDoc(consumableRef);
-  if (!snapshot.exists()) throw new Error("Item not found");
-
-  const newQty = (snapshot.data().qty || 0) + amount;
-  await updateDoc(consumableRef, { qty: newQty });
-
-  const year = new Date().getFullYear();
-  await addDoc(collection(db, "ledger"), {
-    cid: cid,
-    modifiedBy: localStorage.getItem("userFullName") || "Unknown",
-    dateModified: serverTimestamp(),
-    action: "Add Stock",
-    assignedTo: "",
-    amount: amount,
-    remarks: remarks.trim(),  // ✅ store remarks
-  });
-}
+};
 
 export async function populateUserSelect() {
   const userSelect = document.getElementById("userSelect");
   if (!userSelect) return;
 
-  userSelect.innerHTML = ''; // Clear existing options
+  userSelect.innerHTML = '';
 
-  // Add a disabled "Select user" placeholder
+  // Default placeholder option
   const defaultOption = document.createElement("option");
   defaultOption.disabled = true;
   defaultOption.selected = true;
   defaultOption.textContent = 'Select user';
   userSelect.appendChild(defaultOption);
 
-  // Query Firestore ordered by timestamp ascending
-  const q = query(collection(db, "users"), orderBy("timestamp", "asc"));
-  const usersSnapshot = await getDocs(q);
+  // Fetch users
+  const users = await Users.fetchAllAsc();
 
-  usersSnapshot.forEach(doc => {
-    const user = doc.data();
-
-    // Only include users with status 'active'
+  users.forEach(user => {
     if (user.status === 'active') {
       const fullName = `${user.lastName}, ${user.firstName} ${user.middleInitial || ''}.`;
       const option = document.createElement("option");
-      option.value = doc.id;
+      option.value = user.id;
       option.textContent = fullName.trim();
       userSelect.appendChild(option);
     }
   });
 }
 
-// assign button function
-export async function handleAssignConsumable(selectedCID) {
-  const qtyInput = document.getElementById("assignQty");
-  const userSelect = document.getElementById("userSelect");
-  const remarksInput = document.getElementById("assignRemarks");
-
-  const assignQty = parseInt(qtyInput.value);
-  const assignedTo = userSelect.value;
-  const remarks = remarksInput.value.trim();
-
-  if (!assignQty || assignQty < 1) {
-    alert("Please enter a valid quantity.");
-    return;
-  }
-
-  if (!assignedTo) {
-    alert("Please select a user to assign to.");
-    return;
-  }
-
-  const confirmAssign = confirm("Are you sure you want to assign this item?\nThis action cannot be undone.");
-  if (!confirmAssign) return;
-
-  try {
-    const consumableRef = doc(db, "consumable", selectedCID);
-    const consumableSnap = await getDoc(consumableRef);
-
-    if (!consumableSnap.exists()) {
-      alert("Consumable item not found.");
-      return;
-    }
-
-    const currentData = consumableSnap.data();
-    const availableQty = currentData.qty || 0;
-
-    if (assignQty > availableQty) {
-      alert(`Cannot assign more than available quantity (${availableQty}).`);
-      return;
-    }
-
-    await addDoc(collection(db, "ledger"), {
-      action: "Assign Item",
-      amount: assignQty,
-      assignedTo: assignedTo,
-      cid: selectedCID,
-      dateModified: serverTimestamp(),
-      modifiedBy: localStorage.getItem("userFullName"),
-      remarks: remarks
-    });
-
-    await updateDoc(consumableRef, {
-      qty: availableQty - assignQty
-    });
-
-    alert("Item assigned successfully.");
-    const assignModal = bootstrap.Modal.getInstance(document.getElementById("assignModal"));
-    assignModal.hide();
-
-  } catch (error) {
-    console.error("Error assigning item:", error);
-    alert("An error occurred. Please try again.");
-  }
-}
-
-export async function generateLedgerPDFBlob(selectedCID, ledgerEntries, totalQty) {
-  const { jsPDF } = window.jspdf;
-  const pdfDoc = new jsPDF();
-  const logoUrl = './images/denr logo.png';
-
-  const loadImageAsBase64 = (url) =>
-    fetch(url)
-      .then(res => res.blob())
-      .then(blob =>
-        new Promise(resolve => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result);
-          reader.readAsDataURL(blob);
-        })
-      );
-
-  const logoData = await loadImageAsBase64(logoUrl);
-
-  // Header logo
-  pdfDoc.addImage(logoData, 'PNG', 14, 10, 15, 15);
-
-  let specification = "Not Found";
-  let unit = "—";
-
-  try {
-    const docRef = doc(db, "consumable", selectedCID);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      const data = docSnap.data();
-      specification = data.specification || "N/A";
-      unit = data.unit || "—";
-    }
-  } catch (error) {
-    specification = "Error fetching specification";
-  }
-
-  const formatDate = (dateObj) =>
-    dateObj.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric"
-    });
-
-  const today = formatDate(new Date());
-
-  pdfDoc.setFont("helvetica", "bold");
-  pdfDoc.setFontSize(12);
-  pdfDoc.text("Department of Environment and Natural Resources - National Capital Region", 32, 16);
-  pdfDoc.text("Licenses, Patents, and Deeds Division", 32, 22);
-  pdfDoc.text("Water Resources Utilization Section", 32, 28);
-
-  pdfDoc.setFont("helvetica", "normal");
-  pdfDoc.setFontSize(10);
-  pdfDoc.text("Date:", 14, 36);
-  let dateLabelWidth = pdfDoc.getTextWidth("Date:");
-  pdfDoc.setFont("helvetica", "bold");
-  pdfDoc.text(today, 14 + dateLabelWidth + 2, 36);
-
-  pdfDoc.setFont("helvetica", "normal");
-  pdfDoc.text("Ledger Report for:", 14, 40);
-  let titleLabelWidth = pdfDoc.getTextWidth("Ledger Report for:");
-  pdfDoc.setFont("helvetica", "bold");
-  pdfDoc.text(specification, 14 + titleLabelWidth + 2, 40);
-
-  pdfDoc.setFont("helvetica", "normal");
-  pdfDoc.text("Stocks Left:", 14, 46);
-  let qtyLabelWidth = pdfDoc.getTextWidth("Stocks Left:");
-  pdfDoc.setFont("helvetica", "bold");
-  pdfDoc.text(String(totalQty), 14 + qtyLabelWidth + 2, 46);
-
-  pdfDoc.setFont("helvetica", "normal");
-  pdfDoc.text("Unit of Measurement:", 14, 50);
-  let unitLabelWidth = pdfDoc.getTextWidth("Unit of Measurement:");
-  pdfDoc.setFont("helvetica", "bold");
-  pdfDoc.text(unit, 14 + unitLabelWidth + 2, 50);
-
-  let currentY = 56;
-
-  const addStockEntries = ledgerEntries.filter(e => e.action === "Add Stock");
-  if (addStockEntries.length > 0) {
-    pdfDoc.setFont("helvetica", "bold");
-    pdfDoc.text("Add to Stock", 14, currentY);
-    currentY += 6;
-
-    const inventoryTable = addStockEntries.map(entry => ([
-      entry.dateModified ? formatDate(entry.dateModified.toDate()) : "—",
-      entry.amount,
-      entry.remarks || "—"
-    ]));
-
-    pdfDoc.autoTable({
-      head: [["Date", "Qty", "Remarks"]],
-      body: inventoryTable,
-      startY: currentY,
-      theme: 'grid',
-      didParseCell: function (data) {
-        if (data.section === 'body' && data.column.index === 1) {
-          data.cell.styles.textColor = [0, 128, 0]; // green
-        }
-      }
-    });
-
-    currentY = pdfDoc.lastAutoTable.finalY + 10;
-  }
-
-  const assignedEntries = ledgerEntries.filter(e => e.action !== "Add Stock");
-  if (assignedEntries.length > 0) {
-    pdfDoc.setFont("helvetica", "bold");
-    pdfDoc.text("Items Assigned", 14, currentY);
-    currentY += 6;
-
-    const assignedTable = assignedEntries.map(entry => ([
-      entry.dateModified ? formatDate(entry.dateModified.toDate()) : "—",
-      entry.assignedTo || "—",
-      entry.amount,
-      entry.remarks || "—"
-    ]));
-
-    pdfDoc.autoTable({
-      head: [["Date", "Assigned To", "Qty", "Remarks"]],
-      body: assignedTable,
-      startY: currentY,
-      theme: 'grid',
-      didParseCell: function (data) {
-        if (data.section === 'body' && data.column.index === 2) {
-          data.cell.styles.textColor = [220, 20, 60]; // red
-        }
-      }
-    });
-
-    currentY = pdfDoc.lastAutoTable.finalY + 10;
-  }
-
-  // Watermark
-  const pageCount = pdfDoc.getNumberOfPages();
-  const pageWidth = pdfDoc.internal.pageSize.getWidth();
-  const pageHeight = pdfDoc.internal.pageSize.getHeight();
-  const watermarkWidth = 100;
-  const watermarkHeight = 100;
-  const x = (pageWidth - watermarkWidth) / 2;
-  const y = (pageHeight - watermarkHeight) / 2;
-
-  for (let i = 1; i <= pageCount; i++) {
-    pdfDoc.setPage(i);
-    pdfDoc.saveGraphicsState();
-    pdfDoc.setGState(new pdfDoc.GState({ opacity: 0.07 }));
-    pdfDoc.addImage(logoData, 'PNG', x, y, watermarkWidth, watermarkHeight);
-    pdfDoc.restoreGraphicsState();
-  }
-
-  const blob = pdfDoc.output("blob");
-
-  return blob;
-}
-
-export async function renderLedgerTable(selectedCID) {
-  const totalQtyDisplay = document.getElementById("totalQtyDisplay");
-
+export async function fetchLedgerDataByCID(selectedCID) {
   if (!selectedCID || typeof selectedCID !== "string" || selectedCID.trim() === "") {
     console.error("Invalid selectedCID:", selectedCID);
     totalQtyDisplay.textContent = "Invalid CID";
@@ -383,35 +180,13 @@ export async function renderLedgerTable(selectedCID) {
   }
 
   try {
-    // Fetch total quantity
-    const consumableSnap = await getDoc(doc(db, "consumable", selectedCID));
-    let totalQty = 0;
-    if (consumableSnap.exists()) {
-      totalQty = consumableSnap.data().qty ?? 0;
-      totalQtyDisplay.textContent = totalQty;
-    } else {
-      totalQtyDisplay.textContent = "Not found";
-    }
+    const totalQty = await Consumable.getQty(selectedCID);
+    totalQtyDisplay.textContent = (totalQty !== null) ? totalQty : "Not found";
 
-    // Fetch ledger entries
-    const q = query(
-      collection(db, "ledger"),
-      where("cid", "==", selectedCID),
-      orderBy("dateModified", "desc")
-    );
-    const ledgerSnapshot = await getDocs(q);
-
-    const ledgerEntries = [];
-    const userIds = new Set();
-
-    ledgerSnapshot.forEach(doc => {
-      const data = doc.data();
-      ledgerEntries.push({ id: doc.id, ...data });
-      if (data.assignedTo) userIds.add(data.assignedTo);
-    });
+    const { ledgerEntries, userIds } = await Ledger.getEntriesByCID(selectedCID);
 
     const userMap = {};
-    await Promise.all(Array.from(userIds).map(async userId => {
+    await Promise.all(userIds.map(async userId => {
       try {
         const userDoc = await getDoc(doc(db, "users", userId));
         if (userDoc.exists()) {
@@ -425,29 +200,17 @@ export async function renderLedgerTable(selectedCID) {
       }
     }));
 
-    // Resolve user names
+    // ✅ Enrich ledger with user names
     const enrichedEntries = ledgerEntries.map(entry => ({
       ...entry,
-      assignedTo: userMap[entry.assignedTo] || "—"
+      assignedTo: entry.assignedTo ? (userMap[entry.assignedTo] || "—") : "—"
     }));
 
-    return { totalQty, ledgerEntries: enrichedEntries };
+    return { totalQty: totalQty ?? 0, ledgerEntries: enrichedEntries };
 
   } catch (error) {
     console.error("Failed to load ledger or total qty:", error);
     totalQtyDisplay.textContent = "Error";
     return { totalQty: 0, ledgerEntries: [] };
   }
-}
-
-async function loadImageAsBase64(url) {
-  const response = await fetch(url);
-  const blob = await response.blob();
-
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result);
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
 }

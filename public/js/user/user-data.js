@@ -6,35 +6,52 @@ import {
   doc,
   updateDoc,
   query,
-  orderBy
+  orderBy,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
-import { serverTimestamp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
 
-export async function addUser(userData) {
-  const usersRef = collection(db, 'users');
-  await addDoc(usersRef, {
-    ...userData,
-    timestamp: serverTimestamp()
-  });
-}
+export const Users = {
+  collectionRef: collection(db, "users"),
 
-export async function fetchUsers() {
-  const usersCol = collection(db, "users");
-  const usersQuery = query(usersCol, orderBy("timestamp", "desc"));
-  const userSnapshot = await getDocs(usersQuery);
-  return userSnapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data()
-  }));
-}
+  async add(userData) {
+    await addDoc(this.collectionRef, {
+      ...userData,
+      timestamp: serverTimestamp()
+    });
+  },
 
-export async function updateUser(id, updatedData) {
-  const userRef = doc(db, "users", id);
-  try {
-    await updateDoc(userRef, updatedData);
-    console.log(`User with ID ${id} successfully updated.`);
-  } catch (error) {
-    console.error("Error updating user:", error);
-    throw error;
-  }
-}
+  async fetchAllDesc() {
+    const usersQuery = query(
+      this.collectionRef,
+      orderBy("timestamp", "desc")
+    );
+    const userSnapshot = await getDocs(usersQuery);
+    return userSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+  },
+
+  async fetchAllAsc() {
+    const usersQuery = query(
+      this.collectionRef,
+      orderBy("timestamp", "asc")
+    );
+    const userSnapshot = await getDocs(usersQuery);
+    return userSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+  },
+
+  async update(id, updatedData) {
+    const userRef = doc(db, "users", id);
+    try {
+      await updateDoc(userRef, updatedData);
+    } catch (error) {
+      console.error("Error updating user:", error);
+      throw error;
+    }
+  },
+};
+

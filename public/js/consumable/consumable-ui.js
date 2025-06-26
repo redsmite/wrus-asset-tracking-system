@@ -1,14 +1,9 @@
 import {
-  fetchConsumables,
-  addConsumable,
-  isSpecDuplicate,
-  updateConsumable,
-  addStock,
+  Consumable,
   populateUserSelect,
-  handleAssignConsumable,
-  renderLedgerTable,
-  generateLedgerPDFBlob
+  fetchLedgerDataByCID
 } from "./consumable-data.js";
+import { generateLedgerPDFBlob } from './ledger-pdf.js';
 import { Spinner } from "../components/spinner.js";
 
 export let selectedCID = null;
@@ -67,10 +62,10 @@ export async function handleAddItem() {
 
     if (!spec || !qty || !unit) return;
 
-    const duplicate = await isSpecDuplicate(spec);
+    const duplicate = await Consumable.isSpecDuplicate(spec);
     if (duplicate) return alert("An item with the same specification already exists.");
 
-    await addConsumable(spec, qty, unit, addedBy, remarks);
+    await Consumable.add(spec, qty, unit, addedBy, remarks);
     alert("Consumable Item successfully added!");
 
     document.getElementById("newSpec").value = "";
@@ -95,7 +90,7 @@ export async function handleSaveEdit() {
 
     selectedCID = cid;
 
-    await updateConsumable(cid, { specification: spec, unit });
+    await Consumable.update(cid, { specification: spec, unit });
     bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
     renderConsumableTable();
   } finally {
@@ -127,7 +122,7 @@ export async function handleAddStock() {
   }
 
   try {
-    await addStock(selectedCID, amount, remarks);
+    await Consumable.addStock(selectedCID, amount, remarks);
     bootstrap.Modal.getInstance(document.getElementById("addStockModal")).hide();
     alert("Items added successfully");
     renderConsumableTable();
@@ -149,8 +144,35 @@ export async function openAssignModal() {
 export async function handleConfirmAssign() {
   Spinner.show();
   try {
-    await handleAssignConsumable(selectedCID);
+    const qtyInput = document.querySelector("#assignQty").value.trim();
+    const assignedTo = document.querySelector("#userSelect").value;
+    const remarks = document.querySelector("#assignRemarks").value.trim();
+
+    const amount = parseInt(qtyInput, 10);
+
+    if (isNaN(amount) || amount <= 0) {
+      alert("Please enter a valid quantity.");
+      return;
+    }
+
+    if (!assignedTo) {
+      alert("Please select a user to assign to.");
+      return;
+    }
+
+    await Consumable.assignItem(selectedCID, amount, assignedTo, remarks);
+
+    // Refresh the table after assigning
     renderConsumableTable();
+
+    // Hide the modal after successful assignment
+    const assignModal = bootstrap.Modal.getInstance(document.getElementById('assignModal'));
+    assignModal.hide();
+
+    // Reset form fields
+    document.getElementById("assignForm").reset();
+  } catch (error) {
+    alert(error.message);
   } finally {
     Spinner.hide();
   }
@@ -159,9 +181,10 @@ export async function handleConfirmAssign() {
 // ---------- Ledger ----------
 export async function handleViewLedger() {
   Spinner.show();
-
+  const totalQtyDisplay = document.getElementById("totalQtyDisplay");
   try {
-    const { totalQty, ledgerEntries } = await renderLedgerTable(selectedCID);
+    const { totalQty, ledgerEntries } = await fetchLedgerDataByCID(selectedCID);
+    totalQtyDisplay.textContent = totalQty !== null ? totalQty : "Not found";
     const blob = await generateLedgerPDFBlob(selectedCID, ledgerEntries, totalQty);
     document.getElementById("pdfPreviewFrame").src = URL.createObjectURL(blob);
     new bootstrap.Modal(document.getElementById("ledgerModal")).show();
@@ -189,7 +212,7 @@ export async function renderConsumableTable() {
   Spinner.show();
 
   try {
-    currentItems = await fetchConsumables();
+    currentItems = await Consumable.fetchAll();
     filteredItems = [...currentItems];
     currentPage = 1;
     renderTablePage();

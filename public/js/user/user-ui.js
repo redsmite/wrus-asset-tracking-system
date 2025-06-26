@@ -1,5 +1,5 @@
 import bcrypt from "https://esm.sh/bcryptjs@2.4.3";
-import { addUser, fetchUsers, updateUser } from './user-data.js';
+import { Users } from './user-data.js';
 import { Spinner } from '../components/spinner.js';
 
 export let currentPage = 1;
@@ -9,7 +9,7 @@ export let allUsers = [];
 export async function loadUsers() {
   Spinner.show();
   try {
-    allUsers = await fetchUsers();
+    allUsers = await Users.fetchAllDesc();
     renderUsersTable();
   } finally {
     Spinner.hide();
@@ -59,7 +59,7 @@ export function setupAddUserForm() {
         return;
       }
 
-      const existingUsers = await fetchUsers();
+      const existingUsers = await Users.fetchAllDesc();
       const usernameExists = existingUsers.some(
         user => user.username?.toLowerCase() === username.toLowerCase()
       );
@@ -71,7 +71,7 @@ export function setupAddUserForm() {
 
       const hashedPassword = await bcrypt.hash(password.value, 10);
 
-      await addUser({
+      await Users.add({
         username,
         lastName,
         firstName,
@@ -143,7 +143,7 @@ export function handleEditButtons() {
     button.addEventListener("click", async () => {
       const userId = button.getAttribute("data-id");
 
-      const users = await fetchUsers();
+      const users = await Users.fetchAllDesc();
       const user = users.find(u => u.id === userId);
       if (!user) return;
 
@@ -190,7 +190,7 @@ async function editSubmitHandler(e) {
     const password = document.getElementById("editPassword").value.trim();
     const confirmPassword = document.getElementById("editConfirmPassword").value.trim();
 
-    const users = await fetchUsers();
+    const users = await Users.fetchAllDesc();
     const usernameExists = users.some(
       (user) =>
         (user.username || '').toLowerCase() === username.toLowerCase() &&
@@ -220,7 +220,7 @@ async function editSubmitHandler(e) {
       updateData.password = hashedPassword;
     }
 
-    await updateUser(id, updateData);
+    await Users.update(id, updateData);
 
     alert("User updated successfully");
 

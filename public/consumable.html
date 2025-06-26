@@ -210,39 +210,38 @@
 
       <!-- Assign Item Modal -->
       <div class="modal fade" id="assignModal" tabindex="-1" aria-labelledby="assignModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-sm">
-          <div class="modal-content border border-secondary-subtle rounded-3 shadow-sm">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content border border-secondary-subtle rounded-3 shadow-sm" style="max-width: 500px; margin: auto;">
             
-            <div class="modal-header border-bottom border-secondary-subtle">
+            <div class="modal-header py-2 border-bottom border-secondary-subtle">
               <h5 class="modal-title fw-semibold" id="assignModalLabel">
                 <i class="bi bi-box-arrow-up me-2"></i>Assign Item
               </h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             
-            <div class="modal-body">
+            <div class="modal-body py-2">
               <form id="assignForm">
-                <div class="mb-3">
-                  <label for="assignQty" class="form-label">Quantity</label>
-                  <input type="number" class="form-control" id="assignQty" min="1" required placeholder="Enter quantity" />
+                <div class="mb-2">
+                  <label for="assignQty" class="form-label small mb-1">Quantity</label>
+                  <input type="number" class="form-control form-control-sm" id="assignQty" min="1" required placeholder="Enter quantity" />
                 </div>
                 
-                <div class="mb-3">
-                  <label for="userSelect" class="form-label">Assign To</label>
-                  <select class="form-select" id="userSelect" required>
+                <div class="mb-2">
+                  <label for="userSelect" class="form-label small mb-1">Assign To</label>
+                  <select class="form-select form-select-sm" id="userSelect" required>
                     <option value="" disabled selected>Select user</option>
-                    <!-- Options dynamically added via JS -->
                   </select>
                 </div>
                 
                 <div class="mb-2">
-                  <label for="assignRemarks" class="form-label">Remarks (optional)</label>
-                  <textarea class="form-control" id="assignRemarks" rows="3" placeholder="Enter remarks..."></textarea>
+                  <label for="assignRemarks" class="form-label small mb-1">Remarks (optional)</label>
+                  <textarea class="form-control form-control-sm" id="assignRemarks" rows="2" placeholder="Enter remarks..."></textarea>
                 </div>
               </form>
             </div>
             
-            <div class="modal-footer border-top border-secondary-subtle">
+            <div class="modal-footer py-2 border-top border-secondary-subtle">
               <button type="button" id="confirmAssignBtn" class="btn btn-primary w-100">
                 <i class="bi bi-send-check me-1"></i>Assign
               </button>
@@ -251,6 +250,8 @@
           </div>
         </div>
       </div>
+
+
 
       <!-- Ledger Modal -->
       <div class="modal fade" id="ledgerModal" tabindex="-1" aria-labelledby="ledgerModalLabel" aria-hidden="true">
