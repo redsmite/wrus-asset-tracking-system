@@ -12,224 +12,274 @@ export let currentQty = 0;
 export const pageSize = 8;
 
 // ---------- Event Listeners ----------
-export function initializeEventListeners() {
-  document.getElementById("showAddFormBtn")?.addEventListener("click", () => {
-    new bootstrap.Modal(document.getElementById("addItemModal")).show();
-  });
-
-  document.getElementById("addItemBtn")?.addEventListener("click", handleAddItem);
-  document.getElementById("saveEditBtn")?.addEventListener("click", handleSaveEdit);
-  document.getElementById("addStockBtn")?.addEventListener("click", openAddStockModal);
-  document.getElementById("confirmAddStockBtn")?.addEventListener("click", handleAddStock);
-  document.getElementById("assignItemBtn")?.addEventListener("click", openAssignModal);
-  document.getElementById("confirmAssignBtn")?.addEventListener("click", handleConfirmAssign);
-  document.getElementById("viewLedgerBtn")?.addEventListener("click", handleViewLedger);
-  document.getElementById("searchInput")?.addEventListener("input", handleSearchInput);
-
-  document.addEventListener("click", (e) => {
-    const editBtn = e.target.closest(".edit-btn");
-    const actionBtn = e.target.closest(".action-btn");
-
-    if (editBtn) {
-      const id = editBtn.dataset.id;
-      selectedCID = id;
-      document.getElementById("editCID").value = id;
-      document.getElementById("editSpec").value = editBtn.dataset.spec;
-      document.getElementById("editUnit").value = editBtn.dataset.unit;
-    }
-
-    if (actionBtn) {
-      selectedCID = actionBtn.dataset.id;
-      currentQty = parseInt(actionBtn.dataset.qty || "0");
-    }
-  });
+export function initializeFunctions() {
+  renderConsumableTable();
+  initAddItemHandler();
+  initEditItemHandler();
+  initAddStockHandler();
+  initAssignHandler();
+  initViewLedgerHandler();
+  initSearchHandler();
 }
 
 // ---------- Item Handling ----------
-const addItemModal = new bootstrap.Modal(document.getElementById("addItemModal"));
+export function initAddItemHandler() {
+  const addItemModal = new bootstrap.Modal(document.getElementById("addItemModal"));
 
-export async function handleAddItem() {
-  Spinner.show();
+  document.getElementById("showAddFormBtn")?.addEventListener("click", () => {
+    addItemModal.show();
+  });
 
-  try {
-    const spec = document.getElementById("newSpec").value.trim();
-    const qty = document.getElementById("newQty").value.trim();
-    const unit = document.getElementById("newUnit").value.trim();
-    const remarks = document.getElementById("newRemarks").value.trim();
-    const addedBy = localStorage.getItem("userFullName") || "Unknown";
+  document.getElementById("addItemBtn")?.addEventListener("click", async () => {
+    Spinner.show();
 
-    if (!spec || !qty || !unit) return;
+    try {
+      const spec = document.getElementById("newSpec").value.trim();
+      const qty = document.getElementById("newQty").value.trim();
+      const unit = document.getElementById("newUnit").value.trim();
+      const remarks = document.getElementById("newRemarks").value.trim();
+      const addedBy = localStorage.getItem("userFullName") || "Unknown";
 
-    const duplicate = await Consumable.isSpecDuplicate(spec);
-    if (duplicate) return alert("An item with the same specification already exists.");
+      if (!spec || !qty || !unit) {
+        alert("Specification, Quantity, and Unit are required.");
+        return;
+      }
 
-    await Consumable.add(spec, qty, unit, addedBy, remarks);
-    alert("Consumable Item successfully added!");
+      const duplicate = await Consumable.isSpecDuplicate(spec);
+      if (duplicate) {
+        alert("An item with the same specification already exists.");
+        return;
+      }
 
-    document.getElementById("newSpec").value = "";
-    document.getElementById("newQty").value = "";
-    document.getElementById("newUnit").value = "";
-    document.getElementById("newRemarks").value = "";
-    addItemModal.hide();
-    renderConsumableTable();
-  } finally {
-    Spinner.hide();
-  }
-}
+      await Consumable.add(spec, qty, unit, addedBy, remarks);
+      alert("Consumable Item successfully added!");
 
-export async function handleSaveEdit() {
-  Spinner.show();
-  try {
-    const cid = document.getElementById("editCID").value;
-    const spec = document.getElementById("editSpec").value.trim();
-    const unit = document.getElementById("editUnit").value.trim();
+      // Clear form
+      document.getElementById("newSpec").value = "";
+      document.getElementById("newQty").value = "";
+      document.getElementById("newUnit").value = "";
+      document.getElementById("newRemarks").value = "";
 
-    if (!spec || !unit) return;
-
-    selectedCID = cid;
-
-    await Consumable.update(cid, { specification: spec, unit });
-    bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
-    renderConsumableTable();
-  } finally {
-    Spinner.hide();
-  }
-}
-
-// ---------- Stock Handling ----------
-export function openAddStockModal() {
-  bootstrap.Modal.getInstance(document.getElementById("actionModal")).hide();
-  document.getElementById("stockAmount").value = "";
-  new bootstrap.Modal(document.getElementById("addStockModal")).show();
-}
-
-export async function handleAddStock() {
-  Spinner.show();
-  const amount = parseInt(document.getElementById("stockAmount").value);
-  const remarks = document.getElementById("stockRemarks").value;
-
-  if (!amount || amount <= 0 || !selectedCID) {
-    Spinner.hide();
-    return alert("Invalid amount.");
-  }
-
-  const confirmAdd = confirm("Are you sure you want to add to this stock?\nThis action cannot be undone.");
-  if (!confirmAdd) {
-    Spinner.hide();
-    return;
-  }
-
-  try {
-    await Consumable.addStock(selectedCID, amount, remarks);
-    bootstrap.Modal.getInstance(document.getElementById("addStockModal")).hide();
-    alert("Items added successfully");
-    renderConsumableTable();
-  } catch (err) {
-    console.error("Error adding stock:", err.message);
-    alert("Something went wrong. Please try again.");
-  } finally {
-    Spinner.hide();
-  }
-}
-
-// ---------- Assignment ----------
-export async function openAssignModal() {
-  if (!selectedCID) return console.warn("No CID selected.");
-  await populateUserSelect();
-  new bootstrap.Modal(document.getElementById("assignModal")).show();
-}
-
-async function populateUserSelect() {
-  const userSelect = document.getElementById("userSelect");
-  if (!userSelect) return;
-
-  userSelect.innerHTML = '';
-
-  // Default placeholder option
-  const defaultOption = document.createElement("option");
-  defaultOption.disabled = true;
-  defaultOption.selected = true;
-  defaultOption.textContent = 'Select user';
-  userSelect.appendChild(defaultOption);
-
-  // Fetch users
-  const users = await Users.fetchAllAsc();
-
-  users.forEach(user => {
-    if (user.status === 'active') {
-      const fullName = `${user.lastName}, ${user.firstName} ${user.middleInitial || ''}.`;
-      const option = document.createElement("option");
-      option.value = user.id;
-      option.textContent = fullName.trim();
-      userSelect.appendChild(option);
+      addItemModal.hide();
+      renderConsumableTable();
+    } catch (error) {
+      console.error("Error adding item:", error);
+      alert("An error occurred while adding the item.");
+    } finally {
+      Spinner.hide();
     }
   });
 }
 
-export async function handleConfirmAssign() {
-  Spinner.show();
-  try {
-    const qtyInput = document.querySelector("#assignQty").value.trim();
-    const assignedTo = document.querySelector("#userSelect").value;
-    const remarks = document.querySelector("#assignRemarks").value.trim();
+export function initEditItemHandler() {
+  const editModal = new bootstrap.Modal(document.getElementById("editModal"));
 
-    const amount = parseInt(qtyInput, 10);
+  document.getElementById("saveEditBtn")?.addEventListener("click", async () => {
+    Spinner.show();
 
-    if (isNaN(amount) || amount <= 0) {
-      alert("Please enter a valid quantity.");
+    try {
+      const cid = document.getElementById("editCID").value;
+      const spec = document.getElementById("editSpec").value.trim();
+      const unit = document.getElementById("editUnit").value.trim();
+
+      if (!spec || !unit) {
+        alert("Specification and Unit are required.");
+        return;
+      }
+
+      await Consumable.update(cid, { specification: spec, unit });
+
+      editModal.hide();
+      renderConsumableTable();
+    } catch (error) {
+      console.error("Error updating item:", error);
+      alert("An error occurred while updating the item.");
+    } finally {
+      Spinner.hide();
+    }
+  });
+}
+
+// ---------- Stock Handling ----------
+export function initAddStockHandler() {
+  const actionModal = new bootstrap.Modal(document.getElementById("actionModal"));
+  const addStockModal = new bootstrap.Modal(document.getElementById("addStockModal"));
+
+  // Open Add Stock Modal
+  document.getElementById("addStockBtn")?.addEventListener("click", () => {
+    actionModal.hide();
+    document.getElementById("stockAmount").value = "";
+    document.getElementById("stockRemarks").value = "";
+    addStockModal.show();
+  });
+
+  // Confirm Add Stock
+  document.getElementById("confirmAddStockBtn")?.addEventListener("click", async () => {
+    Spinner.show();
+
+    const amount = parseInt(document.getElementById("stockAmount").value.trim(), 10);
+    const remarks = document.getElementById("stockRemarks").value.trim();
+
+    if (isNaN(amount) || amount <= 0 || !selectedCID) {
+      Spinner.hide();
+      return alert("Invalid amount.");
+    }
+
+    const confirmAdd = confirm(
+      "Are you sure you want to add to this stock?\nThis action cannot be undone."
+    );
+    if (!confirmAdd) {
+      Spinner.hide();
       return;
     }
 
-    if (!assignedTo) {
-      alert("Please select a user to assign to.");
+    try {
+      await Consumable.addStock(selectedCID, amount, remarks);
+      
+      // Hide both modals after success
+      const actionModalInstance = bootstrap.Modal.getInstance(document.getElementById("actionModal"));
+      const addStockModalInstance = bootstrap.Modal.getInstance(document.getElementById("addStockModal"));
+
+      addStockModalInstance?.hide();
+      actionModalInstance?.hide();
+
+      alert("Items added successfully");
+      renderConsumableTable();
+    } catch (err) {
+      console.error("Error adding stock:", err.message);
+      alert("Something went wrong. Please try again.");
+    } finally {
+      Spinner.hide();
+    }
+  });
+}
+
+// ---------- Assignment ----------
+export function initAssignHandler() {
+  const actionModal = new bootstrap.Modal(document.getElementById("actionModal"));
+  const assignModal = new bootstrap.Modal(document.getElementById("assignModal"));
+
+  // Open Assign Modal
+  document.getElementById("assignItemBtn")?.addEventListener("click", async () => {
+    if (!selectedCID) {
+      return console.warn("No CID selected.");
+    }
+
+    const userSelect = document.getElementById("userSelect");
+    if (!userSelect) return;
+
+    // Populate user dropdown
+    userSelect.innerHTML = '';
+
+    const defaultOption = document.createElement("option");
+    defaultOption.disabled = true;
+    defaultOption.selected = true;
+    defaultOption.textContent = 'Select user';
+    userSelect.appendChild(defaultOption);
+
+    try {
+      const users = await Users.fetchAllAsc();
+
+      users.forEach(user => {
+        if (user.status === 'active') {
+          const fullName = `${user.lastName}, ${user.firstName} ${user.middleInitial || ''}.`;
+          const option = document.createElement("option");
+          option.value = user.id;
+          option.textContent = fullName.trim();
+          userSelect.appendChild(option);
+        }
+      });
+    } catch (err) {
+      console.error("Error fetching users:", err);
+      alert("Failed to load users.");
       return;
     }
 
-    await Consumable.assignItem(selectedCID, amount, assignedTo, remarks);
+    // Show modal
+    assignModal.show();
+  });
 
-    // Refresh the table after assigning
-    renderConsumableTable();
+  // Handle Confirm Assign
+  document.getElementById("confirmAssignBtn")?.addEventListener("click", async () => {
+    Spinner.show();
+    try {
+      const qtyInput = document.getElementById("assignQty").value.trim();
+      const assignedTo = document.getElementById("userSelect").value;
+      const remarks = document.getElementById("assignRemarks").value.trim();
+      const amount = parseInt(qtyInput, 10);
 
-    // Hide the modal after successful assignment
-    const assignModal = bootstrap.Modal.getInstance(document.getElementById('assignModal'));
-    assignModal.hide();
+      if (isNaN(amount) || amount <= 0) {
+        alert("Please enter a valid quantity.");
+        return;
+      }
 
-    // Reset form fields
-    document.getElementById("assignForm").reset();
-  } catch (error) {
-    alert(error.message);
-  } finally {
-    Spinner.hide();
-  }
+      if (!assignedTo) {
+        alert("Please select a user to assign to.");
+        return;
+      }
+
+      // Confirmation prompt
+      const confirmAssign = confirm(
+        `Are you sure you want to assign ${amount} item(s) to this user?\nThis action cannot be undone.`
+      );
+      if (!confirmAssign) {
+        return;
+      }
+
+      await Consumable.assignItem(selectedCID, amount, assignedTo, remarks);
+      alert('Items assigned successfully');
+
+      renderConsumableTable();
+      assignModal.hide();
+      actionModal.hide();
+      document.getElementById("assignForm").reset();
+
+    } catch (error) {
+      console.error("Error assigning item:", error);
+      alert(error.message);
+    } finally {
+      Spinner.hide();
+    }
+  });
 }
 
 // ---------- Ledger ----------
-export async function handleViewLedger() {
-  Spinner.show();
-  const totalQtyDisplay = document.getElementById("totalQtyDisplay");
-  try {
-    const { totalQty, ledgerEntries } = await Ledger.fetchLedgerDataByCID(selectedCID);
-    totalQtyDisplay.textContent = totalQty !== null ? totalQty : "Not found";
-    const blob = await generateLedgerPDFBlob(selectedCID, ledgerEntries, totalQty);
-    document.getElementById("pdfPreviewFrame").src = URL.createObjectURL(blob);
-    new bootstrap.Modal(document.getElementById("ledgerModal")).show();
-  } catch (err) {
-    console.error("Error generating ledger:", err);
-    alert("Failed to generate ledger.");
-  } finally {
-    Spinner.hide();
-  }
+export function initViewLedgerHandler() {
+  document.getElementById("viewLedgerBtn")?.addEventListener("click", async () => {
+    Spinner.show();
+    const totalQtyDisplay = document.getElementById("totalQtyDisplay");
+
+    try {
+      const { totalQty, ledgerEntries } = await Ledger.fetchLedgerDataByCID(selectedCID);
+      
+      totalQtyDisplay.textContent = totalQty !== null ? totalQty : "Not found";
+
+      const blob = await generateLedgerPDFBlob(selectedCID, ledgerEntries, totalQty);
+      document.getElementById("pdfPreviewFrame").src = URL.createObjectURL(blob);
+
+      new bootstrap.Modal(document.getElementById("ledgerModal")).show();
+    } catch (err) {
+      console.error("Error generating ledger:", err);
+      alert("Failed to generate ledger.");
+    } finally {
+      Spinner.hide();
+    }
+  });
 }
 
 // ---------- Search ----------
-export function handleSearchInput() {
-  const term = document.getElementById("searchInput").value.trim().toLowerCase();
-  filteredItems = currentItems.filter(item =>
-    item.specification.toLowerCase().includes(term)
-  );
-  currentPage = 1;
-  renderTablePage();
-  renderPagination();
+export function initSearchHandler() {
+  document.getElementById("searchInput")?.addEventListener("input", () => {
+    const term = document.getElementById("searchInput").value.trim().toLowerCase();
+
+    filteredItems = currentItems.filter(item =>
+      item.specification.toLowerCase().includes(term)
+    );
+
+    currentPage = 1;
+    renderTablePage();
+    renderPagination();
+  });
 }
 
 // ---------- Table Rendering ----------
