@@ -6,7 +6,13 @@ export let currentPage = 1;
 export const usersPerPage = 7;
 export let allUsers = [];
 
-export async function loadUsers() {
+export function initializeFunctions(){
+  loadUsers();
+  initializeAddUserModal();
+  handleSearchBar();
+}
+
+async function loadUsers() {
   Spinner.show();
   try {
     allUsers = await Users.fetchAllDesc();
@@ -16,29 +22,41 @@ export async function loadUsers() {
   }
 }
 
-export function handleAddUserModal() {
-  document.getElementById('showAddUserFormBtn').addEventListener('click', () => {
-    const modalElement = document.getElementById('addUserModal');
-    const modal = new bootstrap.Modal(modalElement);
+function initializeAddUserModal() {
+  const showAddUserFormBtn = document.getElementById('showAddUserFormBtn');
+  const addUserForm = document.getElementById('addUserForm');
+  const addUserModalEl = document.getElementById('addUserModal');
+  const modal = new bootstrap.Modal(addUserModalEl);
+
+  // 👉 Handle opening the modal
+  showAddUserFormBtn.addEventListener('click', () => {
+    addUserForm.reset();
+    addUserForm.classList.remove("was-validated");
     modal.show();
   });
-}
 
-export function setupAddUserForm() {
-  const addUserForm = document.getElementById("addUserForm");
-  const addUserModalEl = document.getElementById('addUserModal');
-
-  addUserForm.addEventListener("submit", async function (event) {
+  // 👉 Handle form submission
+  addUserForm.addEventListener('submit', async function (event) {
     event.preventDefault();
     event.stopPropagation();
 
-    const password = document.getElementById("password");
-    const confirmPassword = document.getElementById("confirmPassword");
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value;
+    const confirmPassword = document.getElementById("confirmPassword").value;
+    const lastName = document.getElementById("lastName").value.trim();
+    const firstName = document.getElementById("firstName").value.trim();
+    const middleInitial = document.getElementById("middleInitial").value.trim();
+    const position = document.getElementById("position").value.trim();
+    const duty = document.getElementById("duty").value;
+    const natureOfAppointment = document.getElementById("natureOfAppointment").value;
+    const status = document.querySelector('input[name="status"]:checked')?.value;
 
-    if (password.value !== confirmPassword.value) {
-      confirmPassword.setCustomValidity("Passwords do not match");
+    // 🔐 Password match validation
+    const confirmPasswordInput = document.getElementById("confirmPassword");
+    if (password !== confirmPassword) {
+      confirmPasswordInput.setCustomValidity("Passwords do not match");
     } else {
-      confirmPassword.setCustomValidity("");
+      confirmPasswordInput.setCustomValidity("");
     }
 
     this.classList.add("was-validated");
@@ -47,46 +65,51 @@ export function setupAddUserForm() {
 
     Spinner.show();
     try {
-      const username = document.getElementById("username").value.trim();
-      const lastName = document.getElementById("lastName").value.trim();
-      const firstName = document.getElementById("firstName").value.trim();
-      const middleInitial = document.getElementById("middleInitial").value.trim();
-      const natureOfAppointment = document.getElementById("natureOfAppointment").value.trim();
-      const status = document.querySelector('input[name="status"]:checked')?.value;
-
-      if (!natureOfAppointment) {
-        alert("Please select the nature of appointment.");
-        return;
-      }
-
       const existingUsers = await Users.fetchAllDesc();
-      const usernameExists = existingUsers.some(
-        user => user.username?.toLowerCase() === username.toLowerCase()
-      );
 
+      // 🔎 Username duplication check
+      const usernameExists = existingUsers.some(
+        (user) => user.username?.toLowerCase() === username.toLowerCase()
+      );
       if (usernameExists) {
         alert("Username already exists.");
         return;
       }
 
-      const hashedPassword = await bcrypt.hash(password.value, 10);
+      // 🔎 Supervisor uniqueness check
+      if (duty === "Supervisor") {
+        const supervisorExists = existingUsers.some(
+          (user) => user.duty === "Supervisor"
+        );
+        if (supervisorExists) {
+          alert("A user with 'Supervisor' duty already exists. Only one supervisor is allowed.");
+          return;
+        }
+      }
 
+      // 🔐 Password hashing
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // 💾 Add to database
       await Users.add({
         username,
+        password: hashedPassword,
         lastName,
         firstName,
         middleInitial,
+        position,
+        duty,
         type: natureOfAppointment,
-        password: hashedPassword,
         status,
-        role: 'user',
+        role: "user",
       });
 
-      alert('User successfully added');
+      alert("User successfully added.");
       await loadUsers();
+
+      // ✅ Reset form and close modal
       addUserForm.reset();
       addUserForm.classList.remove("was-validated");
-      const modal = bootstrap.Modal.getInstance(addUserModalEl);
       modal.hide();
     } catch (err) {
       console.error("Error creating user:", err.message);
@@ -97,7 +120,7 @@ export function setupAddUserForm() {
   });
 }
 
-export function renderUsersTable(page = 1, searchQuery = "") {
+function renderUsersTable(page = 1, searchQuery = "") {
   const usersTableBody = document.getElementById("usersTableBody");
 
   let filteredUsers = allUsers.filter(user => user.type && user.type.trim() !== "");
@@ -122,7 +145,7 @@ export function renderUsersTable(page = 1, searchQuery = "") {
       <td>${user.username || ''}</td>
       <td>${user.lastName || ''}</td>
       <td>${user.firstName || ''}</td>
-      <td>${user.middleInitial || ''}</td>
+      <td>${user.position || ''}</td>
       <td>${user.type || ''}</td>
       <td>
         <button class="btn btn-sm btn-outline-primary edit-btn" data-id="${user.id}">
@@ -133,117 +156,143 @@ export function renderUsersTable(page = 1, searchQuery = "") {
     usersTableBody.appendChild(row);
   });
 
-  handleEditButtons();
-  handleEditSubmit();
+  initializeEditFunctionality();
   renderPaginationControls(Math.ceil(filteredUsers.length / usersPerPage), page, searchQuery);
 }
 
-export function handleEditButtons() {
+function initializeEditFunctionality() {
+  // Handle Edit Button Click
   document.querySelectorAll(".edit-btn").forEach(button => {
     button.addEventListener("click", async () => {
       const userId = button.getAttribute("data-id");
-
       const users = await Users.fetchAllDesc();
       const user = users.find(u => u.id === userId);
       if (!user) return;
 
+      // Populate form
       document.getElementById("editUserId").value = user.id;
       document.getElementById("editUsername").value = user.username || '';
       document.getElementById("editLastName").value = user.lastName || '';
       document.getElementById("editFirstName").value = user.firstName || '';
       document.getElementById("editMiddleInitial").value = user.middleInitial || '';
+      document.getElementById("editPosition").value = user.position || '';
+      document.getElementById("editDuty").value = user.duty || '';
       document.getElementById("editNatureOfAppointment").value = user.type || '';
+
+      // Status Radio
       if (user.status === "active") {
         document.getElementById("editStatusActive").checked = true;
       } else {
         document.getElementById("editStatusInactive").checked = true;
       }
 
+      // Clear password fields
       document.getElementById("editPassword").value = '';
       document.getElementById("editConfirmPassword").value = '';
 
+      // Show modal
       const modal = new bootstrap.Modal(document.getElementById("editUserModal"));
       modal.show();
     });
   });
-}
 
-export function handleEditSubmit() {
+  // Handle Form Submit
   const form = document.getElementById("editUserForm");
-  form.removeEventListener("submit", editSubmitHandler);
-  form.addEventListener("submit", editSubmitHandler);
-}
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    Spinner.show();
 
-async function editSubmitHandler(e) {
-  e.preventDefault();
-  Spinner.show();
+    try {
+      const id = document.getElementById("editUserId").value.trim();
+      const username = document.getElementById("editUsername").value.trim();
+      const lastName = document.getElementById("editLastName").value.trim();
+      const firstName = document.getElementById("editFirstName").value.trim();
+      const middleInitial = document.getElementById("editMiddleInitial").value.trim();
+      const position = document.getElementById("editPosition").value.trim();
+      const duty = document.getElementById("editDuty").value;
+      const type = document.getElementById("editNatureOfAppointment").value;
+      const status = document.querySelector('input[name="editStatus"]:checked')?.value;
 
-  try {
-    const id = document.getElementById("editUserId").value;
-    const username = document.getElementById("editUsername").value.trim();
-    const lastName = document.getElementById("editLastName").value.trim();
-    const firstName = document.getElementById("editFirstName").value.trim();
-    const middleInitial = document.getElementById("editMiddleInitial").value.trim();
-    const status = document.querySelector('input[name="editStatus"]:checked')?.value;
-    const type = document.getElementById("editNatureOfAppointment")?.value;
+      const password = document.getElementById("editPassword").value.trim();
+      const confirmPassword = document.getElementById("editConfirmPassword").value.trim();
 
-    const password = document.getElementById("editPassword").value.trim();
-    const confirmPassword = document.getElementById("editConfirmPassword").value.trim();
+      // ✅ Basic Validation
+      if (!username || !lastName || !firstName || !position || !duty || !type || !status) {
+        alert("Please fill in all required fields.");
+        return;
+      }
 
-    const users = await Users.fetchAllDesc();
-    const usernameExists = users.some(
-      (user) =>
-        (user.username || '').toLowerCase() === username.toLowerCase() &&
-        user.id !== id
-    );
+      const users = await Users.fetchAllDesc();
 
-    if (usernameExists) {
-      alert("Username already exists. Please choose another one.");
-      return;
-    }
+      // ✅ Username duplicate check
+      const usernameExists = users.some(
+        (user) => 
+          (user.username || '').toLowerCase() === username.toLowerCase() && 
+          user.id !== id
+      );
 
-    let updateData = {
-      username,
-      lastName,
-      firstName,
-      middleInitial,
-      status,
-      type
-    };
+      if (usernameExists) {
+        alert("Username already exists. Please choose another one.");
+        return;
+      }
 
-    if (password || confirmPassword) {
-      if (password !== confirmPassword) {
+      // ✅ Password confirmation
+      if ((password || confirmPassword) && password !== confirmPassword) {
         alert("Passwords do not match.");
         return;
       }
-      const hashedPassword = await bcrypt.hash(password, 10);
-      updateData.password = hashedPassword;
+
+      if (duty === "Supervisor") {
+        const existingSupervisor = users.find(
+          (user) => user.duty === "Supervisor" && user.id !== id
+        );
+        if (existingSupervisor) {
+          alert("A supervisor already exists. Only one supervisor is allowed.");
+          return;
+        }
+      }
+
+      // ✅ Prepare update data
+      let updateData = {
+        username,
+        lastName,
+        firstName,
+        middleInitial,
+        position,
+        duty,
+        type,
+        status
+      };
+
+      if (password) {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        updateData.password = hashedPassword;
+      }
+
+      await Users.update(id, updateData);
+
+      alert("User updated successfully.");
+
+      const modalEl = document.getElementById("editUserModal");
+      const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
+      modalInstance.hide();
+
+      setTimeout(() => {
+        document.body.classList.remove("modal-open");
+        document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
+      }, 300);
+
+      await loadUsers();
+    } catch (error) {
+      console.error("Error submitting edit form:", error);
+      alert("An error occurred while updating the user.");
+    } finally {
+      Spinner.hide();
     }
-
-    await Users.update(id, updateData);
-
-    alert("User updated successfully");
-
-    const modalEl = document.getElementById("editUserModal");
-    const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
-    modalInstance.hide();
-
-    setTimeout(() => {
-      document.body.classList.remove("modal-open");
-      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
-    }, 300);
-
-    await loadUsers();
-    handleEditButtons();
-  } catch (error) {
-    console.error("Error submitting edit form:", error);
-    alert("An error occurred while updating the user.");
-  } finally {
-    Spinner.hide();
-  }
+  };
 }
 
-export function renderPaginationControls(totalPages, current, searchQuery = "") {
+function renderPaginationControls(totalPages, current, searchQuery = "") {
   const paginationContainer = document.getElementById("paginationControls");
   paginationContainer.innerHTML = "";
 
@@ -259,7 +308,7 @@ export function renderPaginationControls(totalPages, current, searchQuery = "") 
   }
 }
 
-export function handleSearchBar() {
+function handleSearchBar() {
   document.getElementById("searchInput").addEventListener("input", (e) => {
     const query = e.target.value.trim().toLowerCase();
     currentPage = 1;

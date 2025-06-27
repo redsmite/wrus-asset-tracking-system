@@ -46,7 +46,7 @@
                 <th>Username</th>
                 <th>Last Name</th>
                 <th>First Name</th>
-                <th>MI</th>
+                <th>Position</th>
                 <th>Type</th>
                 <th>Action</th>
               </tr>
@@ -132,6 +132,22 @@
                         <input type="text" class="form-control" id="middleInitial" maxlength="1" />
                       </div>
                       <div class="col-md-6">
+                        <label for="position" class="form-label">Position <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="position" required />
+                        <div class="invalid-feedback">Position is required.</div>
+                      </div>
+                      <div class="col-md-6">
+                        <label for="duty" class="form-label">Duty <span class="text-danger">*</span></label>
+                        <select class="form-select" id="duty" required>
+                          <option value="" disabled selected>Select Duty</option>
+                          <option value="Supervisor">Supervisor</option>
+                          <option value="Field Work">Field Work</option>
+                          <option value="Admin Work">Admin Work</option>
+                          <option value="Others">Others</option>
+                        </select>
+                        <div class="invalid-feedback">Please select duty.</div>
+                      </div>
+                                            <div class="col-md-6">
                         <label for="natureOfAppointment" class="form-label">Nature of Appointment <span class="text-danger">*</span></label>
                         <select class="form-select" id="natureOfAppointment" required>
                           <option value="" disabled selected>Select an option</option>
@@ -243,45 +259,53 @@
                   </div>
 
                   <!-- Personal Info Tab -->
-                  <div
-                    class="tab-pane fade"
-                    id="editPersonalTab"
-                    role="tabpanel"
-                    aria-labelledby="edit-personal-tab"
-                  >
-                    <div class="row">
-                      <div class="col-md-6 mb-3">
-                        <label for="editLastName" class="form-label">Last Name</label>
-                        <input type="text" class="form-control" id="editLastName" required />
-                      </div>
-                      <div class="col-md-6 mb-3">
-                        <label for="editFirstName" class="form-label">First Name</label>
-                        <input type="text" class="form-control" id="editFirstName" required />
-                      </div>
+                <div class="tab-pane fade" id="editPersonalTab" role="tabpanel" aria-labelledby="edit-personal-tab">
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label for="editLastName" class="form-label">Last Name</label>
+                      <input type="text" class="form-control" id="editLastName" required />
                     </div>
-
-                    <div class="mb-3">
-                      <label for="editMiddleInitial" class="form-label">Middle Initial</label>
-                      <input type="text" class="form-control" id="editMiddleInitial" maxlength="1" />
-                    </div>
-
-                    <div class="mb-3">
-                      <label for="editNatureOfAppointment" class="form-label">Nature of Appointment</label>
-                      <select class="form-select" id="editNatureOfAppointment" required>
-                        <option value="" disabled selected>Select an option</option>
-                        <option value="Permanent">Permanent</option>
-                        <option value="COS">COS</option>
-                        <option value="Temporary">Temporary</option>
-                        <option value="Coterminous">Coterminous</option>
-                        <option value="Fixed Term">Fixed Term</option>
-                        <option value="Substitute">Substitute</option>
-                        <option value="Provisional">Provisional</option>
-                      </select>
+                    <div class="col-md-6 mb-3">
+                      <label for="editFirstName" class="form-label">First Name</label>
+                      <input type="text" class="form-control" id="editFirstName" required />
                     </div>
                   </div>
-                </div>
-              </div>
 
+                  <div class="mb-3">
+                    <label for="editMiddleInitial" class="form-label">Middle Initial</label>
+                    <input type="text" class="form-control" id="editMiddleInitial" maxlength="1" />
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="editPosition" class="form-label">Position</label>
+                    <input type="text" class="form-control" id="editPosition" placeholder="Enter position" required />
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="editDuty" class="form-label">Duty</label>
+                    <select class="form-select" id="editDuty" required>
+                      <option value="" disabled selected>Select duty</option>
+                      <option value="Supervisor">Supervisor</option>
+                      <option value="Field Work">Field Work</option>
+                      <option value="Admin Work">Admin Work</option>
+                      <option value="Others">Others</option>
+                    </select>
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="editNatureOfAppointment" class="form-label">Nature of Appointment</label>
+                    <select class="form-select" id="editNatureOfAppointment" required>
+                      <option value="" disabled selected>Select an option</option>
+                      <option value="Permanent">Permanent</option>
+                      <option value="COS">COS</option>
+                      <option value="Temporary">Temporary</option>
+                      <option value="Coterminous">Coterminous</option>
+                      <option value="Fixed Term">Fixed Term</option>
+                      <option value="Substitute">Substitute</option>
+                      <option value="Provisional">Provisional</option>
+                    </select>
+                  </div>
+                </div>
               <div class="modal-footer">
                 <button type="submit" class="btn btn-success w-100">
                   <i class="bi bi-save me-1"></i>Update User
