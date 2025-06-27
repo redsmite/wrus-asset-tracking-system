@@ -72,7 +72,7 @@ export const Sidebar = {
               <div class="collapse ps-3" id="waterMenu">
                 <ul class="nav flex-column">
                   <li><a class="nav-link text-white" href="permit.html">Water Permit</a></li>
-                  <li><a class="nav-link text-white" href="wus.html">Water Users and Sources</a></li>
+                  <li><a class="nav-link text-white" href="water-user.html">Water Users and Sources</a></li>
                   <li><a class="nav-link text-white" href="report.html">Accomplishment Report</a></li>
                   <li><a class="nav-link text-white" href="map.html">Map Generator</a></li>
                 </ul>
