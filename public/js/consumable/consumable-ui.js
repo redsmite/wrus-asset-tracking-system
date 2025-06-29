@@ -23,10 +23,11 @@ export function initializePage() {
   initAssignHandler();
   initViewLedgerHandler();
   initSearchHandler();
+  initActionButtonHandler();
 }
 
 // ---------- Item Handling ----------
-export function initAddItemHandler() {
+function initAddItemHandler() {
   const addItemModal = new bootstrap.Modal(document.getElementById("addItemModal"));
 
   document.getElementById("showAddFormBtn")?.addEventListener("click", () => {
@@ -74,7 +75,7 @@ export function initAddItemHandler() {
   });
 }
 
-export function initEditItemHandler() {
+function initEditItemHandler() {
   const editModal = new bootstrap.Modal(document.getElementById("editModal"));
 
   document.getElementById("saveEditBtn")?.addEventListener("click", async () => {
@@ -104,7 +105,7 @@ export function initEditItemHandler() {
 }
 
 // ---------- Stock Handling ----------
-export function initAddStockHandler() {
+function initAddStockHandler() {
   const actionModal = new bootstrap.Modal(document.getElementById("actionModal"));
   const addStockModal = new bootstrap.Modal(document.getElementById("addStockModal"));
 
@@ -158,7 +159,7 @@ export function initAddStockHandler() {
 }
 
 // ---------- Assignment ----------
-export function initAssignHandler() {
+function initAssignHandler() {
   const actionModal = new bootstrap.Modal(document.getElementById("actionModal"));
   const assignModal = new bootstrap.Modal(document.getElementById("assignModal"));
 
@@ -247,7 +248,7 @@ export function initAssignHandler() {
 }
 
 // ---------- Ledger ----------
-export function initViewLedgerHandler() {
+function initViewLedgerHandler() {
   document.getElementById("viewLedgerBtn")?.addEventListener("click", async () => {
     Spinner.show();
     const totalQtyDisplay = document.getElementById("totalQtyDisplay");
@@ -270,8 +271,23 @@ export function initViewLedgerHandler() {
   });
 }
 
+function initActionButtonHandler() {
+  document.addEventListener("click", (e) => {
+    const actionBtn = e.target.closest(".action-btn");
+    if (actionBtn) {
+      const cid = actionBtn.getAttribute("data-id");
+      const qty = actionBtn.getAttribute("data-qty");
+
+      selectedCID = cid;
+
+      const viewLedgerBtn = document.getElementById("viewLedgerBtn");
+      viewLedgerBtn.setAttribute("data-id", cid);
+    }
+  });
+}
+
 // ---------- Search ----------
-export function initSearchHandler() {
+function initSearchHandler() {
   document.getElementById("searchInput")?.addEventListener("input", () => {
     const term = document.getElementById("searchInput").value.trim().toLowerCase();
 
@@ -286,7 +302,7 @@ export function initSearchHandler() {
 }
 
 // ---------- Table Rendering ----------
-export async function renderConsumableTable() {
+async function renderConsumableTable() {
   Spinner.show();
 
   try {
@@ -303,7 +319,7 @@ export async function renderConsumableTable() {
   }
 }
 
-export function renderTablePage() {
+function renderTablePage() {
   const tbody = document.getElementById("consumableBody");
   tbody.innerHTML = "";
 
@@ -347,7 +363,7 @@ export function renderTablePage() {
   });
 }
 
-export function renderPagination() {
+function renderPagination() {
   const paginationContainer = document.getElementById("paginationContainer");
   if (!paginationContainer) return;
 
