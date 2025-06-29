@@ -1,12 +1,17 @@
 import bcrypt from "https://esm.sh/bcryptjs@2.4.3";
 import { Users } from './user-data.js';
 import { Spinner } from '../components/spinner.js';
+import { Sidebar } from '../components/sidebar.js';
+import { adminVerification } from '../admin/admin-verification.js';
 
 export let currentPage = 1;
 export const usersPerPage = 7;
 export let allUsers = [];
 
-export function initializeFunctions(){
+export function initializePage(){
+  Sidebar.render();
+  adminVerification();
+  Spinner.render();
   loadUsers();
   initializeAddUserModal();
   handleSearchBar();

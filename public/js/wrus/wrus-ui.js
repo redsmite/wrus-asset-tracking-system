@@ -1,7 +1,9 @@
 import { WUSData } from './wrus-data.js';
+import { Sidebar } from "../components/sidebar.js";
 import { Spinner } from '../components/spinner.js';
 
-export function initializeFunctions(){
+export function initializePage(){
+  Sidebar.render();
   loadWaterUser();
   initializeSearchBar();
   handleAddForm();

@@ -2,17 +2,20 @@ import { Consumable } from "./consumable-data.js";
 import { Ledger } from "../ledger/ledger-data.js"
 import { generateLedgerPDFBlob } from '../pdf/item-consumable-pdf.js';
 import { Users } from "../user/user-data.js"; 
+import { Sidebar } from "../components/sidebar.js";
 import { Spinner } from "../components/spinner.js";
 
-export let selectedCID = null;
-export let currentItems = [];
-export let filteredItems = [];
-export let currentPage = 1;
-export let currentQty = 0;
-export const pageSize = 8;
+let selectedCID = null;
+let currentItems = [];
+let filteredItems = [];
+let currentPage = 1;
+let currentQty = 0;
+const pageSize = 8;
 
 // ---------- Event Listeners ----------
-export function initializeFunctions() {
+export function initializePage() {
+  Sidebar.render();
+  Spinner.render();
   renderConsumableTable();
   initAddItemHandler();
   initEditItemHandler();

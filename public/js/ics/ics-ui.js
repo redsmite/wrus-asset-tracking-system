@@ -1,6 +1,7 @@
 import { uploadFileAndGetURL, deleteFileFromStorage } from '../upload/upload.js';
 import { ICS } from './ics-data.js';
 import { Users } from '../user/user-data.js';
+import { Sidebar } from '../components/sidebar.js'
 import { Spinner } from '../components/spinner.js';
 
 let currentPage = 1;
@@ -10,7 +11,21 @@ let filteredData = [];       // Data after filtering
 let usersMapGlobal = {};     // For use in renderFilteredTable
 
 // 🔹 Show modal and load users
-export function setupAddBtn() {
+export function initializePage(){
+  Sidebar.render();
+  Spinner.render();
+  setupAddBtn();
+  setupAddQtyAndCostListeners();
+  setupEditQtyAndCostListeners();
+  setupFileValidation();
+  setupICSFormSubmit();
+  renderICSTable();
+  initDeleteICSButton();
+  document.getElementById("searchBar").addEventListener("input", applySearchFilter);
+  setupEditICSFormSubmit();
+}
+
+function setupAddBtn() {
   const addBtn = document.getElementById('addBtn');
   if (addBtn) {
     addBtn.addEventListener('click', () => {
@@ -66,7 +81,7 @@ function loadUsers(selectElementId = 'assignedTo', selectedUserId = '') {
 }
 
 // 🔹 Set up qty & cost listeners to auto-update total
-export function setupAddQtyAndCostListeners() {
+function setupAddQtyAndCostListeners() {
   const qtyInput = document.getElementById('qty');
   const unitCostInput = document.getElementById('unitCost');
 
@@ -86,7 +101,7 @@ function updateAddTotalCost() {
 }
 
 
-export function setupEditQtyAndCostListeners() {
+function setupEditQtyAndCostListeners() {
   const qtyInput = document.getElementById('editQty');
   const unitCostInput = document.getElementById('editUnitCost');
 
@@ -106,7 +121,7 @@ function updateEditTotalCost() {
 }
 
 // 🔹 File size validation (max 1MB)
-export function setupFileValidation() {
+function setupFileValidation() {
   const fileInput = document.getElementById('attachment');
   if (fileInput) {
     fileInput.addEventListener('change', function () {
@@ -120,7 +135,7 @@ export function setupFileValidation() {
 }
 
 // 🔹 Submit handler for ICS form
-export function setupICSFormSubmit() {
+function setupICSFormSubmit() {
   const addICSForm = document.getElementById('addICSForm');
   if (addICSForm) {
     addICSForm.addEventListener('submit', handleICSFormSubmit);
@@ -194,7 +209,7 @@ function collectICSFormData() {
 }
 
 // 🔹 Render ICS Table
-export async function renderICSTable(dataSet = null, page = 1) {
+async function renderICSTable(dataSet = null, page = 1) {
   Spinner.show();
 
   const userId = localStorage.getItem("wrusUserId");
@@ -300,7 +315,7 @@ function renderPaginationControls(dataSet, currentPage) {
   }
 }
 
-export function applySearchFilter() {
+function applySearchFilter() {
   const query = document.getElementById("searchBar").value.trim().toLowerCase();
 
   filteredData = currentData.filter(entry => {
@@ -343,7 +358,7 @@ async function populateEditModal(icsItem) {
   await loadUsers('editAssignedTo', data.assignedTo);
 }
 
-export function setupEditICSFormSubmit() {
+function setupEditICSFormSubmit() {
   const editICSForm = document.getElementById('editICSForm');
   if (editICSForm) {
     editICSForm.addEventListener('submit', handleEditICSSubmit);
@@ -420,7 +435,7 @@ async function handleEditICSSubmit(e) {
   }
 }
 
-export function initDeleteICSButton() {
+function initDeleteICSButton() {
   const deleteButton = document.getElementById("deleteICSButton");
 
   Spinner.show();
