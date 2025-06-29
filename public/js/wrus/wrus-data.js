@@ -1,5 +1,5 @@
 import { db } from '../firebaseConfig.js';
-import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
+import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, serverTimestamp, query, orderBy, limit, setDoc } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
 
 const WUSCollection = collection(db, 'water_users');
 
@@ -26,11 +26,32 @@ export const WUSData = {
   },
 
   async add(data) {
+    const q = query(WUSCollection, orderBy('__name__', 'desc'), limit(1));
+    const snapshot = await getDocs(q);
+
+    let newNumber = 1;
+
+    if (!snapshot.empty) {
+      const lastId = snapshot.docs[0].id;
+      const match = lastId.match(/2025-(\d{4})/);
+      const lastNumber = match ? parseInt(match[1]) : 0;
+      newNumber = lastNumber + 1;
+    }
+
+    const formattedNumber = String(newNumber).padStart(4, '0');
+    const newId = `2025-${formattedNumber}`;
+
     const newData = {
       ...data,
       timestamp: serverTimestamp()
     };
-    return await addDoc(WUSCollection, newData);
+
+    const docRef = doc(db, 'water_users', newId);
+    console.log('Adding new user:', newId, newData);
+
+    await setDoc(docRef, newData);
+
+    return { id: newId, ...newData };
   },
 
   async update(id, data) {

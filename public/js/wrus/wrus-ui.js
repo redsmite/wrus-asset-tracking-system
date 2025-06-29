@@ -71,7 +71,6 @@ async function loadWaterUser() {
     Spinner.hide();
   }
 }
-
 async function renderWaterUsers(searchTerm = '') {
   const tableBody = document.getElementById('waterUserTableBody');
   tableBody.innerHTML = '';
@@ -84,12 +83,13 @@ async function renderWaterUsers(searchTerm = '') {
   const term = searchTerm.trim().toLowerCase();
   const filteredUsers = term
     ? allUsers.filter(u =>
-        (u.nameOfWaterUser   || '').toLowerCase().includes(term) ||
-        (u.location          || '').toLowerCase().includes(term) ||
-        (u.type              || '').toLowerCase().includes(term) ||
-        (u.remarks           || '').toLowerCase().includes(term) ||
-        (u.latitude          || '').toString().includes(term) ||
-        (u.longitude         || '').toString().includes(term)
+        (u.id               || '').toLowerCase().includes(term) ||
+        (u.nameOfWaterUser  || '').toLowerCase().includes(term) ||
+        (u.location         || '').toLowerCase().includes(term) ||
+        (u.type             || '').toLowerCase().includes(term) ||
+        (u.remarks          || '').toLowerCase().includes(term) ||
+        (u.latitude         || '').toString().includes(term) ||
+        (u.longitude        || '').toString().includes(term)
       )
     : allUsers;
 
@@ -104,6 +104,7 @@ async function renderWaterUsers(searchTerm = '') {
     const tr = document.createElement('tr');
     if (user.isWaterSource) tr.classList.add('table-info');
     tr.innerHTML = `
+      <td>${user.id}</td>
       <td>${user.nameOfWaterUser || ''}</td>
       <td>${user.location || ''}</td>
       <td>${user.latitude || ''}</td>
@@ -112,7 +113,7 @@ async function renderWaterUsers(searchTerm = '') {
       <td>${user.remarks || ''}</td>
       <td>
         <button class="btn btn-sm btn-warning edit-btn" data-id="${user.id}">
-          <i class="bi bi-pencil-square"></i> Edit
+          <i class="bi bi-pencil-square"></i> Update
         </button>
       </td>
     `;
