@@ -11,12 +11,7 @@ export function initializePage(){
   handleAddButton();
   handleAddFormSubmit();
   renderPermitTable();
-    setupToggle(
-    'toggleFilter',
-    'filterSection',
-    'Show Legend & Filter',
-    'Hide Legend & Filter'
-  );
+  setupToggle('toggleFilter', 'filterSection', 'Show Filters', 'Hide Filters');
   initializePermitUpdate();
 }
 
@@ -137,6 +132,7 @@ async function renderPermitTable() {
   const tableBody = document.getElementById('permitTableBody');
   const searchBar = document.getElementById('searchBar');
   const visitedFilter = document.getElementById('visitedFilter');
+  const showVisitedFilter = document.getElementById('showVisitedFilter');
   const pagination = document.getElementById('pagination');
   const rowsPerPageSelect = document.getElementById('rowsPerPage');
 
@@ -228,24 +224,19 @@ async function renderPermitTable() {
         return li;
       };
 
-      pagination.appendChild(
-        createButton('«', currentPage - 1, currentPage === 1)
-      );
+      pagination.appendChild(createButton('«', currentPage - 1, currentPage === 1));
 
       for (let i = 1; i <= totalPages; i++) {
-        pagination.appendChild(
-          createButton(i, i, false, currentPage === i)
-        );
+        pagination.appendChild(createButton(i, i, false, currentPage === i));
       }
 
-      pagination.appendChild(
-        createButton('»', currentPage + 1, currentPage === totalPages)
-      );
+      pagination.appendChild(createButton('»', currentPage + 1, currentPage === totalPages));
     }
 
     function applyFilters() {
       const searchTerm = searchBar.value.trim().toLowerCase();
       const isVisitedChecked = visitedFilter.checked;
+      const isShowVisitedChecked = showVisitedFilter.checked;
 
       filteredPermits = permits.filter((permit) => {
         const matchesSearch =
@@ -254,7 +245,14 @@ async function renderPermitTable() {
           (permit.mailingAddress && permit.mailingAddress.toLowerCase().includes(searchTerm)) ||
           (permit.diversionPoint && permit.diversionPoint.toLowerCase().includes(searchTerm));
 
-        const matchesVisited = isVisitedChecked ? permit.visited === false : true;
+        let matchesVisited = true;
+        if (isVisitedChecked && !isShowVisitedChecked) {
+          matchesVisited = permit.visited === false;
+        } else if (!isVisitedChecked && isShowVisitedChecked) {
+          matchesVisited = permit.visited === true;
+        } else if (isVisitedChecked && isShowVisitedChecked) {
+          matchesVisited = false; // Show none if both are checked (optional behavior)
+        }
 
         return matchesSearch && matchesVisited;
       });
@@ -272,7 +270,24 @@ async function renderPermitTable() {
     });
 
     searchBar.addEventListener('input', applyFilters);
-    visitedFilter.addEventListener('change', applyFilters);
+
+    visitedFilter.addEventListener('change', () => {
+      if (visitedFilter.checked) {
+        showVisitedFilter.disabled = true;
+      } else {
+        showVisitedFilter.disabled = false;
+      }
+      applyFilters();
+    });
+
+    showVisitedFilter.addEventListener('change', () => {
+      if (showVisitedFilter.checked) {
+        visitedFilter.disabled = true;
+      } else {
+        visitedFilter.disabled = false;
+      }
+      applyFilters();
+    });
 
     applyFilters();
 
@@ -312,6 +327,7 @@ function populateEditModal(permit) {
   document.getElementById('editFlowRate').value = permit.flowRate || '';
   document.getElementById('editPeriodOfUse').value = permit.periodOfUse || '';
   document.getElementById('editPurpose').value = permit.purpose || '';
+  document.getElementById('editVisited').checked = !!permit.visited;
   document.getElementById('editPdfExistingUrl').value = permit.pdfUrl || '';
 }
 

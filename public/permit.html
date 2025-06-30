@@ -46,11 +46,9 @@
 
       </div>
 
-      <!-- Toggle Button -->
-      <button class="btn btn-outline-secondary btn-sm mb-2 w-auto" id="toggleFilter">
-        <i class="bi bi-eye-slash"></i> Hide Legend & Filter
+      <button id="toggleFilter" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-eye-slash"></i> Hide Filters
       </button>
-
       <!-- Filter Section -->
       <div class="mb-3" id="filterSection">
         <!-- Legend -->
@@ -65,6 +63,14 @@
           <label class="form-check-label" for="visitedFilter">
             <strong>Show only unvisited permits</strong><br>
             <small>(If checked, shows permittees that are <strong>not yet visited</strong>. If unchecked, shows <strong>all permittees</strong>.)</small>
+          </label>
+        </div>
+
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="showVisitedFilter">
+          <label class="form-check-label" for="showVisitedFilter">
+            <strong>Show only visited permits</strong><br>
+            <small>(If checked, shows permittees that are <strong>already visited</strong>. If unchecked, shows <strong>all permittees</strong>.)</small>
           </label>
         </div>
       </div>
@@ -84,6 +90,7 @@
           <ul class="pagination mb-0" id="pagination"></ul>
         </nav>
       </div>
+
       <!-- Data Table -->
       <div class="table-responsive">
         <table class="table table-bordered table-striped align-middle" id="permitTable">
@@ -105,8 +112,6 @@
           </tbody>
         </table>
       </div>
-
-
 
       <!-- Add Permit Modal -->
       <div class="modal fade" id="addPermitModal" tabindex="-1" aria-labelledby="addPermitModalLabel" aria-hidden="true">
