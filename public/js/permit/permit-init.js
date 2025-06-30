@@ -1,5 +1,5 @@
-import { Sidebar } from "../components/sidebar.js";
+import { initializePage } from "./permit-ui.js";
 
 document.addEventListener('DOMContentLoaded',()=>{
-  Sidebar.render();
+  initializePage();
 })

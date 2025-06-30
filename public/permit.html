@@ -13,8 +13,161 @@
   <div class="d-flex flex-column flex-md-row" id="wrapper">
     <div id="sidebarContainer"></div>
     <div class="container-fluid p-4" id="page-content">
-        <h4><i class="bi bi-file-earmark-text"></i> Water Permit</h4>
+      <!-- Heading -->
+      <div class="mb-2">
+        <h4 class="mb-0">
+          <i class="bi bi-file-earmark-text"></i> Water Permit
+        </h4>
+      </div>
 
+      <!-- Search Bar and Add Button Row -->
+      <div class="d-flex flex-wrap align-items-center mb-3 gap-2">
+
+        <!-- Search Bar (Expands) -->
+        <div class="flex-grow-1">
+          <div class="input-group">
+            <input type="text" id="searchBar" class="form-control" placeholder="Search Permit No.">
+            <span class="input-group-text">
+              <i class="bi bi-search"></i>
+            </span>
+          </div>
+        </div>
+
+        <!-- Add Permit Button -->
+        <div class="flex-shrink-0">
+          <button class="btn btn-primary shadow-sm px-3 py-2 d-flex align-items-center gap-2" id="addPermitBtn">
+            <span class="d-inline-flex justify-content-center align-items-center bg-light text-primary rounded-circle" style="width: 24px; height: 24px;">
+              <i class="bi bi-plus-lg"></i>
+            </span>
+            Add
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Add Permit Modal -->
+      <div class="modal fade" id="addPermitModal" tabindex="-1" aria-labelledby="addPermitModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg"> <!-- Wider Modal -->
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="addPermitModalLabel">
+                <i class="bi bi-plus-circle-fill me-2 text-primary"></i> Add Water Permit
+              </h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+              <form id="permitForm" class="needs-validation" novalidate>
+
+                <div class="row g-3">
+
+                  <!-- Permit No -->
+                  <div class="col-md-6">
+                    <label class="form-label"><i class="bi bi-hash me-1"></i> Permit No.</label>
+                    <input type="text" class="form-control" id="permitNo" required>
+                    <div class="invalid-feedback">Permit No. is required.</div>
+                  </div>
+
+                  <!-- Permittee -->
+                  <div class="col-md-6">
+                    <label class="form-label"><i class="bi bi-person-badge me-1"></i> Permittee</label>
+                    <input type="text" class="form-control" id="permittee" required>
+                    <div class="invalid-feedback">Permittee is required.</div>
+                  </div>
+
+                  <!-- Mailing Address -->
+                  <div class="col-md-6">
+                    <label class="form-label"><i class="bi bi-geo-alt me-1"></i> Mailing Address</label>
+                    <input type="text" class="form-control" id="mailingAddress" required>
+                    <div class="invalid-feedback">Mailing Address is required.</div>
+                  </div>
+
+                  <!-- Diversion Point -->
+                  <div class="col-md-6">
+                    <label class="form-label"><i class="bi bi-geo-fill me-1"></i> Diversion Point</label>
+                    <input type="text" class="form-control" id="diversionPoint" required>
+                    <div class="invalid-feedback">Diversion Point is required.</div>
+                  </div>
+
+                  <!-- Latitude -->
+                  <div class="col-md-3">
+                    <label class="form-label"><i class="bi bi-compass me-1"></i> Latitude</label>
+                    <input type="text" class="form-control" id="latitude" required>
+                    <div class="invalid-feedback">Latitude is required.</div>
+                  </div>
+
+                  <!-- Longitude -->
+                  <div class="col-md-3">
+                    <label class="form-label"><i class="bi bi-compass me-1"></i> Longitude</label>
+                    <input type="text" class="form-control" id="longitude" required>
+                    <div class="invalid-feedback">Longitude is required.</div>
+                  </div>
+
+                  <!-- Water Source -->
+                  <div class="col-md-6">
+                    <label class="form-label"><i class="bi bi-droplet-half me-1"></i> Water Source</label>
+                    <input type="text" class="form-control" id="waterSource" required>
+                    <div class="invalid-feedback">Water Source is required.</div>
+                  </div>
+
+                  <!-- Water Diversion -->
+                  <div class="col-md-6">
+                    <label class="form-label"><i class="bi bi-arrow-repeat me-1"></i> Water Diversion</label>
+                    <input type="text" class="form-control" id="waterDiversion" required>
+                    <div class="invalid-feedback">Water Diversion is required.</div>
+                  </div>
+
+                  <!-- Flow Rate -->
+                  <div class="col-md-6">
+                    <label class="form-label">
+                      <i class="bi bi-speedometer me-1"></i> Flow Rate (L/s)
+                    </label>
+                    <input type="number" class="form-control" id="flowRate" required min="0" step="any">
+                    <div class="invalid-feedback">Flow Rate is required.</div>
+                  </div>
+
+                  <!-- Period of Use -->
+                  <div class="col-md-6">
+                    <label class="form-label"><i class="bi bi-calendar-event me-1"></i> During the Month of</label>
+                    <input type="text" class="form-control" id="periodOfUse" required>
+                    <div class="invalid-feedback">Period of Use is required.</div>
+                  </div>
+
+                  <!-- Visited Checkbox -->
+                  <div class="col-md-6">
+                    <div class="form-check mt-4">
+                      <input class="form-check-input" type="checkbox" id="visited">
+                      <label class="form-check-label" for="visited">
+                        <i class="bi bi-person-check me-1"></i> Already Visited?
+                      </label>
+                    </div>
+                  </div>
+
+                  <!-- PDF Attachment -->
+                  <div class="col-md-6">
+                    <label class="form-label">
+                      <i class="bi bi-paperclip me-1"></i> Attach PDF (Optional)
+                    </label>
+                    <input class="form-control" type="file" id="pdfAttachment" accept=".pdf">
+                    <div class="form-text">Upload a PDF document related to this permit.</div>
+                  </div>
+
+                </div> <!-- End Row -->
+
+              </form>
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                <i class="bi bi-x-circle me-1"></i> Close
+              </button>
+              <button type="button" class="btn btn-primary" id="savePermitBtn">
+                <i class="bi bi-save me-1"></i> Save Permit
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
   <script type="module" src="js/permit/permit-init.js"></script>

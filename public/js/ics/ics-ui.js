@@ -1,4 +1,4 @@
-import { uploadFileAndGetURL, deleteFileFromStorage } from '../upload/upload.js';
+import { FileService } from '../upload/upload.js';
 import { ICS } from './ics-data.js';
 import { Users } from '../user/user-data.js';
 import { Sidebar } from '../components/sidebar.js'
@@ -164,7 +164,7 @@ async function handleICSFormSubmit(e) {
   try {
     if (fileInput.files.length > 0) {
       const file = fileInput.files[0];
-      fileURL = await uploadFileAndGetURL(file);
+      fileURL = await FileService.uploadICSFile(file);
       if (!fileURL) throw new Error("File upload failed");
     }
 
@@ -389,13 +389,13 @@ async function handleEditICSSubmit(e) {
 
   if (newFile) {
     if (attachmentURL) {
-      const deleted = await deleteFileFromStorage(attachmentURL);
+      const deleted = await FileService.deleteFileFromStorage(attachmentURL);
       if (!deleted) {
         console.warn("Old file may not have been deleted properly.");
       }
     }
 
-    const uploadedUrl = await uploadFileAndGetURL(newFile);
+    const uploadedUrl = await FileService.uploadICSFile(newFile);
     if (!uploadedUrl) {
       alert('New file upload failed.');
       Spinner.hide();
@@ -460,7 +460,7 @@ function initDeleteICSButton() {
 
       try {
         if (attachmentURL) {
-          const deleted = await deleteFileFromStorage(attachmentURL);
+          const deleted = await FileService.deleteFileFromStorage(attachmentURL);
           if (!deleted) {
             console.warn("Attachment might not have been deleted.");
           }
