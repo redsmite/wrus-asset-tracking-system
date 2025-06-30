@@ -17,6 +17,7 @@ export function initializePage(){
     'Show Legend & Filter',
     'Hide Legend & Filter'
   );
+  initializePermitUpdate();
 }
 
 function handleAddButton(){
@@ -110,12 +111,20 @@ function setupToggle(buttonId, sectionId, labelShow, labelHide) {
   const section = document.getElementById(sectionId);
 
   if (!button || !section) {
-    console.error(`❌ setupToggle error: Check IDs "${buttonId}" or "${sectionId}" — one or both not found.`);
+    console.error(`setupToggle error: Check IDs "${buttonId}" or "${sectionId}" — one or both not found.`);
     return;
   }
 
+  // Initialize button label based on current visibility
+  const isInitiallyHidden = section.style.display === 'none' || getComputedStyle(section).display === 'none';
+
+  button.innerHTML = isInitiallyHidden
+    ? `<i class="bi bi-eye"></i> ${labelShow}`
+    : `<i class="bi bi-eye-slash"></i> ${labelHide}`;
+
+  // Add toggle event
   button.addEventListener('click', () => {
-    const isHidden = section.style.display === 'none';
+    const isHidden = section.style.display === 'none' || getComputedStyle(section).display === 'none';
 
     section.style.display = isHidden ? 'block' : 'none';
     button.innerHTML = isHidden
@@ -124,13 +133,19 @@ function setupToggle(buttonId, sectionId, labelShow, labelHide) {
   });
 }
 
-
-
 async function renderPermitTable() {
   const tableBody = document.getElementById('permitTableBody');
   const searchBar = document.getElementById('searchBar');
   const visitedFilter = document.getElementById('visitedFilter');
+  const pagination = document.getElementById('pagination');
+  const rowsPerPageSelect = document.getElementById('rowsPerPage');
+
+  let rowsPerPage = parseInt(rowsPerPageSelect.value);
+  let currentPage = 1;
+  let filteredPermits = [];
+
   tableBody.innerHTML = '';
+  pagination.innerHTML = '';
 
   try {
     const permits = await Permit.getAll();
@@ -143,10 +158,13 @@ async function renderPermitTable() {
         return;
       }
 
-      data.forEach((permit) => {
+      const start = (currentPage - 1) * rowsPerPage;
+      const end = start + rowsPerPage;
+      const paginatedItems = data.slice(start, end);
+
+      paginatedItems.forEach((permit) => {
         const latitude = permit.latitude ? Number(permit.latitude).toFixed(5) : '';
         const longitude = permit.longitude ? Number(permit.longitude).toFixed(5) : '';
-
         const isVisited = permit.visited === true;
         const rowClass = isVisited ? 'table-success' : '';
 
@@ -174,7 +192,6 @@ async function renderPermitTable() {
 
         tableBody.appendChild(row);
 
-        // ✅ Attach event listener directly after creating the button
         const editButton = row.querySelector('button[data-id]');
         editButton.addEventListener('click', () => {
           const permitId = editButton.getAttribute('data-id');
@@ -185,16 +202,52 @@ async function renderPermitTable() {
             editModal.show();
           }
         });
-
       });
     }
 
-    // 🔥 Combined filter function
+    function renderPagination(totalItems) {
+      pagination.innerHTML = '';
+      const totalPages = Math.ceil(totalItems / rowsPerPage);
+
+      if (totalPages <= 1) return;
+
+      const createButton = (label, page, disabled = false, active = false) => {
+        const li = document.createElement('li');
+        li.className = `page-item ${disabled ? 'disabled' : ''} ${active ? 'active' : ''}`;
+        const btn = document.createElement('button');
+        btn.className = 'page-link';
+        btn.innerText = label;
+        btn.addEventListener('click', () => {
+          if (!disabled) {
+            currentPage = page;
+            renderRows(filteredPermits);
+            renderPagination(filteredPermits.length);
+          }
+        });
+        li.appendChild(btn);
+        return li;
+      };
+
+      pagination.appendChild(
+        createButton('«', currentPage - 1, currentPage === 1)
+      );
+
+      for (let i = 1; i <= totalPages; i++) {
+        pagination.appendChild(
+          createButton(i, i, false, currentPage === i)
+        );
+      }
+
+      pagination.appendChild(
+        createButton('»', currentPage + 1, currentPage === totalPages)
+      );
+    }
+
     function applyFilters() {
       const searchTerm = searchBar.value.trim().toLowerCase();
       const isVisitedChecked = visitedFilter.checked;
 
-      const filtered = permits.filter((permit) => {
+      filteredPermits = permits.filter((permit) => {
         const matchesSearch =
           (permit.permitNo && permit.permitNo.toLowerCase().includes(searchTerm)) ||
           (permit.permittee && permit.permittee.toLowerCase().includes(searchTerm)) ||
@@ -206,17 +259,22 @@ async function renderPermitTable() {
         return matchesSearch && matchesVisited;
       });
 
-      renderRows(filtered);
+      currentPage = 1;
+      renderRows(filteredPermits);
+      renderPagination(filteredPermits.length);
     }
 
-    // ✅ Initial render (shows everything)
-    applyFilters();
+    rowsPerPageSelect.addEventListener('change', () => {
+      rowsPerPage = parseInt(rowsPerPageSelect.value);
+      currentPage = 1;
+      renderRows(filteredPermits);
+      renderPagination(filteredPermits.length);
+    });
 
-    // 🔍 Search input listener
     searchBar.addEventListener('input', applyFilters);
-
-    // ✅ Visited checkbox listener
     visitedFilter.addEventListener('change', applyFilters);
+
+    applyFilters();
 
   } catch (error) {
     console.error('❌ Error rendering permit table:', error.message);
@@ -225,6 +283,7 @@ async function renderPermitTable() {
 }
 
 function populateEditModal(permit) {
+  document.getElementById('editPermitForm').setAttribute('data-id', permit.id);
   // Basic Info
   document.getElementById('editPermitNo').value = permit.permitNo || '';
   document.getElementById('editPermittee').value = permit.permittee || '';
@@ -253,7 +312,121 @@ function populateEditModal(permit) {
   document.getElementById('editFlowRate').value = permit.flowRate || '';
   document.getElementById('editPeriodOfUse').value = permit.periodOfUse || '';
   document.getElementById('editPurpose').value = permit.purpose || '';
+  document.getElementById('editPdfExistingUrl').value = permit.pdfUrl || '';
 }
+
+function initializePermitUpdate() {
+  const updateBtn = document.getElementById('updatePermitBtn');
+  if (!updateBtn) {
+    console.error('Update button not found.');
+    return;
+  }
+
+  updateBtn.addEventListener('click', async (e) => {
+    e.preventDefault();
+    Spinner.show();
+
+    try {
+      const form = document.getElementById('editPermitForm');
+      if (!form) {
+        console.error('Edit form not found.');
+        return;
+      }
+
+      if (!form.checkValidity()) {
+        form.classList.add('was-validated');
+        return;
+      }
+
+      const id = form.getAttribute('data-id');
+      if (!id) {
+        console.error('No document ID found for update.');
+        return;
+      }
+
+      // 👉 Handle Coordinates
+      const latDegrees = parseFloat(document.getElementById('editLatDegrees').value) || 0;
+      const latMinutes = parseFloat(document.getElementById('editLatMinutes').value) || 0;
+      const latSeconds = parseFloat(document.getElementById('editLatSeconds').value) || 0;
+      const latDirection = document.getElementById('editLatDirection').value.trim();
+
+      const lonDegrees = parseFloat(document.getElementById('editLonDegrees').value) || 0;
+      const lonMinutes = parseFloat(document.getElementById('editLonMinutes').value) || 0;
+      const lonSeconds = parseFloat(document.getElementById('editLonSeconds').value) || 0;
+      const lonDirection = document.getElementById('editLonDirection').value.trim();
+
+      const latitudeDecimal = CoordinateUtils.dmsToDecimal(latDegrees, latMinutes, latSeconds, latDirection);
+      const longitudeDecimal = CoordinateUtils.dmsToDecimal(lonDegrees, lonMinutes, lonSeconds, lonDirection);
+
+      // 📄 Handle PDF Upload
+      const fileInput = document.getElementById('editPdfAttachment');
+      let permitFileUrl = document.getElementById('editPdfExistingUrl').value || '';
+
+      console.log(permitFileUrl);
+      if (fileInput && fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+
+        // 🗑️ Delete existing file before uploading a new one
+        if (permitFileUrl) {
+          const deleted = await FileService.deleteFileFromPermitBucket(permitFileUrl);
+          if (!deleted) {
+            throw new Error('Failed to delete existing PDF before uploading new one.');
+          }
+        }
+
+        // ✅ Upload the new file
+        const uploadedUrl = await FileService.uploadPermitFile(file);
+
+        if (uploadedUrl) {
+          permitFileUrl = uploadedUrl;
+        } else {
+          throw new Error('Failed to upload permit file.');
+        }
+      }
+
+      // 🔥 Prepare data for update
+      const data = {
+        permitNo: document.getElementById('editPermitNo').value.trim(),
+        permittee: document.getElementById('editPermittee').value.trim(),
+        mailingAddress: document.getElementById('editMailingAddress').value.trim(),
+        diversionPoint: document.getElementById('editDiversionPoint').value.trim(),
+
+        latitude: latitudeDecimal,
+        longitude: longitudeDecimal,
+
+        waterSource: document.getElementById('editWaterSource').value.trim(),
+        waterDiversion: document.getElementById('editWaterDiversion').value.trim(),
+        flowRate: parseFloat(document.getElementById('editFlowRate').value) || 0,
+        periodOfUse: document.getElementById('editPeriodOfUse').value.trim(),
+        purpose: document.getElementById('editPurpose').value.trim(),
+        visited: document.getElementById('editVisited').checked,
+
+        pdfUrl: permitFileUrl
+      };
+
+      // 🚀 Update Firestore
+      await Permit.update(id, data);
+      renderPermitTable();
+      alert('Permit updated successfully');
+
+      const editModal = bootstrap.Modal.getInstance(document.getElementById('editPermitModal'));
+      if (editModal) editModal.hide();
+
+      form.classList.remove('was-validated');
+
+    } catch (error) {
+      console.error(' Error updating permit:', error);
+      alert('Failed to update permit. Please try again.');
+    } finally {
+      Spinner.hide();
+    }
+  });
+}
+
+
+
+
+
 
 
 

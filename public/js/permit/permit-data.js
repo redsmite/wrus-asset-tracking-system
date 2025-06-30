@@ -8,7 +8,8 @@ import {
   limit,
   doc,
   setDoc,
-  serverTimestamp
+  serverTimestamp,
+  deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
 
 // Reference the collection in Firestore
@@ -58,10 +59,8 @@ export const Permit = {
       };
 
       await setDoc(doc(db, 'permits', newDocId), newData);
-
-      console.log(`✅ Permit ${newDocId} added successfully`);
     } catch (error) {
-      console.error('❌ Error adding permit:', error.message);
+      console.error('Error adding permit:', error.message);
       throw error;
     }
   },
@@ -76,7 +75,28 @@ export const Permit = {
       });
       return permits;
     } catch (error) {
-      console.error('❌ Error fetching permits:', error.message);
+      console.error('Error fetching permits:', error.message);
+      throw error;
+    }
+  },
+
+  async update(id, data) {
+    try {
+      const docRef = doc(permitCollection, id);
+      await setDoc(docRef, {
+        ...data,
+        updatedAt: serverTimestamp(),
+      }, { merge: true });
+    } catch (error) {
+      console.error('Error updating permit:', error.message);
+      throw error;
+    }
+  },
+  async delete(id) {
+    try {
+      await deleteDoc(doc(permitCollection, id));
+      console.log(`🗑️ Permit ${id} deleted successfully`);
+    } catch (error) {
       throw error;
     }
   }

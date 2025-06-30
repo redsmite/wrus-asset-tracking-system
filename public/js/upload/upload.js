@@ -46,35 +46,72 @@ export const FileService = {
   },
 
   async deleteFileFromStorage(url, bucket = 'ics-files') {
-    if (!url) return true;
+      if (!url) return true;
 
-    try {
-      const decodedUrl = decodeURIComponent(url);
-      const publicPrefix = `/storage/v1/object/public/${bucket}/`;
-      const pathIndex = decodedUrl.indexOf(publicPrefix);
+      try {
+        const decodedUrl = decodeURIComponent(url);
+        const publicPrefix = `/storage/v1/object/public/${bucket}/`;
+        const pathIndex = decodedUrl.indexOf(publicPrefix);
 
-      if (pathIndex === -1) {
-        console.warn(`⚠️ Couldn't find base path in URL for bucket ${bucket}`);
+        if (pathIndex === -1) {
+          console.warn(`⚠️ Couldn't find base path in URL for bucket ${bucket}`);
+          return false;
+        }
+
+        let relativePath = decodedUrl.substring(pathIndex + publicPrefix.length);
+        relativePath = relativePath.replace(/^\/+/, '').trim();
+
+        const { error } = await supabase.storage
+          .from(bucket)
+          .remove([relativePath]);
+
+        if (error) {
+          console.error(`❌ Delete error from ${bucket}:`, error.message);
+          return false;
+        }
+
+        return true;
+
+      } catch (err) {
+        console.error('❌ Error during deleteFileFromStorage:', err);
         return false;
       }
+    },
 
-      let relativePath = decodedUrl.substring(pathIndex + publicPrefix.length);
-      relativePath = relativePath.replace(/^\/+/, '').trim();
+async deleteFileFromPermitBucket(url, bucket = 'permit') {
+  console.log(url);
+  if (!url) return true;
 
-      const { error } = await supabase.storage
-        .from(bucket)
-        .remove([relativePath]);
+  try {
+    const decodedUrl = decodeURIComponent(url);
+    const publicPrefix = `/storage/v1/object/public/${bucket}/`;
+    const pathIndex = decodedUrl.indexOf(publicPrefix);
 
-      if (error) {
-        console.error(`❌ Delete error from ${bucket}:`, error.message);
-        return false;
-      }
-
-      return true;
-
-    } catch (err) {
-      console.error('❌ Error during deleteFileFromStorage:', err);
+    if (pathIndex === -1) {
+      console.warn(`⚠️ Couldn't find base path in URL for bucket '${bucket}'`);
       return false;
     }
+
+    let relativePath = decodedUrl.substring(pathIndex + publicPrefix.length);
+    relativePath = relativePath.replace(/^\/+/, '').trim();
+
+    console.log(`🗑️ Deleting file from ${bucket} bucket: ${relativePath}`);
+
+    const { error } = await supabase.storage
+      .from(bucket)
+      .remove([relativePath]);
+
+    if (error) {
+      console.error(`❌ Delete error from '${bucket}':`, error.message);
+      return false;
+    }
+
+    console.log('✅ File deleted successfully.');
+    return true;
+
+  } catch (err) {
+    console.error('❌ Error in deleteFileFromPermitBucket:', err);
+    return false;
   }
+}
 };

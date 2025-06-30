@@ -19,7 +19,7 @@ export const Sidebar = {
         </div>
       </nav>
 
-      <!-- Sidebar Offcanvas -->
+      <!-- Sidebar -->
       <div id="sidebar"
           class="offcanvas-md offcanvas-start bg-primary text-white p-3 vh-100"
           tabindex="-1"
@@ -30,18 +30,21 @@ export const Sidebar = {
         </div>
 
         <div class="offcanvas-body d-flex flex-column">
-          <h4 class="mb-4 d-none d-md-block">WRUS Portal</h4>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="d-none d-md-block m-0">WRUS Portal</h4>
+            <!-- Desktop Toggle Button -->
+            <button id="sidebarToggle" class="btn btn-light d-none d-md-block">
+              <i class="bi bi-chevron-left"></i>
+            </button>
+          </div>
 
           <ul class="nav flex-column mb-auto">
-
-            <!-- Dashboard -->
             <li class="nav-item mb-2">
               <a href="${isAdmin ? 'admin-dashboard.html' : 'dashboard.html'}" class="nav-link text-white">
                 <i class="bi bi-speedometer2 me-2"></i> Dashboard
               </a>
             </li>
 
-            <!-- User Management (Admin Only) -->
             ${isAdmin ? `
             <li class="nav-item mb-2">
               <a href="user-management.html" class="nav-link text-white">
@@ -50,9 +53,8 @@ export const Sidebar = {
             </li>
             ` : ''}
 
-            <!-- Asset Inventory System (Collapsible) -->
             <li class="nav-item mb-2">
-              <a class="nav-link text-white" data-bs-toggle="collapse" href="#assetMenu" role="button" aria-expanded="false" aria-controls="assetMenu">
+              <a class="nav-link text-white" data-bs-toggle="collapse" href="#assetMenu" role="button">
                 <i class="bi bi-box-seam me-2"></i> Asset Inventory System
               </a>
               <div class="collapse ps-3" id="assetMenu">
@@ -64,9 +66,8 @@ export const Sidebar = {
               </div>
             </li>
 
-            <!-- Water Inventory System (Collapsible) -->
             <li class="nav-item mb-2">
-              <a class="nav-link text-white" data-bs-toggle="collapse" href="#waterMenu" role="button" aria-expanded="false" aria-controls="waterMenu">
+              <a class="nav-link text-white" data-bs-toggle="collapse" href="#waterMenu" role="button">
                 <i class="bi bi-droplet-half me-2"></i> Water Inventory System
               </a>
               <div class="collapse ps-3" id="waterMenu">
@@ -78,10 +79,8 @@ export const Sidebar = {
                 </ul>
               </div>
             </li>
-
           </ul>
 
-          <!-- Logout Button -->
           <button id="logoutBtn" class="btn btn-light mt-auto">
             <i class="bi bi-box-arrow-right me-2"></i> Logout
           </button>
@@ -89,10 +88,10 @@ export const Sidebar = {
       </div>
     `;
 
-    // Initialize Offcanvas for mobile
+    // Initialize Offcanvas
     this.initializeOffcanvas();
 
-    // Logout Button Functionality
+    // Logout
     const logoutBtn = container.querySelector('#logoutBtn');
     if (logoutBtn) {
       logoutBtn.addEventListener('click', () => {
@@ -107,6 +106,15 @@ export const Sidebar = {
         window.location.href = 'index.html';
       });
     }
+
+    // Toggle Sidebar (Desktop)
+    const sidebarToggle = container.querySelector('#sidebarToggle');
+    if (sidebarToggle) {
+      sidebarToggle.addEventListener('click', () => {
+        const wrapper = document.getElementById('wrapper');
+        wrapper.classList.toggle('sidebar-collapsed');
+      });
+    }
   },
 
   initializeOffcanvas() {
@@ -115,8 +123,6 @@ export const Sidebar = {
       if (sidebarElement) {
         bootstrap.Offcanvas.getOrCreateInstance(sidebarElement);
       }
-    } else {
-      console.warn('Bootstrap Offcanvas component not available');
     }
   }
 };
