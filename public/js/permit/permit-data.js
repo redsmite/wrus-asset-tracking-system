@@ -64,5 +64,20 @@ export const Permit = {
       console.error('❌ Error adding permit:', error.message);
       throw error;
     }
+  },
+  async getAll() {
+    try {
+      const querySnapshot = await getDocs(
+        query(permitCollection, orderBy('createdAt', 'desc'))
+      );
+      const permits = [];
+      querySnapshot.forEach((doc) => {
+        permits.push({ id: doc.id, ...doc.data() });
+      });
+      return permits;
+    } catch (error) {
+      console.error('❌ Error fetching permits:', error.message);
+      throw error;
+    }
   }
 };

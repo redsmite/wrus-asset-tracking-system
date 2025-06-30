@@ -45,10 +45,57 @@
 
       </div>
 
+      <!-- Toggle Button -->
+<button class="btn btn-outline-secondary btn-sm mb-2 w-auto" id="toggleFilter">
+  <i class="bi bi-eye-slash"></i> Hide Legend & Filter
+</button>
+
+      <!-- Filter Section -->
+      <div class="mb-3" id="filterSection">
+        <!-- Legend -->
+        <div class="d-flex align-items-center mb-1">
+          <span class="badge bg-success me-2" style="width: 20px; height: 20px;">&nbsp;</span>
+          <span>Rows highlighted in <strong>green</strong> mean the permittee is <strong>already visited</strong>.</span>
+        </div>
+
+        <!-- Checkbox Filter -->
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="visitedFilter">
+          <label class="form-check-label" for="visitedFilter">
+            <strong>Show only unvisited permits</strong><br>
+            <small>(If checked, shows permittees that are <strong>not yet visited</strong>. If unchecked, shows <strong>all permittees</strong>.)</small>
+          </label>
+        </div>
+      </div>
+
+
+      <div class="table-responsive">
+        <table class="table table-bordered table-striped align-middle" id="permitTable">
+          <thead class="table-primary">
+            <tr>
+              <th>Permit No</th>
+              <th>Permittee</th>
+              <th>Mailing Address</th>
+              <th>Diversion Point</th>
+              <th>Latitude</th>
+              <th>Longitude</th>
+              <th>Water Source</th>
+              <th>Purpose</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="permitTableBody">
+            <!-- Dynamic rows will be inserted here -->
+          </tbody>
+        </table>
+      </div>
+
       <!-- Add Permit Modal -->
       <div class="modal fade" id="addPermitModal" tabindex="-1" aria-labelledby="addPermitModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg"> <!-- Wider Modal -->
+        <div class="modal-dialog modal-lg">
           <div class="modal-content">
+
+            <!-- Modal Header -->
             <div class="modal-header">
               <h5 class="modal-title" id="addPermitModalLabel">
                 <i class="bi bi-plus-circle-fill me-2 text-primary"></i> Add Water Permit
@@ -56,107 +103,183 @@
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
+            <!-- Modal Body -->
             <div class="modal-body">
               <form id="permitForm" class="needs-validation" novalidate>
 
-                <div class="row g-3">
+                <!-- Nav Tabs -->
+                <ul class="nav nav-tabs mb-3" id="permitTab" role="tablist">
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="basic-tab" data-bs-toggle="tab" data-bs-target="#basic" type="button" role="tab">Basic Info</button>
+                  </li>
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="technical-tab" data-bs-toggle="tab" data-bs-target="#technical" type="button" role="tab">Technical Info</button>
+                  </li>
+                </ul>
 
-                  <!-- Permit No -->
-                  <div class="col-md-6">
-                    <label class="form-label"><i class="bi bi-hash me-1"></i> Permit No.</label>
-                    <input type="text" class="form-control" id="permitNo" required>
-                    <div class="invalid-feedback">Permit No. is required.</div>
-                  </div>
+                <!-- Tab Contents -->
+                <div class="tab-content" id="permitTabContent">
 
-                  <!-- Permittee -->
-                  <div class="col-md-6">
-                    <label class="form-label"><i class="bi bi-person-badge me-1"></i> Permittee</label>
-                    <input type="text" class="form-control" id="permittee" required>
-                    <div class="invalid-feedback">Permittee is required.</div>
-                  </div>
+                  <!-- Tab 1: Basic Info -->
+                  <div class="tab-pane fade show active" id="basic" role="tabpanel">
 
-                  <!-- Mailing Address -->
-                  <div class="col-md-6">
-                    <label class="form-label"><i class="bi bi-geo-alt me-1"></i> Mailing Address</label>
-                    <input type="text" class="form-control" id="mailingAddress" required>
-                    <div class="invalid-feedback">Mailing Address is required.</div>
-                  </div>
+                    <div class="row g-3">
 
-                  <!-- Diversion Point -->
-                  <div class="col-md-6">
-                    <label class="form-label"><i class="bi bi-geo-fill me-1"></i> Diversion Point</label>
-                    <input type="text" class="form-control" id="diversionPoint" required>
-                    <div class="invalid-feedback">Diversion Point is required.</div>
-                  </div>
+                      <!-- Permit No -->
+                      <div class="col-md-6">
+                        <label class="form-label"><i class="bi bi-hash me-1"></i> Permit No.</label>
+                        <input type="text" class="form-control" id="permitNo" required>
+                        <div class="invalid-feedback">Permit No. is required.</div>
+                      </div>
 
-                  <!-- Latitude -->
-                  <div class="col-md-3">
-                    <label class="form-label"><i class="bi bi-compass me-1"></i> Latitude</label>
-                    <input type="text" class="form-control" id="latitude" required>
-                    <div class="invalid-feedback">Latitude is required.</div>
-                  </div>
+                      <!-- Permittee -->
+                      <div class="col-md-6">
+                        <label class="form-label">
+                          <i class="bi bi-person-badge me-1"></i> Permittee
+                        </label>
+                        <textarea class="form-control" id="permittee" rows="2" required></textarea>
+                        <div class="invalid-feedback">Permittee is required.</div>
+                      </div>
 
-                  <!-- Longitude -->
-                  <div class="col-md-3">
-                    <label class="form-label"><i class="bi bi-compass me-1"></i> Longitude</label>
-                    <input type="text" class="form-control" id="longitude" required>
-                    <div class="invalid-feedback">Longitude is required.</div>
-                  </div>
+                      <!-- Mailing Address -->
+                      <div class="col-md-6">
+                        <label class="form-label">
+                          <i class="bi bi-geo-alt me-1"></i> Mailing Address
+                        </label>
+                        <textarea class="form-control" id="mailingAddress" rows="2" required></textarea>
+                        <div class="invalid-feedback">Mailing Address is required.</div>
+                      </div>
 
-                  <!-- Water Source -->
-                  <div class="col-md-6">
-                    <label class="form-label"><i class="bi bi-droplet-half me-1"></i> Water Source</label>
-                    <input type="text" class="form-control" id="waterSource" required>
-                    <div class="invalid-feedback">Water Source is required.</div>
-                  </div>
+                      <!-- Diversion Point -->
+                      <div class="col-md-6">
+                        <label class="form-label">
+                          <i class="bi bi-geo-fill me-1"></i> Diversion Point
+                        </label>
+                        <textarea class="form-control" id="diversionPoint" rows="2" required></textarea>
+                        <div class="invalid-feedback">Diversion Point is required.</div>
+                      </div>
 
-                  <!-- Water Diversion -->
-                  <div class="col-md-6">
-                    <label class="form-label"><i class="bi bi-arrow-repeat me-1"></i> Water Diversion</label>
-                    <input type="text" class="form-control" id="waterDiversion" required>
-                    <div class="invalid-feedback">Water Diversion is required.</div>
-                  </div>
+                      <!-- Latitude -->
+                      <div class="col-md-6">
+                        <label class="form-label"><i class="bi bi-compass me-1"></i> Latitude</label>
+                        <div class="row g-2">
+                          <div class="col-3">
+                            <input type="number" class="form-control" id="latDegrees" placeholder="°" required>
+                          </div>
+                          <div class="col-3">
+                            <input type="number" class="form-control" id="latMinutes" placeholder="'" required>
+                          </div>
+                          <div class="col-3">
+                            <input type="number" class="form-control" id="latSeconds" placeholder='"' required step="any">
+                          </div>
+                          <div class="col-3">
+                            <select class="form-select" id="latDirection" required disabled>
+                              <option value="N">N</option>
+                              <option value="S">S</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div class="invalid-feedback">Complete Latitude is required.</div>
+                      </div>
 
-                  <!-- Flow Rate -->
-                  <div class="col-md-6">
-                    <label class="form-label">
-                      <i class="bi bi-speedometer me-1"></i> Flow Rate (L/s)
-                    </label>
-                    <input type="number" class="form-control" id="flowRate" required min="0" step="any">
-                    <div class="invalid-feedback">Flow Rate is required.</div>
-                  </div>
+                      <!-- Longitude -->
+                      <div class="col-md-6">
+                        <label class="form-label"><i class="bi bi-compass me-1"></i> Longitude</label>
+                        <div class="row g-2">
+                          <div class="col-3">
+                            <input type="number" class="form-control" id="lonDegrees" placeholder="°" required>
+                          </div>
+                          <div class="col-3">
+                            <input type="number" class="form-control" id="lonMinutes" placeholder="'" required>
+                          </div>
+                          <div class="col-3">
+                            <input type="number" class="form-control" id="lonSeconds" placeholder='"' required step="any">
+                          </div>
+                          <div class="col-3">
+                            <select class="form-select" id="lonDirection" required disabled>
+                              <option value="E">E</option>
+                              <option value="W">W</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div class="invalid-feedback">Complete Longitude is required.</div>
+                      </div>
 
-                  <!-- Period of Use -->
-                  <div class="col-md-6">
-                    <label class="form-label"><i class="bi bi-calendar-event me-1"></i> During the Month of</label>
-                    <input type="text" class="form-control" id="periodOfUse" required>
-                    <div class="invalid-feedback">Period of Use is required.</div>
-                  </div>
-
-                  <!-- Visited Checkbox -->
-                  <div class="col-md-6">
-                    <div class="form-check mt-4">
-                      <input class="form-check-input" type="checkbox" id="visited">
-                      <label class="form-check-label" for="visited">
-                        <i class="bi bi-person-check me-1"></i> Already Visited?
-                      </label>
                     </div>
                   </div>
 
-                  <!-- PDF Attachment -->
-                  <div class="col-md-6">
-                    <label class="form-label">
-                      <i class="bi bi-paperclip me-1"></i> Attach PDF (Optional)
-                    </label>
-                    <input class="form-control" type="file" id="pdfAttachment" accept=".pdf">
-                    <div class="form-text">Upload a PDF document related to this permit.</div>
+                  <!-- Tab 2: Technical Info -->
+                  <div class="tab-pane fade" id="technical" role="tabpanel">
+
+                    <div class="row g-3">
+
+                      <!-- Water Source -->
+                      <div class="col-md-6">
+                        <label class="form-label"><i class="bi bi-droplet-half me-1"></i> Water Source</label>
+                        <input type="text" class="form-control" id="waterSource" required>
+                        <div class="invalid-feedback">Water Source is required.</div>
+                      </div>
+
+                      <!-- Water Diversion -->
+                      <div class="col-md-6">
+                        <label class="form-label"><i class="bi bi-arrow-repeat me-1"></i> Water Diversion</label>
+                        <input type="text" class="form-control" id="waterDiversion" required>
+                        <div class="invalid-feedback">Water Diversion is required.</div>
+                      </div>
+
+                      <!-- Flow Rate -->
+                      <div class="col-md-6">
+                        <label class="form-label">
+                          <i class="bi bi-speedometer me-1"></i> Flow Rate (L/s)
+                        </label>
+                        <input type="number" class="form-control" id="flowRate" required min="0" step="any">
+                        <div class="invalid-feedback">Flow Rate is required.</div>
+                      </div>
+
+                      <!-- Period of Use -->
+                      <div class="col-md-6">
+                        <label class="form-label"><i class="bi bi-calendar-event me-1"></i> During the Month of</label>
+                        <input type="text" class="form-control" id="periodOfUse" required>
+                        <div class="invalid-feedback">Period of Use is required.</div>
+                      </div>
+
+                      <!-- Purpose -->
+                      <div class="col-md-6">
+                        <label class="form-label">
+                          <i class="bi bi-clipboard-check me-1"></i> Purpose (e.g. Domestic)
+                        </label>
+                        <input type="text" class="form-control" id="purpose" required>
+                        <div class="invalid-feedback">Purpose is required.</div>
+                      </div>
+
+                      <!-- Visited Checkbox -->
+                      <div class="col-md-6">
+                        <div class="form-check mt-4">
+                          <input class="form-check-input" type="checkbox" id="visited">
+                          <label class="form-check-label" for="visited">
+                            <i class="bi bi-person-check me-1"></i> Already Visited?
+                          </label>
+                        </div>
+                      </div>
+
+                      <!-- PDF Attachment -->
+                      <div class="col-md-6">
+                        <label class="form-label">
+                          <i class="bi bi-paperclip me-1"></i> Attach PDF (Optional)
+                        </label>
+                        <input class="form-control" type="file" id="pdfAttachment" accept=".pdf">
+                        <div class="form-text">Upload a PDF document related to this permit.</div>
+                      </div>
+
+                    </div>
                   </div>
 
-                </div> <!-- End Row -->
+                </div> <!-- End Tab Content -->
 
               </form>
             </div>
 
+            <!-- Modal Footer -->
             <div class="modal-footer">
               <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
                 <i class="bi bi-x-circle me-1"></i> Close
@@ -165,9 +288,212 @@
                 <i class="bi bi-save me-1"></i> Save Permit
               </button>
             </div>
+
           </div>
         </div>
       </div>
+
+      <!-- Edit Permit Modal -->
+      <div class="modal fade" id="editPermitModal" tabindex="-1" aria-labelledby="editPermitModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+
+            <!-- Modal Header -->
+            <div class="modal-header">
+              <h5 class="modal-title" id="editPermitModalLabel">
+                <i class="bi bi-pencil-square me-2 text-warning"></i> Edit Water Permit
+              </h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="modal-body">
+              <form id="editPermitForm" class="needs-validation" novalidate>
+
+                <!-- Nav Tabs -->
+                <ul class="nav nav-tabs mb-3" id="editPermitTab" role="tablist">
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="edit-basic-tab" data-bs-toggle="tab" data-bs-target="#edit-basic" type="button" role="tab">Basic Info</button>
+                  </li>
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="edit-technical-tab" data-bs-toggle="tab" data-bs-target="#edit-technical" type="button" role="tab">Technical Info</button>
+                  </li>
+                </ul>
+
+                <!-- Tab Contents -->
+                <div class="tab-content" id="editPermitTabContent">
+
+                  <!-- Tab 1: Basic Info -->
+                  <div class="tab-pane fade show active" id="edit-basic" role="tabpanel">
+                    <div class="row g-3">
+
+                      <!-- Permit No -->
+                      <div class="col-md-6">
+                        <label class="form-label"><i class="bi bi-hash me-1"></i> Permit No.</label>
+                        <input type="text" class="form-control" id="editPermitNo" required>
+                        <div class="invalid-feedback">Permit No. is required.</div>
+                      </div>
+
+                      <!-- Permittee -->
+                      <div class="col-md-6">
+                        <label class="form-label">
+                          <i class="bi bi-person-badge me-1"></i> Permittee
+                        </label>
+                        <textarea class="form-control" id="editPermittee" rows="2" required></textarea>
+                        <div class="invalid-feedback">Permittee is required.</div>
+                      </div>
+
+                      <!-- Mailing Address -->
+                      <div class="col-md-6">
+                        <label class="form-label">
+                          <i class="bi bi-geo-alt me-1"></i> Mailing Address
+                        </label>
+                        <textarea class="form-control" id="editMailingAddress" rows="2" required></textarea>
+                        <div class="invalid-feedback">Mailing Address is required.</div>
+                      </div>
+
+                      <!-- Diversion Point -->
+                      <div class="col-md-6">
+                        <label class="form-label">
+                          <i class="bi bi-geo-fill me-1"></i> Diversion Point
+                        </label>
+                        <textarea class="form-control" id="editDiversionPoint" rows="2" required></textarea>
+                        <div class="invalid-feedback">Diversion Point is required.</div>
+                      </div>
+
+                      <!-- Latitude -->
+                      <div class="col-md-6">
+                        <label class="form-label"><i class="bi bi-compass me-1"></i> Latitude</label>
+                        <div class="row g-2">
+                          <div class="col-3">
+                            <input type="number" class="form-control" id="editLatDegrees" placeholder="°" required>
+                          </div>
+                          <div class="col-3">
+                            <input type="number" class="form-control" id="editLatMinutes" placeholder="'" required>
+                          </div>
+                          <div class="col-3">
+                            <input type="number" class="form-control" id="editLatSeconds" placeholder='"' required step="any">
+                          </div>
+                          <div class="col-3">
+                            <select class="form-select" id="editLatDirection" required disabled>
+                              <option selected value="N">N</option>
+                              <option value="S">S</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div class="invalid-feedback">Complete Latitude is required.</div>
+                      </div>
+
+                      <!-- Longitude -->
+                      <div class="col-md-6">
+                        <label class="form-label"><i class="bi bi-compass me-1"></i> Longitude</label>
+                        <div class="row g-2">
+                          <div class="col-3">
+                            <input type="number" class="form-control" id="editLonDegrees" placeholder="°" required>
+                          </div>
+                          <div class="col-3">
+                            <input type="number" class="form-control" id="editLonMinutes" placeholder="'" required>
+                          </div>
+                          <div class="col-3">
+                            <input type="number" class="form-control" id="editLonSeconds" placeholder='"' required step="any">
+                          </div>
+                          <div class="col-3">
+                            <select class="form-select" id="editLonDirection" required disabled>
+                              <option selected value="E">E</option>
+                              <option value="W">W</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div class="invalid-feedback">Complete Longitude is required.</div>
+                      </div>
+
+                    </div>
+                  </div>
+
+                  <!-- Tab 2: Technical Info -->
+                  <div class="tab-pane fade" id="edit-technical" role="tabpanel">
+                    <div class="row g-3">
+
+                      <!-- Water Source -->
+                      <div class="col-md-6">
+                        <label class="form-label"><i class="bi bi-droplet-half me-1"></i> Water Source</label>
+                        <input type="text" class="form-control" id="editWaterSource" required>
+                        <div class="invalid-feedback">Water Source is required.</div>
+                      </div>
+
+                      <!-- Water Diversion -->
+                      <div class="col-md-6">
+                        <label class="form-label"><i class="bi bi-arrow-repeat me-1"></i> Water Diversion</label>
+                        <input type="text" class="form-control" id="editWaterDiversion" required>
+                        <div class="invalid-feedback">Water Diversion is required.</div>
+                      </div>
+
+                      <!-- Flow Rate -->
+                      <div class="col-md-6">
+                        <label class="form-label">
+                          <i class="bi bi-speedometer me-1"></i> Flow Rate (L/s)
+                        </label>
+                        <input type="number" class="form-control" id="editFlowRate" required min="0" step="any">
+                        <div class="invalid-feedback">Flow Rate is required.</div>
+                      </div>
+
+                      <!-- Period of Use -->
+                      <div class="col-md-6">
+                        <label class="form-label"><i class="bi bi-calendar-event me-1"></i> During the Month of</label>
+                        <input type="text" class="form-control" id="editPeriodOfUse" required>
+                        <div class="invalid-feedback">Period of Use is required.</div>
+                      </div>
+
+                      <!-- Purpose -->
+                      <div class="col-md-6">
+                        <label class="form-label">
+                          <i class="bi bi-clipboard-check me-1"></i> Purpose (e.g. Domestic)
+                        </label>
+                        <input type="text" class="form-control" id="editPurpose" required>
+                        <div class="invalid-feedback">Purpose is required.</div>
+                      </div>
+
+                      <!-- Visited Checkbox -->
+                      <div class="col-md-6">
+                        <div class="form-check mt-4">
+                          <input class="form-check-input" type="checkbox" id="editVisited">
+                          <label class="form-check-label" for="editVisited">
+                            <i class="bi bi-person-check me-1"></i> Already Visited?
+                          </label>
+                        </div>
+                      </div>
+
+                      <!-- PDF Attachment -->
+                      <div class="col-md-6">
+                        <label class="form-label">
+                          <i class="bi bi-paperclip me-1"></i> Replace PDF (Optional)
+                        </label>
+                        <input class="form-control" type="file" id="editPdfAttachment" accept=".pdf">
+                        <div class="form-text">Upload a new PDF to replace the existing one (optional).</div>
+                      </div>
+
+                    </div>
+                  </div>
+
+                </div> <!-- End Tab Content -->
+
+              </form>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                <i class="bi bi-x-circle me-1"></i> Cancel
+              </button>
+              <button type="button" class="btn btn-warning" id="updatePermitBtn">
+                <i class="bi bi-save me-1"></i> Update Permit
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div 
+
     </div>
   </div>
   <script type="module" src="js/permit/permit-init.js"></script>
