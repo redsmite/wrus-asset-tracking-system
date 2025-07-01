@@ -1,5 +1,6 @@
 import { ICS } from "../ics/ics-data.js";
 import { Users } from "../user/user-data.js";
+import { NotificationBox, Confirmation } from "../components/notification.js";
 
 export async function generatePdfICS(userId) {
   try {
@@ -136,10 +137,17 @@ export async function generatePdfICS(userId) {
 
     const isMobile = /Mobi|Android/i.test(navigator.userAgent);
     if (isMobile) {
-      const confirmSave = window.confirm("Do you want to save this ICS report as a PDF?");
-      if (confirmSave) {
-        doc.save(filename);
-      }
+      await new Promise((resolve) => {
+        Confirmation.show(
+          "Do you want to save this ICS report as a PDF?",
+          (confirmed) => {
+            if (confirmed) {
+              doc.save(filename);
+            }
+            resolve();
+          }
+        );
+      });
     } else {
       const blob = doc.output("blob");
       const blobUrl = URL.createObjectURL(blob);
@@ -150,14 +158,14 @@ export async function generatePdfICS(userId) {
         </div>
       `;
 
-
       const modal = new bootstrap.Modal(document.getElementById("ICS-pdfModal"));
       modal.show();
     }
 
+
   } catch (err) {
     console.error("Failed to generate ICS PDF:", err);
-    alert("Failed to generate PDF. Please try again.");
+    NotificationBox.show("Failed to generate PDF. Please try again.");
   }
 }
 

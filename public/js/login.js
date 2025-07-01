@@ -5,6 +5,7 @@ import {
   where,
   getDocs
 } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
+import { NotificationBox } from "./components/notification.js";
 
 import bcrypt from "https://esm.sh/bcryptjs@2.4.3";
 
@@ -32,7 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
           // 🚫 Block login if non-admin and status is inactive
           if (userRole !== "admin" && userStatus === "inactive") {
-            alert("Your account is inactive. Please contact the administrator.");
+            NotificationBox.show("Your account is inactive. Please contact the administrator.");
             return;
           }
 
@@ -50,15 +51,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
             window.location.href = userRole === "admin" ? "admin-dashboard.html" : "dashboard.html";
           } else {
-            alert("Incorrect password.");
+            NotificationBox.show("Incorrect password.");
           }
         } else {
-          alert("User not found.");
+          NotificationBox.show("User not found.");
         }
 
       } catch (error) {
         console.error("Login error:", error);
-        alert("Something went wrong. Please try again.");
+        NotificationBox.show("Something went wrong. Please try again.");
       }
     });
   }

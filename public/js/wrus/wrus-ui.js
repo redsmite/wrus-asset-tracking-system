@@ -1,11 +1,13 @@
 import { WUSData } from './wrus-data.js';
 import { Sidebar } from "../components/sidebar.js";
 import { Spinner } from '../components/spinner.js';
+import { NotificationBox } from '../components/notification.js';
 
 export function initializePage(){
   Sidebar.render();
-  loadWaterUser();
+  Spinner.render();
   initializeSearchBar();
+  loadWaterUser();
   handleAddForm();
   handleEditForm();
 }
@@ -51,10 +53,10 @@ function handleAddForm() {
       modal.hide();
 
       await loadWaterUser();
-      alert('Water User added successfully!');
+      NotificationBox.show('Water User added successfully!');
     } catch (err) {
       console.error('Error adding Water User:', err);
-      alert('Could not add Water User. Please try again.');
+      NotificationBox.show('Could not add Water User. Please try again.');
     } finally {
       Spinner.hide();
       submitButton.disabled = false;
@@ -71,6 +73,7 @@ async function loadWaterUser() {
     Spinner.hide();
   }
 }
+
 async function renderWaterUsers(searchTerm = '') {
   const tableBody = document.getElementById('waterUserTableBody');
   tableBody.innerHTML = '';
@@ -184,10 +187,10 @@ function handleEditForm() {
       form.classList.remove('was-validated');
 
       await loadWaterUser();
-      alert('Water User updated successfully!');
+      NotificationBox.show('Water User updated successfully!');
     } catch (err) {
       console.error('Error updating Water User:', err);
-      alert('Failed to update. Please try again.');
+      NotificationBox.show('Failed to update. Please try again.');
     } finally {
       Spinner.hide();
       submitBtn.disabled = false;

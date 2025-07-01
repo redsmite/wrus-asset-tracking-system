@@ -4,6 +4,7 @@ import { generateLedgerPDFBlob } from '../pdf/item-consumable-pdf.js';
 import { Users } from "../user/user-data.js"; 
 import { Sidebar } from "../components/sidebar.js";
 import { Spinner } from "../components/spinner.js";
+import { NotificationBox, Confirmation } from "../components/notification.js";
 
 let selectedCID = null;
 let currentItems = [];
@@ -45,18 +46,18 @@ function initAddItemHandler() {
       const addedBy = localStorage.getItem("userFullName") || "Unknown";
 
       if (!spec || !qty || !unit) {
-        alert("Specification, Quantity, and Unit are required.");
+        NotificationBox.show("Specification, Quantity, and Unit are required.");
         return;
       }
 
       const duplicate = await Consumable.isSpecDuplicate(spec);
       if (duplicate) {
-        alert("An item with the same specification already exists.");
+        NotificationBox.show("An item with the same specification already exists.");
         return;
       }
 
       await Consumable.add(spec, qty, unit, addedBy, remarks);
-      alert("Consumable Item successfully added!");
+      NotificationBox.show("Consumable Item successfully added!");
 
       // Clear form
       document.getElementById("newSpec").value = "";
@@ -68,7 +69,7 @@ function initAddItemHandler() {
       renderConsumableTable();
     } catch (error) {
       console.error("Error adding item:", error);
-      alert("An error occurred while adding the item.");
+      NotificationBox.show("An error occurred while adding the item.");
     } finally {
       Spinner.hide();
     }
@@ -87,17 +88,17 @@ function initEditItemHandler() {
       const unit = document.getElementById("editUnit").value.trim();
 
       if (!spec || !unit) {
-        alert("Specification and Unit are required.");
+        NotificationBox.show("Specification and Unit are required.");
         return;
       }
 
       await Consumable.update(cid, { specification: spec, unit });
-
+      NotificationBox.show("Items description updated succesfully.");
       editModal.hide();
       renderConsumableTable();
     } catch (error) {
       console.error("Error updating item:", error);
-      alert("An error occurred while updating the item.");
+      NotificationBox.show("An error occurred while updating the item.");
     } finally {
       Spinner.hide();
     }
@@ -118,43 +119,43 @@ function initAddStockHandler() {
   });
 
   // Confirm Add Stock
-  document.getElementById("confirmAddStockBtn")?.addEventListener("click", async () => {
-    Spinner.show();
-
+  document.getElementById("confirmAddStockBtn")?.addEventListener("click", () => {
     const amount = parseInt(document.getElementById("stockAmount").value.trim(), 10);
     const remarks = document.getElementById("stockRemarks").value.trim();
 
     if (isNaN(amount) || amount <= 0 || !selectedCID) {
-      Spinner.hide();
-      return alert("Invalid amount.");
+      return NotificationBox.show("Invalid amount.");
     }
 
-    const confirmAdd = confirm(
-      "Are you sure you want to add to this stock?\nThis action cannot be undone."
+    Confirmation.show(
+      "Are you sure you want to add to this stock?\nThis action cannot be undone.",
+      async (confirm) => {
+        if (!confirm) {
+          return; // ❌ User clicked No
+        }
+
+        Spinner.show();
+
+        try {
+          await Consumable.addStock(selectedCID, amount, remarks);
+
+          // Hide modals after success
+          const actionModalInstance = bootstrap.Modal.getInstance(document.getElementById("actionModal"));
+          const addStockModalInstance = bootstrap.Modal.getInstance(document.getElementById("addStockModal"));
+
+          addStockModalInstance?.hide();
+          actionModalInstance?.hide();
+
+          NotificationBox.show("Items added successfully");
+          renderConsumableTable();
+        } catch (err) {
+          console.error("Error adding stock:", err.message);
+          NotificationBox.show("Something went wrong. Please try again.");
+        } finally {
+          Spinner.hide();
+        }
+      }
     );
-    if (!confirmAdd) {
-      Spinner.hide();
-      return;
-    }
-
-    try {
-      await Consumable.addStock(selectedCID, amount, remarks);
-      
-      // Hide both modals after success
-      const actionModalInstance = bootstrap.Modal.getInstance(document.getElementById("actionModal"));
-      const addStockModalInstance = bootstrap.Modal.getInstance(document.getElementById("addStockModal"));
-
-      addStockModalInstance?.hide();
-      actionModalInstance?.hide();
-
-      alert("Items added successfully");
-      renderConsumableTable();
-    } catch (err) {
-      console.error("Error adding stock:", err.message);
-      alert("Something went wrong. Please try again.");
-    } finally {
-      Spinner.hide();
-    }
   });
 }
 
@@ -195,7 +196,7 @@ function initAssignHandler() {
       });
     } catch (err) {
       console.error("Error fetching users:", err);
-      alert("Failed to load users.");
+      NotificationBox.show("Failed to load users.");
       return;
     }
 
@@ -204,46 +205,48 @@ function initAssignHandler() {
   });
 
   // Handle Confirm Assign
-  document.getElementById("confirmAssignBtn")?.addEventListener("click", async () => {
-    Spinner.show();
-    try {
-      const qtyInput = document.getElementById("assignQty").value.trim();
-      const assignedTo = document.getElementById("userSelect").value;
-      const remarks = document.getElementById("assignRemarks").value.trim();
-      const amount = parseInt(qtyInput, 10);
+  document.getElementById("confirmAssignBtn")?.addEventListener("click", () => {
+    const qtyInput = document.getElementById("assignQty").value.trim();
+    const assignedTo = document.getElementById("userSelect").value;
+    const remarks = document.getElementById("assignRemarks").value.trim();
+    const amount = parseInt(qtyInput, 10);
 
-      if (isNaN(amount) || amount <= 0) {
-        alert("Please enter a valid quantity.");
-        return;
-      }
-
-      if (!assignedTo) {
-        alert("Please select a user to assign to.");
-        return;
-      }
-
-      // Confirmation prompt
-      const confirmAssign = confirm(
-        `Are you sure you want to assign ${amount} item(s) to this user?\nThis action cannot be undone.`
-      );
-      if (!confirmAssign) {
-        return;
-      }
-
-      await Consumable.assignItem(selectedCID, amount, assignedTo, remarks);
-      alert('Items assigned successfully');
-
-      renderConsumableTable();
-      assignModal.hide();
-      actionModal.hide();
-      document.getElementById("assignForm").reset();
-
-    } catch (error) {
-      console.error("Error assigning item:", error);
-      alert(error.message);
-    } finally {
-      Spinner.hide();
+    if (isNaN(amount) || amount <= 0) {
+      NotificationBox.show("Please enter a valid quantity.");
+      return;
     }
+
+    if (!assignedTo) {
+      NotificationBox.show("Please select a user to assign to.");
+      return;
+    }
+
+    // Confirmation prompt
+    Confirmation.show(
+      `Are you sure you want to assign ${amount} item(s) to this user?\nThis action cannot be undone.`,
+      async (confirm) => {
+        if (!confirm) {
+          return;
+        }
+
+        Spinner.show();
+        try {
+          await Consumable.assignItem(selectedCID, amount, assignedTo, remarks);
+
+          NotificationBox.show('Items assigned successfully');
+
+          renderConsumableTable();
+          assignModal.hide();
+          actionModal.hide();
+          document.getElementById("assignForm").reset();
+        } catch (error) {
+          console.error("Error assigning item:", error);
+          NotificationBox.show(error.message);
+        } finally {
+          Spinner.hide();
+        }
+      }
+    );
   });
 }
 
@@ -264,7 +267,7 @@ function initViewLedgerHandler() {
       new bootstrap.Modal(document.getElementById("ledgerModal")).show();
     } catch (err) {
       console.error("Error generating ledger:", err);
-      alert("Failed to generate ledger.");
+      NotificationBox.show("Failed to generate ledger.");
     } finally {
       Spinner.hide();
     }
@@ -360,6 +363,26 @@ function renderTablePage() {
       </td>
     `;
     tbody.appendChild(row);
+  });
+
+  // Attach click handlers for edit buttons
+  handleEditButtons();
+}
+
+function handleEditButtons() {
+  const editButtons = document.querySelectorAll(".edit-btn");
+
+  editButtons.forEach(button => {
+    button.addEventListener("click", () => {
+      const id = button.getAttribute("data-id");
+      const spec = button.getAttribute("data-spec");
+      const unit = button.getAttribute("data-unit");
+
+      // Populate the modal fields
+      document.getElementById("editCID").value = id;
+      document.getElementById("editSpec").value = spec;
+      document.getElementById("editUnit").value = unit;
+    });
   });
 }
 

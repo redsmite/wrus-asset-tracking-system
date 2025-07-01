@@ -3,6 +3,7 @@ import { ICS } from './ics-data.js';
 import { Users } from '../user/user-data.js';
 import { Sidebar } from '../components/sidebar.js'
 import { Spinner } from '../components/spinner.js';
+import { NotificationBox, Confirmation } from '../components/notification.js';
 
 let currentPage = 1;
 let rowsPerPage = 10;
@@ -127,7 +128,7 @@ function setupFileValidation() {
     fileInput.addEventListener('change', function () {
       const file = this.files[0];
       if (file && file.size > 1048576) {
-        alert("File exceeds 1MB limit.");
+        NotificationBox.show("File exceeds 1MB limit.");
         this.value = "";
       }
     });
@@ -184,7 +185,7 @@ async function handleICSFormSubmit(e) {
     renderICSTable();
   } catch (err) {
     console.error(err);
-    alert("Failed to save. Please try again.");
+    NotificationBox.show("Failed to save. Please try again.");
   } finally {
     Spinner.hide();
   }
@@ -378,7 +379,7 @@ async function handleEditICSSubmit(e) {
 
   const docId = document.getElementById('editDocId').value;
   if (!docId) {
-    alert("Document ID missing. Please reload and try again.");
+    NotificationBox.showt("Document ID missing. Please reload and try again.");
     Spinner.hide();
     return;
   }
@@ -397,7 +398,7 @@ async function handleEditICSSubmit(e) {
 
     const uploadedUrl = await FileService.uploadICSFile(newFile);
     if (!uploadedUrl) {
-      alert('New file upload failed.');
+      NotificationBox.show('New file upload failed.');
       Spinner.hide();
       return;
     }
@@ -420,7 +421,7 @@ async function handleEditICSSubmit(e) {
   };
 
   try {
-    alert('ICS entry update successful');
+    NotificationBox.show('ICS entry update successful');
     await ICS.update(docId, updatedData);
     bootstrap.Modal.getOrCreateInstance(document.getElementById('editICSModal')).hide();
     document.getElementById('editAttachment').value = '';
@@ -428,7 +429,7 @@ async function handleEditICSSubmit(e) {
     renderICSTable(null, currentPage);
   } catch (err) {
     console.error("❌ Failed to update ICS entry:", err);
-    alert("Update failed. Check console for details.");
+    NotificationBox.show("Update failed. Check console for details.");
   } finally {
     Spinner.hide();
     form.classList.remove('was-validated');
@@ -438,43 +439,48 @@ async function handleEditICSSubmit(e) {
 function initDeleteICSButton() {
   const deleteButton = document.getElementById("deleteICSButton");
 
-  Spinner.show();
+  if (!deleteButton) {
+    console.warn("Delete button not found in DOM.");
+    return;
+  }
 
-  try{ 
-    if (!deleteButton) {
-      console.warn("Delete button not found in DOM.");
+  deleteButton.addEventListener("click", () => {
+    const docId = document.getElementById("editDocId")?.value;
+    const attachmentURL = document.getElementById("editCurrentAttachmentUrl")?.value;
+
+    if (!docId) {
+      console.error("No docId found for deletion.");
       return;
     }
 
-    deleteButton.addEventListener("click", async () => {
-      const docId = document.getElementById("editDocId")?.value;
-      let attachmentURL = document.getElementById('editCurrentAttachmentUrl').value;
+    Confirmation.show(
+      "Are you sure you want to delete this ICS entry?\nThis action is irreversible.",
+      async (confirmed) => {
+        if (!confirmed) return;
 
-      if (!docId) {
-        console.error("No docId found for deletion.");
-        return;
-      }
-
-      const confirmDelete = confirm(`Are you sure you want to delete this ICS entry?\nThis action is irreversible`);
-      if (!confirmDelete) return;
-
-      try {
-        if (attachmentURL) {
-          const deleted = await FileService.deleteFileFromStorage(attachmentURL);
-          if (!deleted) {
-            console.warn("Attachment might not have been deleted.");
+        Spinner.show();
+        try {
+          // Delete attachment if exists
+          if (attachmentURL) {
+            const deleted = await FileService.deleteFileFromStorage(attachmentURL);
+            if (!deleted) {
+              console.warn("Attachment might not have been deleted.");
+            }
           }
+
+          // Delete ICS document
+          await ICS.delete(docId);
+
+          NotificationBox.show("ICS entry deleted successfully");
+          bootstrap.Modal.getInstance(document.getElementById("editICSModal"))?.hide();
+          await renderICSTable();
+        } catch (error) {
+          console.error("Failed to delete ICS entry:", error);
+          NotificationBox.show("Failed to delete ICS entry.");
+        } finally {
+          Spinner.hide();
         }
-        await ICS.delete(docId);
-        alert('ICS entry deleted successfully');
-        bootstrap.Modal.getInstance(document.getElementById("editICSModal")).hide();
-        await renderICSTable(); // Refresh the table
-      } catch (error) {
-        console.error("Failed to delete ICS entry:", error);
-        alert("Failed to delete ICS entry.");
       }
-    });
-  } finally {
-    Spinner.hide();
-  }
+    );
+  });
 }

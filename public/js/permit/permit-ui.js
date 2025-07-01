@@ -3,14 +3,14 @@ import { Spinner } from "../components/spinner.js";
 import { Permit } from "./permit-data.js";
 import { FileService } from "../upload/upload.js";
 import { CoordinateUtils } from "../utils/coordinates.js";
-
+import { NotificationBox } from "../components/notification.js";
 
 export function initializePage(){
   Sidebar.render();
   Spinner.render();
   handleAddButton();
   handleAddFormSubmit();
-  renderPermitTable();
+  loadPermit();
   setupToggle('toggleFilter', 'filterSection', 'Show Filters', 'Hide Filters');
   initializePermitUpdate();
 }
@@ -85,7 +85,7 @@ function handleAddFormSubmit() {
     try {
       await Permit.add(data);
       renderPermitTable();
-      alert('✅ Permit successfully added');
+      NotificationBox.show('Permit successfully added');
 
       // Reset form
       form.reset();
@@ -93,7 +93,7 @@ function handleAddFormSubmit() {
       const modal = bootstrap.Modal.getInstance(document.getElementById('addPermitModal'));
       modal.hide();
     } catch (error) {
-      alert(`❌ Error: ${error.message}`);
+      NotificationBox.show(`❌ Error: ${error.message}`);
       console.error('Error:', error);
     } finally {
       Spinner.hide();
@@ -297,6 +297,15 @@ async function renderPermitTable() {
   }
 }
 
+async function loadPermit(){
+  Spinner.show();
+  try{
+    await renderPermitTable();
+  } finally {
+    Spinner.hide();
+  }
+}
+
 function populateEditModal(permit) {
   document.getElementById('editPermitForm').setAttribute('data-id', permit.id);
   // Basic Info
@@ -423,7 +432,7 @@ function initializePermitUpdate() {
       // 🚀 Update Firestore
       await Permit.update(id, data);
       renderPermitTable();
-      alert('Permit updated successfully');
+      NotificationBox.show('Permit updated successfully');
 
       const editModal = bootstrap.Modal.getInstance(document.getElementById('editPermitModal'));
       if (editModal) editModal.hide();
@@ -432,7 +441,7 @@ function initializePermitUpdate() {
 
     } catch (error) {
       console.error(' Error updating permit:', error);
-      alert('Failed to update permit. Please try again.');
+      NotificationBox.show('Failed to update permit. Please try again.');
     } finally {
       Spinner.hide();
     }

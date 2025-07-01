@@ -11,6 +11,7 @@ import {
   where
 } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
 import { db } from "../firebaseConfig.js";
+import { NotificationBox } from "../components/notification.js";
 
 export const ICS = {
   collectionRef: collection(db, "ICS"),
@@ -30,7 +31,7 @@ export const ICS = {
   async add(icsData) {
     try {
       if (!icsData.ICSno || typeof icsData.ICSno !== 'string' || icsData.ICSno.trim() === '') {
-        alert('ICS No. is required.');
+        NotificationBox.show('ICS No. is required.');
         return;
       }
 
@@ -40,10 +41,10 @@ export const ICS = {
       };
 
       await addDoc(this.collectionRef, dataToSave);
-      alert('ICS entry saved successfully!');
+      NotificationBox.show('ICS entry saved successfully!');
     } catch (err) {
       console.error("Error adding ICS entry:", err);
-      alert('Error saving ICS entry. Check console for details.');
+      NotificationBox.show('Error saving ICS entry. Check console for details.');
     }
   },
 

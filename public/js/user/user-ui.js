@@ -3,10 +3,11 @@ import { Users } from './user-data.js';
 import { Spinner } from '../components/spinner.js';
 import { Sidebar } from '../components/sidebar.js';
 import { adminVerification } from '../admin/admin-verification.js';
+import { NotificationBox } from "../components/notification.js";
 
-export let currentPage = 1;
-export const usersPerPage = 7;
-export let allUsers = [];
+let currentPage = 1;
+const usersPerPage = 7;
+let allUsers = [];
 
 export function initializePage(){
   Sidebar.render();
@@ -77,7 +78,7 @@ function initializeAddUserModal() {
         (user) => user.username?.toLowerCase() === username.toLowerCase()
       );
       if (usernameExists) {
-        alert("Username already exists.");
+        NotificationBox.show("Username already exists.");
         return;
       }
 
@@ -87,7 +88,7 @@ function initializeAddUserModal() {
           (user) => user.duty === "Supervisor"
         );
         if (supervisorExists) {
-          alert("A user with 'Supervisor' duty already exists. Only one supervisor is allowed.");
+          NotificationBox.show("A user with 'Supervisor' duty already exists. Only one supervisor is allowed.");
           return;
         }
       }
@@ -109,7 +110,7 @@ function initializeAddUserModal() {
         role: "user",
       });
 
-      alert("User successfully added.");
+      NotificationBox.show("User successfully added.");
       await loadUsers();
 
       // ✅ Reset form and close modal
@@ -118,7 +119,7 @@ function initializeAddUserModal() {
       modal.hide();
     } catch (err) {
       console.error("Error creating user:", err.message);
-      alert("Error creating user: " + err.message);
+      NotificationBox.show("Error creating user: " + err.message);
     } finally {
       Spinner.hide();
     }
@@ -223,7 +224,7 @@ function initializeEditFunctionality() {
 
       // ✅ Basic Validation
       if (!username || !lastName || !firstName || !position || !duty || !type || !status) {
-        alert("Please fill in all required fields.");
+        NotificationBox.show("Please fill in all required fields.");
         return;
       }
 
@@ -237,13 +238,13 @@ function initializeEditFunctionality() {
       );
 
       if (usernameExists) {
-        alert("Username already exists. Please choose another one.");
+        NotificationBox.show("Username already exists. Please choose another one.");
         return;
       }
 
       // ✅ Password confirmation
       if ((password || confirmPassword) && password !== confirmPassword) {
-        alert("Passwords do not match.");
+        NotificationBox.show("Passwords do not match.");
         return;
       }
 
@@ -252,7 +253,7 @@ function initializeEditFunctionality() {
           (user) => user.duty === "Supervisor" && user.id !== id
         );
         if (existingSupervisor) {
-          alert("A supervisor already exists. Only one supervisor is allowed.");
+          NotificationBox.show("A supervisor already exists. Only one supervisor is allowed.");
           return;
         }
       }
@@ -276,7 +277,7 @@ function initializeEditFunctionality() {
 
       await Users.update(id, updateData);
 
-      alert("User updated successfully.");
+      NotificationBox.show("User updated successfully.");
 
       const modalEl = document.getElementById("editUserModal");
       const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
@@ -290,7 +291,7 @@ function initializeEditFunctionality() {
       await loadUsers();
     } catch (error) {
       console.error("Error submitting edit form:", error);
-      alert("An error occurred while updating the user.");
+      NotificationBox.show("An error occurred while updating the user.");
     } finally {
       Spinner.hide();
     }

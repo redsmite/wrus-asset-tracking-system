@@ -125,6 +125,76 @@ nav.navbar {
   filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.4)); /* Adds thickness */
 }
 
+/* NOTIFICATION */
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background-color: #4CAF50;
+  color: white;
+  padding: 15px 20px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  transform: translateY(-20px);
+  z-index: 9999;
+  font-family: sans-serif;
+}
+
+.notification.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.notification.error {
+  background-color: #f44336;
+}
+
+.notification.info {
+  background-color: #2196F3;
+}
+
+.notification.warning {
+  background-color: #ff9800;
+}
+
+/* Confirmation */
+.custom-confirm-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1055;
+}
+
+.custom-confirm-box {
+  background: white;
+  padding: 20px 25px;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+}
+
+.custom-confirm-message {
+  margin-bottom: 20px;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.custom-confirm-buttons button {
+  margin: 0 8px;
+  min-width: 70px;
+}
+
 @keyframes spinY {
   0%   { transform: rotateY(0deg); }
   100% { transform: rotateY(360deg); }

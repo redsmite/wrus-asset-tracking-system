@@ -1,4 +1,5 @@
 import { supabase } from './supabaseInit.js';
+import { NotificationBox } from '../components/notification.js';
 
 export const FileService = {
   async uploadICSFile(file) {
@@ -11,7 +12,7 @@ export const FileService = {
 
     if (error) {
       console.error('ICS file upload failed:', error.message);
-      alert('ICS file upload failed.');
+      NotificationBox.show('ICS file upload failed.');
       return null;
     }
 
@@ -33,7 +34,7 @@ export const FileService = {
 
     if (error) {
       console.error('Permit file upload failed:', error.message);
-      alert('Permit file upload failed.');
+      NotificationBox.show('Permit file upload failed.');
       return null;
     }
 
