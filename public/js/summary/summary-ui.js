@@ -11,7 +11,7 @@ import { Spinner } from '../components/spinner.js';
 let users = [];
 let filteredUsers = [];
 let currentPage = 1;
-const usersPerPage = 8;
+const usersPerPage = 10;
 
 // INIT FUNCTIONS
 let tableBody, searchInput, pageContent, paginationNav, modalElement, bsModal;
@@ -187,6 +187,7 @@ function renderPagination(totalPages) {
     ul.appendChild(li);
   };
 
+  // Previous button
   addItem("Previous", currentPage === 1, () => {
     if (currentPage > 1) {
       currentPage--;
@@ -194,13 +195,24 @@ function renderPagination(totalPages) {
     }
   });
 
-  for (let i = 1; i <= totalPages; i++) {
+  // Calculate page range (max 5 at a time)
+  let startPage = Math.max(1, currentPage - 2);
+  let endPage = startPage + 4;
+
+  if (endPage > totalPages) {
+    endPage = totalPages;
+    startPage = Math.max(1, endPage - 4);
+  }
+
+  // Numbered buttons (limited to 5)
+  for (let i = startPage; i <= endPage; i++) {
     addItem(i, false, () => {
       currentPage = i;
       renderTable();
     }, i === currentPage);
   }
 
+  // Next button
   addItem("Next", currentPage === totalPages, () => {
     if (currentPage < totalPages) {
       currentPage++;

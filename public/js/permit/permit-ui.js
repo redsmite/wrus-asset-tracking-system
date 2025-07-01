@@ -224,12 +224,25 @@ async function renderPermitTable() {
         return li;
       };
 
+      // Calculate start and end page for pagination window (max 5 pages)
+      const maxPageButtons = 5;
+      let startPage = Math.max(1, currentPage - Math.floor(maxPageButtons / 2));
+      let endPage = startPage + maxPageButtons - 1;
+
+      if (endPage > totalPages) {
+        endPage = totalPages;
+        startPage = Math.max(1, endPage - maxPageButtons + 1);
+      }
+
+      // Previous button
       pagination.appendChild(createButton('«', currentPage - 1, currentPage === 1));
 
-      for (let i = 1; i <= totalPages; i++) {
+      // Page number buttons
+      for (let i = startPage; i <= endPage; i++) {
         pagination.appendChild(createButton(i, i, false, currentPage === i));
       }
 
+      // Next button
       pagination.appendChild(createButton('»', currentPage + 1, currentPage === totalPages));
     }
 

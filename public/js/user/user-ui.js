@@ -6,7 +6,7 @@ import { adminVerification } from '../admin/admin-verification.js';
 import { NotificationBox } from "../components/notification.js";
 
 let currentPage = 1;
-const usersPerPage = 7;
+const usersPerPage = 10;
 let allUsers = [];
 
 export function initializePage(){
@@ -298,21 +298,71 @@ function initializeEditFunctionality() {
   };
 }
 
-function renderPaginationControls(totalPages, current, searchQuery = "") {
-  const paginationContainer = document.getElementById("paginationControls");
-  paginationContainer.innerHTML = "";
+function renderPaginationControls(totalPages, currentPage, searchQuery = "") {
+  const pagination = document.getElementById("paginationControlsUsers");
+  pagination.innerHTML = "";
 
-  for (let i = 1; i <= totalPages; i++) {
-    const btn = document.createElement("button");
-    btn.textContent = i;
-    btn.className = `btn btn-sm ${i === current ? 'btn-primary' : 'btn-outline-primary'} mx-1`;
-    btn.addEventListener("click", () => {
-      currentPage = i;
+  if (totalPages <= 1) return; // No need to show pagination for 1 page
+
+  const maxVisiblePages = 5;
+  let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+  let endPage = startPage + maxVisiblePages - 1;
+
+  if (endPage > totalPages) {
+    endPage = totalPages;
+    startPage = Math.max(1, endPage - maxVisiblePages + 1);
+  }
+
+  const ul = document.createElement("ul");
+  ul.className = "pagination justify-content-center";
+
+  // Previous Button
+  const prevItem = document.createElement("li");
+  prevItem.className = `page-item ${currentPage === 1 ? "disabled" : ""}`;
+  prevItem.innerHTML = `
+    <a class="page-link" href="#" aria-label="Previous">
+      <span aria-hidden="true">&laquo;</span>
+    </a>
+  `;
+  prevItem.addEventListener("click", (e) => {
+    e.preventDefault();
+    if (currentPage > 1) {
+      renderUsersTable(currentPage - 1, searchQuery);
+    }
+  });
+  ul.appendChild(prevItem);
+
+  // Page Number Buttons
+  for (let i = startPage; i <= endPage; i++) {
+    const pageItem = document.createElement("li");
+    pageItem.className = `page-item ${i === currentPage ? "active" : ""}`;
+    pageItem.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+    pageItem.addEventListener("click", (e) => {
+      e.preventDefault();
       renderUsersTable(i, searchQuery);
     });
-    paginationContainer.appendChild(btn);
+    ul.appendChild(pageItem);
   }
+
+  // Next Button
+  const nextItem = document.createElement("li");
+  nextItem.className = `page-item ${currentPage === totalPages ? "disabled" : ""}`;
+  nextItem.innerHTML = `
+    <a class="page-link" href="#" aria-label="Next">
+      <span aria-hidden="true">&raquo;</span>
+    </a>
+  `;
+  nextItem.addEventListener("click", (e) => {
+    e.preventDefault();
+    if (currentPage < totalPages) {
+      renderUsersTable(currentPage + 1, searchQuery);
+    }
+  });
+  ul.appendChild(nextItem);
+
+  pagination.appendChild(ul);
 }
+
 
 function handleSearchBar() {
   document.getElementById("searchInput").addEventListener("input", (e) => {

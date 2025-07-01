@@ -11,7 +11,7 @@ let currentItems = [];
 let filteredItems = [];
 let currentPage = 1;
 let currentQty = 0;
-const pageSize = 8;
+let pageSize = 10;
 
 // ---------- Event Listeners ----------
 export function initializePage() {
@@ -25,6 +25,7 @@ export function initializePage() {
   initViewLedgerHandler();
   initSearchHandler();
   initActionButtonHandler();
+  pageSizeSelectHandler();
 }
 
 // ---------- Item Handling ----------
@@ -205,48 +206,46 @@ function initAssignHandler() {
   });
 
   // Handle Confirm Assign
-  document.getElementById("confirmAssignBtn")?.addEventListener("click", () => {
-    const qtyInput = document.getElementById("assignQty").value.trim();
-    const assignedTo = document.getElementById("userSelect").value;
-    const remarks = document.getElementById("assignRemarks").value.trim();
-    const amount = parseInt(qtyInput, 10);
+  document.getElementById("confirmAssignBtn")?.addEventListener("click", async () => {
+    Spinner.show();
+    try {
+      const qtyInput = document.getElementById("assignQty").value.trim();
+      const assignedTo = document.getElementById("userSelect").value;
+      const remarks = document.getElementById("assignRemarks").value.trim();
+      const amount = parseInt(qtyInput, 10);
 
-    if (isNaN(amount) || amount <= 0) {
-      NotificationBox.show("Please enter a valid quantity.");
-      return;
-    }
-
-    if (!assignedTo) {
-      NotificationBox.show("Please select a user to assign to.");
-      return;
-    }
-
-    // Confirmation prompt
-    Confirmation.show(
-      `Are you sure you want to assign ${amount} item(s) to this user?\nThis action cannot be undone.`,
-      async (confirm) => {
-        if (!confirm) {
-          return;
-        }
-
-        Spinner.show();
-        try {
-          await Consumable.assignItem(selectedCID, amount, assignedTo, remarks);
-
-          NotificationBox.show('Items assigned successfully');
-
-          renderConsumableTable();
-          assignModal.hide();
-          actionModal.hide();
-          document.getElementById("assignForm").reset();
-        } catch (error) {
-          console.error("Error assigning item:", error);
-          NotificationBox.show(error.message);
-        } finally {
-          Spinner.hide();
-        }
+      if (isNaN(amount) || amount <= 0) {
+        NotificationBox.show("Please enter a valid quantity.");
+        return;
       }
-    );
+
+      if (!assignedTo) {
+        NotificationBox.show("Please select a user to assign to.");
+        return;
+      }
+
+      // Confirmation prompt
+      const confirmAssign = confirm(
+        `Are you sure you want to assign ${amount} item(s) to this user?\nThis action cannot be undone.`
+      );
+      if (!confirmAssign) {
+        return;
+      }
+
+      await Consumable.assignItem(selectedCID, amount, assignedTo, remarks);
+      NotificationBox.show('Items assigned successfully');
+
+      renderConsumableTable();
+      assignModal.hide();
+      actionModal.hide();
+      document.getElementById("assignForm").reset();
+
+    } catch (error) {
+      console.error("Error assigning item:", error);
+      NotificationBox.show(error.message);
+    } finally {
+      Spinner.hide();
+    }
   });
 }
 
@@ -391,18 +390,97 @@ function renderPagination() {
   if (!paginationContainer) return;
 
   paginationContainer.innerHTML = "";
+
   const totalPages = Math.ceil(filteredItems.length / pageSize);
   if (totalPages <= 1) return;
 
-  for (let i = 1; i <= totalPages; i++) {
+  const nav = document.createElement("nav");
+  const ul = document.createElement("ul");
+  ul.classList.add("pagination");
+
+  // Previous Button
+  const prevLi = document.createElement("li");
+  prevLi.classList.add("page-item");
+  if (currentPage === 1) prevLi.classList.add("disabled");
+
+  const prevBtn = document.createElement("button");
+  prevBtn.classList.add("page-link");
+  prevBtn.textContent = "Previous";
+  prevBtn.addEventListener("click", () => {
+    if (currentPage > 1) {
+      currentPage--;
+      renderTablePage();
+      renderPagination();
+    }
+  });
+
+  prevLi.appendChild(prevBtn);
+  ul.appendChild(prevLi);
+
+  // Calculate page range (max 5 pages at a time)
+  let startPage = Math.max(1, currentPage - 2);
+  let endPage = startPage + 4;
+
+  if (endPage > totalPages) {
+    endPage = totalPages;
+    startPage = Math.max(1, endPage - 4);
+  }
+
+  // Numbered Buttons
+  for (let i = startPage; i <= endPage; i++) {
+    const li = document.createElement("li");
+    li.classList.add("page-item");
+    if (i === currentPage) li.classList.add("active");
+
     const btn = document.createElement("button");
+    btn.classList.add("page-link");
     btn.textContent = i;
-    btn.classList.add("btn", "btn-sm", "mx-1", i === currentPage ? "btn-primary" : "btn-outline-primary");
+
     btn.addEventListener("click", () => {
       currentPage = i;
       renderTablePage();
       renderPagination();
     });
-    paginationContainer.appendChild(btn);
+
+    li.appendChild(btn);
+    ul.appendChild(li);
   }
+
+  // Next Button
+  const nextLi = document.createElement("li");
+  nextLi.classList.add("page-item");
+  if (currentPage === totalPages) nextLi.classList.add("disabled");
+
+  const nextBtn = document.createElement("button");
+  nextBtn.classList.add("page-link");
+  nextBtn.textContent = "Next";
+  nextBtn.addEventListener("click", () => {
+    if (currentPage < totalPages) {
+      currentPage++;
+      renderTablePage();
+      renderPagination();
+    }
+  });
+
+  nextLi.appendChild(nextBtn);
+  ul.appendChild(nextLi);
+
+  nav.appendChild(ul);
+  paginationContainer.appendChild(nav);
 }
+
+
+function pageSizeSelectHandler() {
+  const pageSizeSelect = document.getElementById('pageSizeSelect');
+  if (!pageSizeSelect) return;
+
+  pageSizeSelect.addEventListener('change', () => {
+    pageSize = parseInt(pageSizeSelect.value);
+    currentPage = 1; // Reset to first page
+    renderTablePage();
+    renderPagination();
+  });
+}
+
+
+

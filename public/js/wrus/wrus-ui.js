@@ -13,8 +13,9 @@ export function initializePage(){
 }
 
 let currentPage = 1;
-const rowsPerPage = 10;  // You can change to any number
-let allUsers = [];       // Global to store fetched users
+const rowsPerPage = 10;
+let allUsers = [];
+let searchTerm = '';
 
 function handleAddForm() {
   const form = document.getElementById('addWusForm');
@@ -74,30 +75,30 @@ async function loadWaterUser() {
   }
 }
 
-async function renderWaterUsers(searchTerm = '') {
+async function renderWaterUsers(term = '') {
   const tableBody = document.getElementById('waterUserTableBody');
   tableBody.innerHTML = '';
 
   if (allUsers.length === 0) {
-    // Fetch once
     allUsers = await WUSData.fetchAllDesc();
   }
 
-  const term = searchTerm.trim().toLowerCase();
-  const filteredUsers = term
+  searchTerm = term.trim().toLowerCase();
+
+  const filteredUsers = searchTerm
     ? allUsers.filter(u =>
-        (u.id               || '').toLowerCase().includes(term) ||
-        (u.nameOfWaterUser  || '').toLowerCase().includes(term) ||
-        (u.location         || '').toLowerCase().includes(term) ||
-        (u.type             || '').toLowerCase().includes(term) ||
-        (u.remarks          || '').toLowerCase().includes(term) ||
-        (u.latitude         || '').toString().includes(term) ||
-        (u.longitude        || '').toString().includes(term)
+        (u.id               || '').toLowerCase().includes(searchTerm) ||
+        (u.nameOfWaterUser  || '').toLowerCase().includes(searchTerm) ||
+        (u.location         || '').toLowerCase().includes(searchTerm) ||
+        (u.type             || '').toLowerCase().includes(searchTerm) ||
+        (u.remarks          || '').toLowerCase().includes(searchTerm) ||
+        (u.latitude         || '').toString().includes(searchTerm) ||
+        (u.longitude        || '').toString().includes(searchTerm)
       )
     : allUsers;
 
-  const totalPages = Math.ceil(filteredUsers.length / rowsPerPage);
-  if (currentPage > totalPages) currentPage = totalPages || 1;
+  const totalPages = Math.ceil(filteredUsers.length / rowsPerPage) || 1;
+  if (currentPage > totalPages) currentPage = totalPages;
 
   const start = (currentPage - 1) * rowsPerPage;
   const end = start + rowsPerPage;
@@ -123,7 +124,13 @@ async function renderWaterUsers(searchTerm = '') {
     tableBody.appendChild(tr);
   });
 
-  // Attach edit button listeners
+  attachEditListeners(filteredUsers);
+
+  renderPagination(totalPages);
+}
+
+function attachEditListeners(filteredUsers) {
+  const tableBody = document.getElementById('waterUserTableBody');
   tableBody.querySelectorAll('.edit-btn').forEach(button => {
     button.addEventListener('click', () => {
       const id = button.getAttribute('data-id');
@@ -143,13 +150,62 @@ async function renderWaterUsers(searchTerm = '') {
       modal.show();
     });
   });
+}
 
-  // Update pagination info
-  document.getElementById('paginationInfo').textContent = `Page ${currentPage} of ${totalPages}`;
+function renderPagination(totalPages) {
+  const pagination = document.getElementById('pagination');
+  pagination.innerHTML = '';
 
-  // Disable/enable buttons
-  document.getElementById('prevPage').disabled = currentPage === 1;
-  document.getElementById('nextPage').disabled = currentPage === totalPages;
+  // Previous Button
+  const prevItem = document.createElement('li');
+  prevItem.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+  prevItem.innerHTML = `
+    <a class="page-link" href="#">Previous</a>
+  `;
+  prevItem.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (currentPage > 1) {
+      currentPage--;
+      renderWaterUsers(searchTerm);
+    }
+  });
+  pagination.appendChild(prevItem);
+
+  // Numbered Buttons (Limit to 5 pages around current page)
+  const maxVisible = 5;
+  let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+  let endPage = startPage + maxVisible - 1;
+  if (endPage > totalPages) {
+    endPage = totalPages;
+    startPage = Math.max(1, endPage - maxVisible + 1);
+  }
+
+  for (let i = startPage; i <= endPage; i++) {
+    const pageItem = document.createElement('li');
+    pageItem.className = `page-item ${i === currentPage ? 'active' : ''}`;
+    pageItem.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+    pageItem.addEventListener('click', (e) => {
+      e.preventDefault();
+      currentPage = i;
+      renderWaterUsers(searchTerm);
+    });
+    pagination.appendChild(pageItem);
+  }
+
+  // Next Button
+  const nextItem = document.createElement('li');
+  nextItem.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+  nextItem.innerHTML = `
+    <a class="page-link" href="#">Next</a>
+  `;
+  nextItem.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (currentPage < totalPages) {
+      currentPage++;
+      renderWaterUsers(searchTerm);
+    }
+  });
+  pagination.appendChild(nextItem);
 }
 
 function handleEditForm() {
@@ -205,21 +261,3 @@ function initializeSearchBar() {
     renderWaterUsers(term);
   });
 }
-
-document.getElementById('prevPage').addEventListener('click', () => {
-  if (currentPage > 1) {
-    currentPage--;
-    renderWaterUsers(document.getElementById('searchInput').value);
-  }
-});
-
-document.getElementById('nextPage').addEventListener('click', () => {
-  currentPage++;
-  renderWaterUsers(document.getElementById('searchInput').value);
-});
-
-document.getElementById('searchInput').addEventListener('input', () => {
-  currentPage = 1;  // Reset to first page on new search
-  renderWaterUsers(document.getElementById('searchInput').value);
-});
-

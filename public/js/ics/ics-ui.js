@@ -298,22 +298,56 @@ async function renderICSTable(dataSet = null, page = 1) {
   }
 }
 
-
-function renderPaginationControls(dataSet, currentPage) {
-  const pagination = document.getElementById("paginationControls");
+function renderPaginationControls(dataSet, page) {
+  const totalPages = Math.ceil(dataSet.length / rowsPerPage);
+  const pagination = document.getElementById("paginationControlsICS");
   pagination.innerHTML = "";
 
-  const totalPages = Math.ceil(dataSet.length / rowsPerPage);
+  // Calculate page range (max 5 pages at a time)
+  const maxVisiblePages = 5;
+  let startPage = Math.max(1, page - Math.floor(maxVisiblePages / 2));
+  let endPage = startPage + maxVisiblePages - 1;
 
-  for (let i = 1; i <= totalPages; i++) {
-    const btn = document.createElement("button");
-    btn.className = `btn btn-sm mx-1 ${i === currentPage ? "btn-primary" : "btn-outline-primary"}`;
-    btn.textContent = i;
-    btn.addEventListener("click", () => {
-      renderICSTable(dataSet, i);
-    });
-    pagination.appendChild(btn);
+  if (endPage > totalPages) {
+    endPage = totalPages;
+    startPage = Math.max(1, endPage - maxVisiblePages + 1);
   }
+
+  // Previous Button
+  const prevItem = document.createElement("li");
+  prevItem.className = `page-item ${page === 1 ? "disabled" : ""}`;
+  prevItem.innerHTML = `<a class="page-link" href="#">Previous</a>`;
+  prevItem.addEventListener("click", (e) => {
+    e.preventDefault();
+    if (page > 1) {
+      renderICSTable(null, page - 1);
+    }
+  });
+  pagination.appendChild(prevItem);
+
+  // Page Numbers
+  for (let i = startPage; i <= endPage; i++) {
+    const pageItem = document.createElement("li");
+    pageItem.className = `page-item ${i === page ? "active" : ""}`;
+    pageItem.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+    pageItem.addEventListener("click", (e) => {
+      e.preventDefault();
+      renderICSTable(null, i);
+    });
+    pagination.appendChild(pageItem);
+  }
+
+  // Next Button
+  const nextItem = document.createElement("li");
+  nextItem.className = `page-item ${page === totalPages ? "disabled" : ""}`;
+  nextItem.innerHTML = `<a class="page-link" href="#">Next</a>`;
+  nextItem.addEventListener("click", (e) => {
+    e.preventDefault();
+    if (page < totalPages) {
+      renderICSTable(null, page + 1);
+    }
+  });
+  pagination.appendChild(nextItem);
 }
 
 function applySearchFilter() {

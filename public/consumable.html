@@ -32,6 +32,17 @@
         </div>
       </div>
 
+      
+      <div class="d-flex align-items-center gap-2 my-2">
+        <label for="pageSizeSelect" class="form-label mb-0">Show</label>
+        <select id="pageSizeSelect" class="form-select form-select-sm" style="width: auto;">
+          <option value="10">10</option>
+          <option value="25">25</option>
+          <option value="50">50</option>
+        </select>
+        <span>entries</span>
+      </div>
+
       <div class="table-responsive">
         <table id="consumableTable" class="table table-bordered table-hover text-center align-middle">
           <thead class="table-success">
@@ -49,7 +60,7 @@
           </tbody>
         </table>
         <div class="d-flex justify-content-center my-3" id="paginationContainer"></div>
-      </div>
+
 
       <!-- Add Item Modal -->
       <div class="modal fade" id="addItemModal" tabindex="-1" aria-labelledby="addItemModalLabel" aria-hidden="true">
