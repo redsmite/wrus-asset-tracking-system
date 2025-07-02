@@ -174,7 +174,6 @@ function initAssignHandler() {
     const userSelect = document.getElementById("userSelect");
     if (!userSelect) return;
 
-    // Populate user dropdown
     userSelect.innerHTML = '';
 
     const defaultOption = document.createElement("option");
@@ -201,51 +200,52 @@ function initAssignHandler() {
       return;
     }
 
-    // Show modal
     assignModal.show();
   });
 
   // Handle Confirm Assign
-  document.getElementById("confirmAssignBtn")?.addEventListener("click", async () => {
-    Spinner.show();
-    try {
-      const qtyInput = document.getElementById("assignQty").value.trim();
-      const assignedTo = document.getElementById("userSelect").value;
-      const remarks = document.getElementById("assignRemarks").value.trim();
-      const amount = parseInt(qtyInput, 10);
+  document.getElementById("confirmAssignBtn")?.addEventListener("click", () => {
+    const qtyInput = document.getElementById("assignQty").value.trim();
+    const assignedTo = document.getElementById("userSelect").value;
+    const remarks = document.getElementById("assignRemarks").value.trim();
+    const amount = parseInt(qtyInput, 10);
 
-      if (isNaN(amount) || amount <= 0) {
-        NotificationBox.show("Please enter a valid quantity.");
-        return;
-      }
-
-      if (!assignedTo) {
-        NotificationBox.show("Please select a user to assign to.");
-        return;
-      }
-
-      // Confirmation prompt
-      const confirmAssign = confirm(
-        `Are you sure you want to assign ${amount} item(s) to this user?\nThis action cannot be undone.`
-      );
-      if (!confirmAssign) {
-        return;
-      }
-
-      await Consumable.assignItem(selectedCID, amount, assignedTo, remarks);
-      NotificationBox.show('Items assigned successfully');
-
-      renderConsumableTable();
-      assignModal.hide();
-      actionModal.hide();
-      document.getElementById("assignForm").reset();
-
-    } catch (error) {
-      console.error("Error assigning item:", error);
-      NotificationBox.show(error.message);
-    } finally {
-      Spinner.hide();
+    if (isNaN(amount) || amount <= 0) {
+      NotificationBox.show("Please enter a valid quantity.");
+      return;
     }
+
+    if (!assignedTo) {
+      NotificationBox.show("Please select a user to assign to.");
+      return;
+    }
+
+    // Confirmation dialog
+    Confirmation.show(
+      `Are you sure you want to assign ${amount} item(s) to this user?\nThis action cannot be undone.`,
+      async (confirm) => {
+        if (!confirm) return;
+
+        Spinner.show();
+
+        try {
+          await Consumable.assignItem(selectedCID, amount, assignedTo, remarks);
+
+          NotificationBox.show('Items assigned successfully');
+
+          renderConsumableTable();
+          assignModal.hide();
+          actionModal.hide();
+          document.getElementById("assignForm").reset();
+
+        } catch (error) {
+          console.error("Error assigning item:", error);
+          NotificationBox.show(error.message || "Something went wrong.");
+        } finally {
+          Spinner.hide();
+        }
+      }
+    );
   });
 }
 
