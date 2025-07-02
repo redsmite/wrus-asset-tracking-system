@@ -162,7 +162,7 @@ async function renderPermitTable() {
         const latitude = permit.latitude ? Number(permit.latitude).toFixed(5) : '';
         const longitude = permit.longitude ? Number(permit.longitude).toFixed(5) : '';
         const isVisited = permit.visited === true;
-        const rowClass = isVisited ? 'table-success' : '';
+        const rowClass = isVisited ? 'table-water-highlight' : '';
 
         const row = document.createElement('tr');
         row.className = rowClass;

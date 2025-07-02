@@ -1,18 +1,438 @@
 body {
-  background: linear-gradient(to right, #3f87a6, #ebf8e1, #f69d3c);
+  margin: 0;
+  padding: 0;
   height: 100vh;
+  background: radial-gradient(ellipse at center, #001f3f 0%, #001a35 100%);
+  overflow: hidden;
   display: flex;
   justify-content: center;
   align-items: center;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  position: relative;
+}
+
+.portal {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0, 191, 255, 0.7) 0%, transparent 70%);
+  box-shadow: 0 0 40px 20px rgba(0, 191, 255, 0.3), 0 0 60px rgba(0, 191, 255, 0.5) inset;
+  animation: portalOpen 2s ease-out forwards;
+  z-index: 1;
+}
+
+@keyframes portalOpen {
+  0% {
+    transform: scale(0) rotate(0deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2) rotate(180deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(360deg);
+    opacity: 1;
+  }
+}
+
+.portal::before,
+.portal::after {
+  content: "";
+  position: absolute;
+  border: 2px dashed rgba(0, 191, 255, 0.7);
+  border-radius: 50%;
+  top: -20px;
+  left: -20px;
+  width: 340px;
+  height: 340px;
+  animation: rotateDash 8s linear infinite;
+}
+
+.portal::after {
+  border: 2px dotted rgba(0, 191, 255, 0.5);
+  top: -30px;
+  left: -30px;
+  width: 360px;
+  height: 360px;
+  animation-direction: reverse;
+}
+
+@keyframes rotateDash {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .card {
+  backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 1rem;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+  padding: 2rem;
+  width: 100%;
+  max-width: 400px;
+  z-index: 10;
 }
 
 .card-title {
-  font-size: 1.5rem;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.form-label {
+  color: #fff;
+}
+
+.form-control {
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: #fff;
+}
+
+.form-control::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.form-control:focus {
+  background: rgba(255, 255, 255, 0.3);
+  color: #fff;
+  border: none;
+  box-shadow: none;
+}
+
+.btn-primary {
+  background-color: #00b4d8;
+  border: none;
+  transition: background-color 0.3s ease;
+}
+
+.btn-primary:hover {
+  background-color: #0096c7;
+}
+
+#errorMsg {
+  color: #ff6b6b;
+}
+
+/* Alert Overlay */
+#portal-alert {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 10, 20, 0.7);
+  backdrop-filter: blur(8px);
+  z-index: 9999;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Show State */
+#portal-alert.show {
+  display: flex;
+}
+
+/* Alert Box */
+.portal-alert-content {
+  background: #121e2a;
+  color: #f0f6ff;
+  border-radius: 16px;
+  padding: 24px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(0, 191, 255, 0.3);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.portal-alert-header h4 {
+  margin: 0;
+  font-size: 1.4rem;
+  color: #00d4ff;
+  text-align: center;
+}
+
+/* Body */
+.portal-alert-body {
+  margin: 16px 0;
+  text-align: center;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+/* Footer */
+.portal-alert-footer {
+  display: flex;
+  justify-content: center;
+}
+
+/* Button */
+.portal-alert-footer button {
+  background-color: #00b4d8;
+  color: #fff;
+  border: none;
+  padding: 8px 24px;
+  border-radius: 8px;
+  cursor: pointer;
   font-weight: 600;
+  transition: background-color 0.3s ease;
+}
+
+.portal-alert-footer button:hover {
+  background-color: #0096c7;
+}
+
+.portal-alert-footer button:active {
+  background-color: #0077a5;
+}
+
+/* Success Overlay - Portal Theme */
+.login-success-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(0, 255, 255, 0.15) 0%, rgba(0, 0, 0, 0.9) 80%);
+  backdrop-filter: blur(8px);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  overflow: hidden;
+}
+
+.login-success-overlay.show {
+  display: flex;
+  animation: portal-background-fade 0.8s ease forwards;
+}
+
+/* Background fade-in */
+@keyframes portal-background-fade {
+  0% {
+    background: radial-gradient(circle, rgba(0, 255, 255, 0) 0%, rgba(0, 0, 0, 1) 80%);
+    opacity: 0;
+  }
+  100% {
+    background: radial-gradient(circle, rgba(0, 255, 255, 0.15) 0%, rgba(0, 0, 0, 0.9) 80%);
+    opacity: 1;
+  }
+}
+
+.login-success-content {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  border: 4px solid rgba(0, 255, 255, 0.8);
+  box-shadow: 0 0 50px rgba(0, 255, 255, 0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  
+  animation: portal-open 1s ease forwards;
+}
+
+/* 🔥 Portal opening animation */
+@keyframes portal-open {
+  0% {
+    transform: scale(0) rotate(0deg);
+    opacity: 0;
+    box-shadow: 0 0 0 rgba(0, 255, 255, 0);
+  }
+  50% {
+    transform: scale(1.1) rotate(360deg);
+    opacity: 1;
+    box-shadow: 0 0 60px rgba(0, 255, 255, 0.9);
+  }
+  100% {
+    transform: scale(1) rotate(720deg);
+    opacity: 1;
+    box-shadow: 0 0 40px rgba(0, 255, 255, 0.7);
+  }
+}
+
+/* Rotating portal ring effect */
+.login-success-content::before {
+  content: "";
+  position: absolute;
+  width: 160%;
+  height: 160%;
+  border: 4px dashed rgba(0, 255, 255, 0.4);
+  border-radius: 50%;
+  animation: rotate-ring 2s linear infinite;
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+}
+
+@keyframes rotate-ring {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+.login-success-content .checkmark {
+  font-size: 70px;
+  color: #00ffff;
+  text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff;
+  animation: pulse 1.5s infinite;
+}
+
+.login-success-content p {
+  margin-top: 10px;
+  color: #ffffff;
+  font-size: 18px;
+  text-shadow: 0 0 5px #00ffff;
+}
+
+/* Pulse effect for checkmark */
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
+}
+
+#portal-light {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 150px;
+  height: 150px;
+  background: radial-gradient(circle, #00ffe7 0%, #001a19 70%);
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+#portal-light.active {
+  animation: portalLightOpen 5s ease forwards;
+}
+
+@keyframes portalLightOpen {
+  0% {
+    transform: translate(-50%, -50%) scale(0.2);
+    opacity: 0.5;
+  }
+  30% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.9;
+  }
+  70% {
+    transform: translate(-50%, -50%) scale(10);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(50);
+    background: white;
+    opacity: 1;
+  }
+}
+
+/* Portal Loader Styles */
+.portal-loader-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.9);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.portal-loader-overlay.show {
+  display: flex;
+}
+
+.portal-loader {
+  position: relative;
+  width: 160px;
+  height: 160px;
+}
+
+.portal-loader .ring,
+.portal-loader .ring2 {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 8px solid transparent;
+  border-top: 8px solid #00ffe7;
+  border-right: 8px solid #00ffe7;
+  border-radius: 50%;
+  box-shadow: 0 0 20px #00ffe7, 0 0 40px #00ffe7, 0 0 60px #00ffe7;
+}
+
+.portal-loader .ring {
+  animation: spin 1.5s linear infinite;
+}
+
+.portal-loader .ring2 {
+  animation: spinReverse 2s linear infinite;
+  opacity: 0.6;
+}
+
+.portal-loader .glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 80%;
+  height: 80%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0, 255, 231, 0.3) 0%, transparent 70%);
+  box-shadow: 0 0 40px rgba(0, 255, 231, 0.7), 0 0 60px rgba(0, 255, 231, 0.5);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.portal-loader h2 {
+  margin-top: 180px;
+  color: white;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-align: center;
+}
+
+/* Animations */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes spinReverse {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(-360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 1;
+  }
 }

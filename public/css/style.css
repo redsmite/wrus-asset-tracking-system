@@ -22,17 +22,51 @@ body {
   position: relative;
   z-index: auto;
   flex-grow: 1;
-  background-color:#faf9fa;
+  background: linear-gradient(to bottom right, #e0f7fa, #ffffff);
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   overflow-y: auto;
 }
 
-
-#welcomeText{
-  padding-bottom: 20px;
+#page-content h1,
+#page-content h2,
+#page-content h3,
+#page-content h4,
+#page-content h5,
+#page-content h6 {
+  color: #023e8a; /* Darker ocean blue for contrast */
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+  font-weight: 700;
 }
+
+#page-content h1 {
+  color: #0077b6;
+  font-size: 2.5rem;
+  border-bottom: 2px solid #0096c7;
+  padding-bottom: 8px;
+}
+
+#page-content h2 {
+  color: #0096c7;
+  font-size: 2rem;
+  border-bottom: 1px dashed #90e0ef;
+  padding-bottom: 6px;
+}
+
+#page-content h3 {
+  color: #00b4d8;
+  font-size: 1.75rem;
+}
+
+#page-content h4,
+#page-content h5,
+#page-content h6 {
+  color: #023e8a; /* Deep ocean blue */
+  text-shadow: 1px 1px 2px rgba(72, 202, 228, 0.4); /* Subtle aqua glow */
+  font-weight: 600;
+}
+
 
 .nav-link.text-white:hover,
 .dropdown-item:hover {
@@ -45,19 +79,106 @@ body {
   color: #fff !important;
 }
 
-/* Box Styling */
+/* Welcome Text */
+#welcomeText {
+  background: linear-gradient(to right, #caf0f8, #ade8f4, #90e0ef);
+  color: #023e8a;
+  padding: 15px 25px;
+  border-radius: 12px;
+  font-size: 1.5rem;
+  font-weight: 600;
+  box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2);
+  border: 1px solid #90e0ef;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+#welcomeText:hover {
+  transform: scale(1.02);
+  box-shadow: 0 6px 15px rgba(0, 150, 255, 0.4);
+}
+
+p.welcome-banner {
+  background: linear-gradient(to right, #a6e3f3, #90e0ef, #48cae4);
+  color: #01497c;
+  padding: 15px 25px;
+  border-radius: 12px;
+  font-size: 1.6rem;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0, 180, 255, 0.3);
+  border: 1px solid #90e0ef;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+p.welcome-banner:hover {
+  transform: scale(1.02);
+  box-shadow: 0 6px 18px rgba(0, 150, 255, 0.4);
+}
+
+
+/* Cards Styling */
 .card {
   height: 200px;
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  background-color: rgba(0, 188, 212, 0.9) !important;
+  color: white !important;
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+.card h5 {
+  color: white !important;
 }
 
 .card:hover {
   transform: scale(1.03);
+  box-shadow: 0 12px 25px rgba(0,0,0,0.15);
 }
 
+.card .card-header {
+  background-color: rgba(0, 150, 255, 0.8);
+  border-bottom: none;
+}
 
 nav.navbar {
   min-height: 100vh;
+}
+
+.water-btn {
+  background: white;
+  color: #0288d1;
+  border: none;
+  border-radius: 50px;
+  padding: 8px 16px;
+  transition: background 0.3s, transform 0.2s;
+  box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
+}
+
+.water-btn:hover {
+  background: #e1f5fe;
+  transform: scale(1.05);
+}
+
+.water-btn-outline {
+  background: transparent;
+  color: white;
+  border: 2px solid white;
+  border-radius: 50px;
+  padding: 8px 16px;
+  transition: background 0.3s, color 0.3s, transform 0.2s;
+}
+
+.water-btn-outline:hover {
+  background: white;
+  color: #0288d1;
+  transform: scale(1.05);
+}
+
+.water-btn,
+.water-btn-outline {
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
 }
 
 /* Layout Setup */
@@ -69,8 +190,10 @@ nav.navbar {
 /* Sidebar */
 #sidebar {
   width: 250px;
-  background-color: #0d6efd;
+  background: linear-gradient(180deg, #0077be, #00bcd4);
   color: white;
+  display: flex;
+  flex-direction: column;
   transition: width 0.3s;
 }
 
@@ -101,6 +224,50 @@ nav.navbar {
 #wrapper.sidebar-collapsed #sidebarToggle i {
   transform: rotate(180deg);
 }
+
+/* Water themed table */
+
+.table-responsive {
+  background-color: #e0f7fa;
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow: 0 0 10px rgba(0, 188, 212, 0.2);
+}
+
+.table-responsive table {
+  background-color: white;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.table-responsive thead {
+  background-color: #00bcd4;
+  color: white;
+}
+
+.table-responsive th {
+  padding: 12px;
+  border: none;
+}
+
+.table-responsive td {
+  padding: 10px;
+  border-top: 1px solid #b2ebf2;
+}
+
+.table-responsive tbody tr:hover {
+  background-color: #b2ebf2;
+  transition: background-color 0.3s ease;
+}
+
+/* Optional: Row Glow for special rows */
+.table-responsive tbody tr.glow-row {
+  box-shadow: 0 0 10px rgba(0, 188, 212, 0.7);
+  background-color: #b2ebf2;
+}
+
 
 /* Loading Overlay */
 #loadingOverlay {

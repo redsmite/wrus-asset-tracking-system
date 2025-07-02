@@ -13,7 +13,7 @@ export const Sidebar = {
       <!-- Mobile Navbar -->
       <nav class="navbar bg-light d-md-none">
         <div class="container-fluid">
-          <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar">
+          <button class="btn water-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar">
             <i class="bi bi-list"></i> Menu
           </button>
         </div>
@@ -33,7 +33,7 @@ export const Sidebar = {
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h4 class="d-none d-md-block m-0">WRUS Portal</h4>
             <!-- Desktop Toggle Button -->
-            <button id="sidebarToggle" class="btn btn-light d-none d-md-block">
+            <button id="sidebarToggle" class="btn water-btn-outline d-none d-md-block">
               <i class="bi bi-chevron-left"></i>
             </button>
           </div>
@@ -81,7 +81,7 @@ export const Sidebar = {
             </li>
           </ul>
 
-          <button id="logoutBtn" class="btn btn-light mt-auto">
+          <button id="logoutBtn" class="btn water-btn-outline mt-auto">
             <i class="bi bi-box-arrow-right me-2"></i> Logout
           </button>
         </div>
@@ -91,7 +91,7 @@ export const Sidebar = {
     // Initialize Offcanvas
     this.initializeOffcanvas();
 
-    // Logout
+    // Logout Functionality
     const logoutBtn = container.querySelector('#logoutBtn');
     if (logoutBtn) {
       logoutBtn.addEventListener('click', () => {
