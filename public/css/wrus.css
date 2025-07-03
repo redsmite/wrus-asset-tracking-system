@@ -1,12 +1,41 @@
+.form-water {
+  background-color: #eaf7fc; /* subtle water-blue */
+  border-color: #b6e0f2;     /* soft aqua border */
+  transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.form-water:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25); /* water-blue focus ring */
+}
+
 tr.table-info {
   position: relative;
-  box-shadow: 0 0 10px rgba(13, 202, 240, 0.7), 
-              0 0 20px rgba(13, 202, 240, 0.5);
+  background-color: rgba(33, 150, 243, 0.12); /* light water blue */
+  border-left: 6px solid #0288d1;
+  box-shadow: 0 0 12px rgba(2, 136, 209, 0.5), 0 0 24px rgba(2, 136, 209, 0.3);
+  font-weight: 600;
+  color: #003c66;
   transition: all 0.3s ease;
+  z-index: 1;
+}
+
+tr.table-info > td,
+tr.table-info > th {
+  background-color: inherit;
+  color: inherit;
 }
 
 tr.table-info:hover {
-  box-shadow: 0 0 15px rgba(13, 202, 240, 0.9),
-              0 0 30px rgba(13, 202, 240, 0.7);
+  background-color: rgba(2, 119, 189, 0.35); /* DEEPER blue hover */
+  box-shadow: 0 0 20px rgba(2, 119, 189, 0.7), 0 0 40px rgba(2, 119, 189, 0.4);
   transform: scale(1.01);
+  z-index: 2;
 }
+
+tr.table-info:hover > td,
+tr.table-info:hover > th {
+  background-color: inherit;
+  color: inherit;
+}
+

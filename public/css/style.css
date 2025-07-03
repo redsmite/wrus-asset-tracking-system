@@ -1,10 +1,10 @@
 html, body {
   height: 100%;
+  overflow: auto;
 }
 
-
 body {
-  font-family: 'Segoe UI', sans-serif;
+  font-family: 'Quicksand', 'Segoe UI', 'Helvetica Neue', sans-serif;
 }
 
 #wrapper {
@@ -194,7 +194,10 @@ nav.navbar {
   color: white;
   display: flex;
   flex-direction: column;
-  transition: width 0.3s;
+  transition: all 0.3s ease;
+  z-index: 1045;
+  height: 100vh;
+  overflow-y: auto;
 }
 
 /* Main Content */
@@ -225,49 +228,78 @@ nav.navbar {
   transform: rotate(180deg);
 }
 
+.offcanvas-body {
+  overflow-y: auto !important;
+  height: 100%;
+}
+
 /* Water themed table */
 
 .table-responsive {
-  background-color: #e0f7fa;
-  border-radius: 8px;
-  padding: 10px;
-  box-shadow: 0 0 10px rgba(0, 188, 212, 0.2);
+  background: linear-gradient(to bottom right, #e0f7fa, #b2ebf2);
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 8px 16px rgba(0, 188, 212, 0.25);
+  overflow-x: auto;
 }
 
 .table-responsive table {
   background-color: white;
   border-collapse: separate;
   border-spacing: 0;
-  border-radius: 8px;
+  width: 100%;
+  border-radius: 12px;
   overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 188, 212, 0.1);
 }
 
-.table-responsive thead {
-  background-color: #00bcd4;
+.table-responsive thead th {
+  background: linear-gradient(to right, #4dd0e1, #00bcd4);
   color: white;
+  z-index: 10;
 }
 
 .table-responsive th {
-  padding: 12px;
+  padding: 14px;
   border: none;
+  text-align: left;
+  font-weight: 600;
 }
 
 .table-responsive td {
-  padding: 10px;
+  padding: 12px;
   border-top: 1px solid #b2ebf2;
+  background-color: rgba(255, 255, 255, 0.9);
 }
 
 .table-responsive tbody tr:hover {
-  background-color: #b2ebf2;
-  transition: background-color 0.3s ease;
+  background-color: rgba(178, 235, 242, 0.6);
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: inset 0 0 8px rgba(0, 188, 212, 0.2);
 }
 
-/* Optional: Row Glow for special rows */
+/* Optional glow row */
 .table-responsive tbody tr.glow-row {
-  box-shadow: 0 0 10px rgba(0, 188, 212, 0.7);
   background-color: #b2ebf2;
+  box-shadow: 0 0 12px rgba(0, 188, 212, 0.5);
 }
 
+/* Round corners: only top of thead and bottom of last row */
+.table-responsive thead th:first-child {
+  border-top-left-radius: 12px;
+}
+
+.table-responsive thead th:last-child {
+  border-top-right-radius: 12px;
+}
+
+.table-responsive tbody tr:last-child td:first-child {
+  border-bottom-left-radius: 12px;
+}
+
+.table-responsive tbody tr:last-child td:last-child {
+  border-bottom-right-radius: 12px;
+}
 
 /* Loading Overlay */
 #loadingOverlay {
@@ -283,6 +315,79 @@ nav.navbar {
   align-items: center;
   transition: opacity 0.3s ease;
   perspective: 1000px;
+}
+
+.modal-header {
+  background-color: #c2d4e2;
+  color: #007c91; /* deep aqua text */
+  border-bottom: 1px solid #00bcd4;
+}
+
+.modal-content {
+  background-color: white; /* ensures body stays white */
+  border-radius: 12px;
+  border: 1px solid #b2ebf2;
+  box-shadow: 0 0 15px rgba(0, 188, 212, 0.2);
+}
+
+.modal-header .btn-close {
+  filter: none; /* default black close button */
+}
+
+/* Primary – Deep Water Blue */
+.btn-primary {
+  background-color: #0288d1;   /* Deep blue */
+  border-color: #0288d1;
+  color: #fff;
+}
+.btn-primary:hover {
+  background-color: #0277bd;
+  border-color: #0277bd;
+}
+
+/* Success – Aqua Greenish-Blue */
+.btn-success {
+  background-color: #26c6da;   /* Aqua */
+  border-color: #26c6da;
+  color: #fff;
+}
+.btn-success:hover {
+  background-color: #00acc1;
+  border-color: #00acc1;
+}
+
+/* Info – Sky Blue */
+.btn-info {
+  background-color: #4fc3f7;   /* Sky Blue */
+  border-color: #4fc3f7;
+  color: #fff;
+}
+.btn-info:hover {
+  background-color: #29b6f6;
+  border-color: #29b6f6;
+}
+
+/* Warning – Soft Yellow-Gold (For contrast) */
+.btn-warning {
+  background-color: #ffe082;
+  border-color: #ffca28;
+  color: #004d40;
+}
+.btn-warning:hover {
+  background-color: #ffb300;
+  border-color: #ffa000;
+  color: #fff;
+}
+
+/* Danger – Coral or Deep Pinkish Red (Water contrast) */
+.btn-danger {
+  background-color: #ef5350;
+  border-color: #ef5350;
+  color: #fff;
+}
+.btn-danger:hover {
+  background-color: #e53935;
+  border-color: #d32f2f;
 }
 
 /* Container for spinner + water effect */
@@ -336,13 +441,20 @@ nav.navbar {
   animation: spinY 1.5s linear infinite;
   transform-origin: center;
   transform-style: preserve-3d;
-  filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.4));
+  filter: drop-shadow(0 0 6px rgba(0, 150, 200, 0.5)); /* bluish glow */
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 2;
+  border-radius: 50%;
+  box-shadow:
+    0 0 10px rgba(0, 200, 255, 0.5),
+    0 0 20px rgba(0, 200, 255, 0.3) inset;
+  background: radial-gradient(circle, rgba(0, 200, 255, 0.1), transparent 70%);
+  backdrop-filter: blur(1px);
 }
+
 
 /* Spin keyframes */
 @keyframes spinY {
@@ -469,9 +581,48 @@ nav.navbar {
   margin: 0 5px;
 }
 
+/* Pagination */
+.pagination .page-link {
+  color: #0b7fab; /* Water blue */
+  border-color: #cde9f6;
+  background-color: #f4fafd; /* Very light blue */
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.pagination .page-link:hover {
+  color: #ffffff;
+  background-color: #0b7fab;
+  border-color: #0b7fab;
+}
+
+.pagination .page-item.active .page-link {
+  background-color: #0b7fab;
+  border-color: #0b7fab;
+  color: #ffffff;
+}
+
 @media (max-width: 767.98px) {
   nav.navbar {
     min-height: auto;
     width: 100%;
   }
 }
+
+#sidebar {
+  height: 100vh !important;
+  display: flex;
+  flex-direction: column;
+}
+
+#sidebar .offcanvas-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+@media (max-width: 767.98px) {
+  #sidebar .offcanvas-body {
+    max-height: calc(100vh - 56px); /* adjust based on navbar */
+  }
+}
+

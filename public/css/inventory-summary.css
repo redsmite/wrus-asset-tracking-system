@@ -46,3 +46,46 @@
   height: 95vh; /* Almost full screen height */
   display: block;
 }
+
+/* Water-themed hint for Inventory Summary search input */
+#searchInput.form-control {
+  background-color: #f9fcff;             /* very light water blue */
+  border: 1px solid #64b5f6;             /* medium water blue */
+  color: #1565c0;                        /* deep readable blue */
+  font-weight: 500;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+#searchInput::placeholder {
+  color: #90caf9;                        /* subtle placeholder blue */
+}
+
+#searchInput:focus {
+  border-color: #42a5f5;                 /* brighter blue on focus */
+  box-shadow: 0 0 6px rgba(100, 181, 246, 0.3);  /* soft glow */
+  outline: none;
+}
+
+.btn-water {
+  background-color: #ffffff;
+  color: #117a8b;
+  border: 1px solid #117a8b;
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-water:hover {
+  background-color: #117a8b;
+  color: #ffffff;
+}
+
+.btn-water-alt {
+  background-color: #e0f0fb;
+  color: #0d6efd;
+  border: 1px solid #0d6efd;
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-water-alt:hover {
+  background-color: #0d6efd;
+  color: #ffffff;
+}

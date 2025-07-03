@@ -10,6 +10,7 @@ function checkAccessAndInitialize(userType, userRole) {
   if (userType !== "Permanent" && userRole !== 'admin') {
     const pageContent = document.getElementById("page-content");
     if (pageContent) {
+      initializePage();
       pageContent.innerHTML = "<p class='text-danger'>Access denied.</p>";
     }
   } else {

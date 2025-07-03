@@ -400,7 +400,6 @@ function initializePermitUpdate() {
       const fileInput = document.getElementById('editPdfAttachment');
       let permitFileUrl = document.getElementById('editPdfExistingUrl').value || '';
 
-      console.log(permitFileUrl);
       if (fileInput && fileInput.files.length > 0) {
         const file = fileInput.files[0];
 

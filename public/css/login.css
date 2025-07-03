@@ -1,3 +1,9 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -197,6 +203,7 @@ body {
 /* Success Overlay - Portal Theme */
 .login-success-overlay {
   position: fixed;
+  inset: 0;
   top: 0;
   left: 0;
   width: 100%;
@@ -315,7 +322,7 @@ body {
   left: 50%;
   width: 150px;
   height: 150px;
-  background: radial-gradient(circle, #00ffe7 0%, #001a19 70%);
+  background: radial-gradient(circle, #ffffff 0%, #f0f0f0 70%);
   border-radius: 50%;
   transform: translate(-50%, -50%) scale(0);
   opacity: 0;
@@ -330,15 +337,16 @@ body {
 @keyframes portalLightOpen {
   0% {
     transform: translate(-50%, -50%) scale(0.2);
-    opacity: 0.5;
+    opacity: 0.3;
+    background: radial-gradient(circle, #ffffff 0%, #f5f5f5 70%);
   }
   30% {
     transform: translate(-50%, -50%) scale(1);
-    opacity: 0.9;
+    opacity: 0.7;
   }
   70% {
     transform: translate(-50%, -50%) scale(10);
-    opacity: 1;
+    opacity: 0.95;
   }
   100% {
     transform: translate(-50%, -50%) scale(50);

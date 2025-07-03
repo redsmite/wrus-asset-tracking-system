@@ -19,14 +19,75 @@
 }
 
 #toggleFilter {
-  background-color: #e0f7fa;
-  color: #00796b;
-  border: 1px solid #00bcd4;
-  transition: all 0.3s ease;
+  background-color: #f7fbff;        /* near-white with hint of blue */
+  color: #1565c0;                   /* soft readable blue */
+  border: 1px solid #bbdefb;        /* subtle blue border */
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
 #toggleFilter:hover {
-  background-color: #00bcd4;
-  color: white;
-  box-shadow: 0 0 10px rgba(0, 188, 212, 0.7);
+  background-color: #e3f2fd;        /* light blue on hover */
+  color: #0d47a1;
+}
+
+.rows-per-page-container {
+  margin-top: 5px;
+}
+
+#rowsPerPage {
+  appearance: none;             /* Remove default styling */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  background-color: #ffffff;
+  border: 1px solid #bbdefb;
+  color: #1565c0;
+  font-weight: normal;
+  border-radius: 4px;
+  padding: 5px 10px;
+  transition: border-color 0.2s ease;
+  cursor: pointer;
+
+  background-image: none;       /* Ensure no native arrow is shown */
+}
+
+#rowsPerPage:focus {
+  outline: none;
+  border-color: #64b5f6;
+}
+
+label[for="rowsPerPage"] {
+  color: #1565c0;
+  font-weight: 500;
+}
+
+.water-search {
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: none;
+}
+
+.water-search input.form-control {
+  background-color: #ffffff;
+  border: 1px solid #bbdefb;
+  color: #1565c0;
+  font-weight: normal;
+  border-right: none;
+  transition: border-color 0.2s ease;
+}
+
+.water-search input.form-control::placeholder {
+  color: #90caf9;
+}
+
+.water-search input.form-control:focus {
+  border-color: #64b5f6;
+  outline: none;
+}
+
+.water-search .input-group-text {
+  background-color: #e3f2fd;
+  border: 1px solid #bbdefb;
+  color: #1565c0;
+  font-weight: 500;
 }

@@ -1,0 +1,28 @@
+/* Input group text (the "Search" label) */
+.input-group-text {
+  background-color: #e3f2fd;       /* soft sky blue */
+  border: 1px solid #64b5f6;       /* mid-blue border */
+  color: #1565c0;                  /* readable water blue */
+  font-weight: 500;
+}
+
+/* Input field */
+#searchBar.form-control {
+  border: 1px solid #64b5f6;       /* water blue border */
+  background-color: #f9fcff;       /* pale water-blue hint */
+  color: #1565c0;                  /* readable blue */
+  transition: border-color 0.3s ease;
+  font-weight: 500;
+}
+
+/* Placeholder color */
+#searchBar::placeholder {
+  color: #90caf9;                  /* light blue-gray */
+}
+
+/* Focus effect */
+#searchBar:focus {
+  border-color: #42a5f5;
+  box-shadow: 0 0 6px rgba(100, 181, 246, 0.3);
+  outline: none;
+}

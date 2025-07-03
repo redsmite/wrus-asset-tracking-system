@@ -100,7 +100,8 @@ export const Sidebar = {
           'loggedInUser',
           'wrusUserId',
           'userFullName',
-          'userType'
+          'userType',
+          'portalFadeShown'
         ];
         keysToRemove.forEach(key => localStorage.removeItem(key));
         window.location.href = 'index.html';

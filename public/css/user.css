@@ -1,0 +1,36 @@
+/* Subtle blue-themed input group */
+.input-group .form-control {
+  background-color: #fff;
+  border: 1px solid #bbdefb; /* light blue border */
+  color: #1565c0;             /* readable deep blue text */
+  transition: border-color 0.2s ease;
+}
+
+.input-group .form-control::placeholder {
+  color: #90caf9; /* light blue placeholder */
+}
+
+.input-group .form-control:focus {
+  border-color: #64b5f6; /* blue highlight on focus */
+  box-shadow: 0 0 4px rgba(100, 181, 246, 0.3);
+  outline: none;
+}
+
+.input-group-text {
+  background-color: #e3f2fd; /* light blue background */
+  border: 1px solid #bbdefb;
+  color: #1565c0;
+}
+
+/* Add User Button with subtle blue hint */
+#showAddUserFormBtn {
+  border-color: #64b5f6;
+  color: #1565c0;
+  transition: all 0.2s ease;
+}
+
+#showAddUserFormBtn:hover {
+  background-color: #64b5f6;
+  color: white;
+  box-shadow: 0 0 8px rgba(100, 181, 246, 0.3);
+}

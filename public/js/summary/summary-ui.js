@@ -118,7 +118,7 @@ function createConsumableCell(user) {
   cell.classList.add("text-center");
 
   const btn = document.createElement("button");
-  btn.className = "btn btn-outline-success btn-sm px-2 py-1 fw-semibold border-1 rounded custom-btn-success";
+  btn.className = "btn btn-water btn-sm px-2 py-1 fw-semibold rounded";
   btn.innerHTML = `<i class="bi bi-box-arrow-in-down me-1"></i>Consumable`;
   btn.setAttribute("data-id", user.id);
 
@@ -152,7 +152,7 @@ function createICSCell(user) {
   }
 
   const btn = document.createElement("button");
-  btn.className = "btn btn-outline-primary btn-sm px-2 py-1 fw-semibold border-1 rounded custom-btn-info text-primary";
+  btn.className = "btn btn-water-alt btn-sm px-2 py-1 fw-semibold rounded";
   btn.innerHTML = `<i class="bi bi-card-list me-1"></i>ICS`;
   btn.setAttribute("data-id", user.id);
 

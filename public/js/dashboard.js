@@ -1,6 +1,7 @@
 import { Sidebar } from "./components/sidebar.js";
-
+import { PortalBubble } from "./components/PortalBubble.js";
 document.addEventListener('DOMContentLoaded', () => {
+  //PortalBubble.trigger();
   checkAuthentication();
   setupLogoutButtons();
   displayWelcomeText();

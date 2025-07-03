@@ -12,8 +12,6 @@ import { PortalAlert } from './components/loginAlert.js';
 import { LoginSuccess } from './components/loginSuccess.js';
 import { PortalLight } from './components/PortalLight.js';
 
-
-
 document.addEventListener('DOMContentLoaded', () => {
   PortalLoader.render();
   LoginSuccess.render();
@@ -62,12 +60,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
           PortalLoader.hide();
           LoginSuccess.show();
-          PortalLight.trigger();
+          //PortalLight.trigger();
 
           // ✅ Add delay before redirecting so the overlay is visible
           setTimeout(() => {
             window.location.href = userRole === "admin" ? "admin-dashboard.html" : "dashboard.html";
-          }, 4000); // 4 seconds
+          }, 1500); // 4 seconds
         } else {
             PortalLoader.hide();
             PortalAlert.show("Incorrect password.");

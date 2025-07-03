@@ -1,0 +1,102 @@
+.water-theme {
+  box-shadow: 0 4px 8px rgba(0, 188, 212, 0.2);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.water-theme input::placeholder {
+  color: #81d4fa;
+}
+
+.water-theme input:focus {
+  outline: none;
+  box-shadow: 0 0 10px #4dd0e1;
+  background: linear-gradient(to right, #ffffff, #b2ebf2);
+}
+
+.input-group-text {
+  background-color: #e0f7fa !important;
+  color: #0277bd !important;
+}
+
+/* select number of rows */
+
+label[for="pageSizeSelect"] {
+  color: #0277bd;
+  font-weight: 500;
+}
+
+#pageSizeSelect {
+  background-color: #f0f8ff;
+  border: 1px solid #64b5f6;
+  color: #1565c0;
+  font-weight: 500;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+#pageSizeSelect:focus {
+  border-color: #42a5f5;
+  box-shadow: 0 0 6px rgba(100, 181, 246, 0.3);
+  outline: none;
+}
+
+
+/* Modal Background – Light Blue Glassy */
+#actionModal .modal-content {
+  background: linear-gradient(to bottom right, #e3f2fd, #bbdefb);
+  border: 1px solid #90caf9;
+  box-shadow: 0 0 18px rgba(100, 181, 246, 0.3);
+  border-radius: 12px;
+  color: #003c66;
+}
+
+/* Modal Header */
+#actionModal .modal-header {
+  border-bottom: 1px solid #90caf9;
+  background-color: rgba(179, 229, 252, 0.4);
+}
+
+/* Modal Title Icon and Text */
+#actionModal .modal-title {
+  color: #01579b;
+}
+
+/* Close Button */
+#actionModal .btn-close {
+  filter: invert(40%);
+}
+
+/* Water-themed Buttons */
+
+/* Add Stock – Aqua Blue */
+#addStockBtn {
+  background-color: #26c6da;
+  border-color: #26c6da;
+  color: #fff;
+}
+#addStockBtn:hover {
+  background-color: #00acc1;
+  border-color: #00acc1;
+}
+
+/* Assign Item – Deep Water Blue */
+#assignItemBtn {
+  background-color: #0288d1;
+  border-color: #0288d1;
+  color: #fff;
+}
+#assignItemBtn:hover {
+  background-color: #0277bd;
+  border-color: #0277bd;
+}
+
+/* View Ledger – Light Sky Blue */
+#viewLedgerBtn {
+  background-color: #4fc3f7;
+  border-color: #4fc3f7;
+  color: #fff;
+}
+#viewLedgerBtn:hover {
+  background-color: #29b6f6;
+  border-color: #29b6f6;
+}
