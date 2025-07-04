@@ -15,6 +15,7 @@ export function initializePage(){
   Spinner.render();
   loadUsers();
   initializeAddUserModal();
+  handleRefreshButton();
   handleSearchBar();
 }
 
@@ -129,13 +130,38 @@ function initializeAddUserModal() {
 function renderUsersTable(page = 1, searchQuery = "") {
   const usersTableBody = document.getElementById("usersTableBody");
 
+  // Helper to normalize text (remove diacritics, lower case)
+  function normalizeText(str) {
+    return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  }
+
+  // Highlight match in original text
+  function highlightMatch(text, query) {
+    if (!query) return text;
+    const normalizedText = normalizeText(text);
+    const normalizedQuery = normalizeText(query);
+    const index = normalizedText.indexOf(normalizedQuery);
+    if (index === -1) return text;
+
+    const originalIndex = [...text].findIndex((_, i) =>
+      normalizeText(text.slice(i)).startsWith(normalizedQuery)
+    );
+
+    return (
+      text.slice(0, originalIndex) +
+      "<mark>" + text.slice(originalIndex, originalIndex + query.length) + "</mark>" +
+      text.slice(originalIndex + query.length)
+    );
+  }
+
   let filteredUsers = allUsers.filter(user => user.type && user.type.trim() !== "");
 
   if (searchQuery) {
+    const normQuery = normalizeText(searchQuery);
     filteredUsers = filteredUsers.filter(user =>
-      (user.username || "").toLowerCase().includes(searchQuery) ||
-      (user.firstName || "").toLowerCase().includes(searchQuery) ||
-      (user.lastName || "").toLowerCase().includes(searchQuery)
+      normalizeText(user.username || "").includes(normQuery) ||
+      normalizeText(user.firstName || "").includes(normQuery) ||
+      normalizeText(user.lastName || "").includes(normQuery)
     );
   }
 
@@ -146,13 +172,19 @@ function renderUsersTable(page = 1, searchQuery = "") {
   usersTableBody.innerHTML = "";
 
   paginatedUsers.forEach(user => {
+    const username   = highlightMatch(user.username || '', searchQuery);
+    const lastName   = highlightMatch(user.lastName || '', searchQuery);
+    const firstName  = highlightMatch(user.firstName || '', searchQuery);
+    const position   = user.position || '';
+    const type       = user.type || '';
+
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td>${user.username || ''}</td>
-      <td>${user.lastName || ''}</td>
-      <td>${user.firstName || ''}</td>
-      <td>${user.position || ''}</td>
-      <td>${user.type || ''}</td>
+      <td>${username}</td>
+      <td>${lastName}</td>
+      <td>${firstName}</td>
+      <td>${position}</td>
+      <td>${type}</td>
       <td>
         <button class="btn btn-sm btn-outline-primary edit-btn" data-id="${user.id}">
           <i class="bi bi-pencil-square me-1"></i> Edit
@@ -164,6 +196,15 @@ function renderUsersTable(page = 1, searchQuery = "") {
 
   initializeEditFunctionality();
   renderPaginationControls(Math.ceil(filteredUsers.length / usersPerPage), page, searchQuery);
+}
+
+
+function handleRefreshButton(){
+    const refreshBtn = document.getElementById('refreshBtn');
+    refreshBtn.addEventListener('click', ()=>{
+      renderUsersTable(1);
+      NotificationBox.show("Refreshed successfully.");
+    })
 }
 
 function initializeEditFunctionality() {
@@ -363,10 +404,9 @@ function renderPaginationControls(totalPages, currentPage, searchQuery = "") {
   pagination.appendChild(ul);
 }
 
-
 function handleSearchBar() {
   document.getElementById("searchInput").addEventListener("input", (e) => {
-    const query = e.target.value.trim().toLowerCase();
+    const query = e.target.value.trim();
     currentPage = 1;
     renderUsersTable(currentPage, query);
   });

@@ -10,6 +10,7 @@ export function initializePage(){
   loadWaterUser();
   handleAddForm();
   handleEditForm();
+  handleRefreshButton();
 }
 
 let currentPage = 1;
@@ -83,17 +84,44 @@ async function renderWaterUsers(term = '') {
     allUsers = await WUSData.fetchAllDesc();
   }
 
-  searchTerm = term.trim().toLowerCase();
+  function normalizeText(str) {
+    return str
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase();
+  }
 
-  const filteredUsers = searchTerm
+  function highlightMatch(text, searchTerm) {
+    if (!searchTerm) return text;
+    const normalizedText = normalizeText(text);
+    const normalizedSearch = normalizeText(searchTerm);
+
+    const index = normalizedText.indexOf(normalizedSearch);
+    if (index === -1) return text;
+
+    const originalIndex = [...text].findIndex((_, i) =>
+      normalizeText(text.slice(i)).startsWith(normalizedSearch)
+    );
+
+    return (
+      text.slice(0, originalIndex) +
+      '<mark>' + text.slice(originalIndex, originalIndex + searchTerm.length) + '</mark>' +
+      text.slice(originalIndex + searchTerm.length)
+    );
+  }
+
+  const searchTerm = term.trim();
+  const normalizedSearch = normalizeText(searchTerm);
+
+  const filteredUsers = normalizedSearch
     ? allUsers.filter(u =>
-        (u.id               || '').toLowerCase().includes(searchTerm) ||
-        (u.nameOfWaterUser  || '').toLowerCase().includes(searchTerm) ||
-        (u.location         || '').toLowerCase().includes(searchTerm) ||
-        (u.type             || '').toLowerCase().includes(searchTerm) ||
-        (u.remarks          || '').toLowerCase().includes(searchTerm) ||
-        (u.latitude         || '').toString().includes(searchTerm) ||
-        (u.longitude        || '').toString().includes(searchTerm)
+        normalizeText(u.id || '').includes(normalizedSearch) ||
+        normalizeText(u.nameOfWaterUser || '').includes(normalizedSearch) ||
+        normalizeText(u.location || '').includes(normalizedSearch) ||
+        normalizeText(u.type || '').includes(normalizedSearch) ||
+        normalizeText(u.remarks || '').includes(normalizedSearch) ||
+        (u.latitude || '').toString().includes(normalizedSearch) ||
+        (u.longitude || '').toString().includes(normalizedSearch)
       )
     : allUsers;
 
@@ -107,14 +135,15 @@ async function renderWaterUsers(term = '') {
   usersToDisplay.forEach(user => {
     const tr = document.createElement('tr');
     if (user.isWaterSource) tr.classList.add('table-info');
+
     tr.innerHTML = `
-      <td>${user.id}</td>
-      <td>${user.nameOfWaterUser || ''}</td>
-      <td>${user.location || ''}</td>
-      <td>${user.latitude || ''}</td>
-      <td>${user.longitude || ''}</td>
-      <td>${user.type || ''}</td>
-      <td>${user.remarks || ''}</td>
+      <td>${highlightMatch(user.id || '', searchTerm)}</td>
+      <td>${highlightMatch(user.nameOfWaterUser || '', searchTerm)}</td>
+      <td>${highlightMatch(user.location || '', searchTerm)}</td>
+      <td>${highlightMatch(user.latitude?.toString() || '', searchTerm)}</td>
+      <td>${highlightMatch(user.longitude?.toString() || '', searchTerm)}</td>
+      <td>${highlightMatch(user.type || '', searchTerm)}</td>
+      <td>${highlightMatch(user.remarks || '', searchTerm)}</td>
       <td>
         <button class="btn btn-sm btn-warning edit-btn" data-id="${user.id}">
           <i class="bi bi-pencil-square"></i> Update
@@ -125,8 +154,16 @@ async function renderWaterUsers(term = '') {
   });
 
   attachEditListeners(filteredUsers);
-
   renderPagination(totalPages);
+}
+
+
+function handleRefreshButton(){
+    const refreshBtn = document.getElementById('refreshBtn');
+    refreshBtn.addEventListener('click', ()=>{
+      renderWaterUsers();
+      NotificationBox.show("Refreshed successfully.");
+    })
 }
 
 function attachEditListeners(filteredUsers) {

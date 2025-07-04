@@ -1,6 +1,7 @@
 html, body {
   height: 100%;
-  overflow: auto;
+  overflow: hidden;
+  overflow-y: auto;
 }
 
 body {
@@ -16,6 +17,8 @@ body {
   width: 250px;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  height: 100vh;
 }
 
 #page-content {
@@ -196,8 +199,6 @@ nav.navbar {
   flex-direction: column;
   transition: all 0.3s ease;
   z-index: 1045;
-  height: 100vh;
-  overflow-y: auto;
 }
 
 /* Main Content */
@@ -228,8 +229,9 @@ nav.navbar {
   transform: rotate(180deg);
 }
 
+/* Only scroll if needed in mobile view, and limit it */
 .offcanvas-body {
-  overflow-y: auto !important;
+  overflow-y: hidden; /* Remove forced scrollbars */
   height: 100%;
 }
 
@@ -612,12 +614,6 @@ nav.navbar {
   height: 100vh !important;
   display: flex;
   flex-direction: column;
-}
-
-#sidebar .offcanvas-body {
-  flex: 1 1 auto;
-  overflow-y: auto;
-  min-height: 0;
 }
 
 @media (max-width: 767.98px) {

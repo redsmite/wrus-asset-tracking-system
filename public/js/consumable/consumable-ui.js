@@ -12,6 +12,7 @@ let filteredItems = [];
 let currentPage = 1;
 let currentQty = 0;
 let pageSize = 10;
+let currentSearchTerm = '';
 
 // ---------- Event Listeners ----------
 export function initializePage() {
@@ -26,6 +27,30 @@ export function initializePage() {
   initSearchHandler();
   initActionButtonHandler();
   pageSizeSelectHandler();
+  handleRefreshButton();
+}
+
+function normalizeText(text) {
+  return text
+    .toLowerCase()
+    .normalize('NFD')                     // Break accented characters
+    .replace(/[\u0300-\u036f]/g, '');     // Remove diacritics
+}
+
+function highlightMatch(originalText, term) {
+  if (!term) return originalText;
+
+  const normalizedOriginal = normalizeText(originalText);
+  const normalizedTerm = normalizeText(term);
+
+  const index = normalizedOriginal.indexOf(normalizedTerm);
+  if (index === -1) return originalText;
+
+  const before = originalText.slice(0, index);
+  const match = originalText.slice(index, index + term.length);
+  const after = originalText.slice(index + term.length);
+
+  return `${before}<mark>${match}</mark>${after}`;
 }
 
 // ---------- Item Handling ----------
@@ -291,16 +316,27 @@ function initActionButtonHandler() {
 // ---------- Search ----------
 function initSearchHandler() {
   document.getElementById("searchInput")?.addEventListener("input", () => {
-    const term = document.getElementById("searchInput").value.trim().toLowerCase();
+    const rawTerm = document.getElementById("searchInput").value.trim();
+    currentSearchTerm = rawTerm;
+
+    const normalizedTerm = normalizeText(rawTerm);
 
     filteredItems = currentItems.filter(item =>
-      item.specification.toLowerCase().includes(term)
+      normalizeText(item.specification || '').includes(normalizedTerm)
     );
 
     currentPage = 1;
     renderTablePage();
     renderPagination();
   });
+}
+
+function handleRefreshButton(){
+    const refreshBtn = document.getElementById('refreshBtn');
+    refreshBtn.addEventListener('click', ()=>{
+      renderConsumableTable();
+      NotificationBox.show("Refreshed successfully.");
+    })
 }
 
 // ---------- Table Rendering ----------
@@ -335,9 +371,11 @@ function renderTablePage() {
 
   pageItems.forEach(item => {
     const row = document.createElement("tr");
+    const highlightedSpec = highlightMatch(item.specification || '', currentSearchTerm);
+
     row.innerHTML = `
       <td>${item.id}</td>
-      <td>${item.specification}</td>
+      <td>${highlightedSpec}</td>
       <td>${item.qty}</td>
       <td>${item.unit}</td>
       <td>
@@ -364,7 +402,6 @@ function renderTablePage() {
     tbody.appendChild(row);
   });
 
-  // Attach click handlers for edit buttons
   handleEditButtons();
 }
 

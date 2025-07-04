@@ -79,7 +79,7 @@
       </div>
 
       <!-- Pagination control -->
-      <div class="d-flex justify-content-between align-items-center mb-3">
+      <div class="d-flex justify-content-between align-items-center mb-1 mt-1">
         <div class="rows-per-page-container">
           <label for="rowsPerPage" class="form-label me-2">Rows per page:</label>
           <select id="rowsPerPage" class="form-select d-inline-block w-auto">
@@ -92,6 +92,9 @@
         <nav aria-label="Page navigation">
           <ul class="pagination mb-0" id="pagination"></ul>
         </nav>
+        <button id="refreshBtn" class="btn btn-primary shadow-sm px-3 py-2 d-flex align-items-center justify-content-center">
+        <i class="bi bi-arrow-clockwise me-1"></i> Refresh 
+        </button>
       </div>
 
       <!-- Data Table -->

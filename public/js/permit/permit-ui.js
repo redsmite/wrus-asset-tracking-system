@@ -13,6 +13,7 @@ export function initializePage(){
   loadPermit();
   setupToggle('toggleFilter', 'filterSection', 'Show Filters', 'Hide Filters');
   initializePermitUpdate();
+  handleRefreshButton();
 }
 
 function handleAddButton(){
@@ -136,9 +137,35 @@ async function renderPermitTable() {
   const pagination = document.getElementById('pagination');
   const rowsPerPageSelect = document.getElementById('rowsPerPage');
 
+  function normalizeText(str) {
+    return str
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase();
+  }
+
+  function highlightMatch(text, searchTerm) {
+    if (!searchTerm) return text;
+
+    const normalizedText = normalizeText(text);
+    const normalizedSearch = normalizeText(searchTerm);
+
+    const startIndex = normalizedText.indexOf(normalizedSearch);
+    if (startIndex === -1) return text;
+
+    const endIndex = startIndex + searchTerm.length;
+
+    return (
+      text.slice(0, startIndex) +
+      '<mark>' + text.slice(startIndex, endIndex) + '</mark>' +
+      text.slice(endIndex)
+    );
+  }
+
   let rowsPerPage = parseInt(rowsPerPageSelect.value);
   let currentPage = 1;
   let filteredPermits = [];
+  let searchTerm = '';
 
   tableBody.innerHTML = '';
   pagination.innerHTML = '';
@@ -168,10 +195,10 @@ async function renderPermitTable() {
         row.className = rowClass;
 
         row.innerHTML = `
-          <td>${permit.permitNo || ''}</td>
-          <td>${permit.permittee || ''}</td>
-          <td>${permit.mailingAddress || ''}</td>
-          <td>${permit.diversionPoint || ''}</td>
+          <td>${highlightMatch(permit.permitNo || '', searchTerm)}</td>
+          <td>${highlightMatch(permit.permittee || '', searchTerm)}</td>
+          <td>${highlightMatch(permit.mailingAddress || '', searchTerm)}</td>
+          <td>${highlightMatch(permit.diversionPoint || '', searchTerm)}</td>
           <td>${latitude}</td>
           <td>${longitude}</td>
           <td>${permit.waterSource || ''}</td>
@@ -224,7 +251,6 @@ async function renderPermitTable() {
         return li;
       };
 
-      // Calculate start and end page for pagination window (max 5 pages)
       const maxPageButtons = 5;
       let startPage = Math.max(1, currentPage - Math.floor(maxPageButtons / 2));
       let endPage = startPage + maxPageButtons - 1;
@@ -234,29 +260,25 @@ async function renderPermitTable() {
         startPage = Math.max(1, endPage - maxPageButtons + 1);
       }
 
-      // Previous button
       pagination.appendChild(createButton('«', currentPage - 1, currentPage === 1));
-
-      // Page number buttons
       for (let i = startPage; i <= endPage; i++) {
         pagination.appendChild(createButton(i, i, false, currentPage === i));
       }
-
-      // Next button
       pagination.appendChild(createButton('»', currentPage + 1, currentPage === totalPages));
     }
 
     function applyFilters() {
-      const searchTerm = searchBar.value.trim().toLowerCase();
+      searchTerm = normalizeText(searchBar.value.trim());
+
       const isVisitedChecked = visitedFilter.checked;
       const isShowVisitedChecked = showVisitedFilter.checked;
 
       filteredPermits = permits.filter((permit) => {
         const matchesSearch =
-          (permit.permitNo && permit.permitNo.toLowerCase().includes(searchTerm)) ||
-          (permit.permittee && permit.permittee.toLowerCase().includes(searchTerm)) ||
-          (permit.mailingAddress && permit.mailingAddress.toLowerCase().includes(searchTerm)) ||
-          (permit.diversionPoint && permit.diversionPoint.toLowerCase().includes(searchTerm));
+          (permit.permitNo && normalizeText(permit.permitNo).includes(searchTerm)) ||
+          (permit.permittee && normalizeText(permit.permittee).includes(searchTerm)) ||
+          (permit.mailingAddress && normalizeText(permit.mailingAddress).includes(searchTerm)) ||
+          (permit.diversionPoint && normalizeText(permit.diversionPoint).includes(searchTerm));
 
         let matchesVisited = true;
         if (isVisitedChecked && !isShowVisitedChecked) {
@@ -264,7 +286,7 @@ async function renderPermitTable() {
         } else if (!isVisitedChecked && isShowVisitedChecked) {
           matchesVisited = permit.visited === true;
         } else if (isVisitedChecked && isShowVisitedChecked) {
-          matchesVisited = false; // Show none if both are checked (optional behavior)
+          matchesVisited = false;
         }
 
         return matchesSearch && matchesVisited;
@@ -285,20 +307,12 @@ async function renderPermitTable() {
     searchBar.addEventListener('input', applyFilters);
 
     visitedFilter.addEventListener('change', () => {
-      if (visitedFilter.checked) {
-        showVisitedFilter.disabled = true;
-      } else {
-        showVisitedFilter.disabled = false;
-      }
+      showVisitedFilter.disabled = visitedFilter.checked;
       applyFilters();
     });
 
     showVisitedFilter.addEventListener('change', () => {
-      if (showVisitedFilter.checked) {
-        visitedFilter.disabled = true;
-      } else {
-        visitedFilter.disabled = false;
-      }
+      visitedFilter.disabled = showVisitedFilter.checked;
       applyFilters();
     });
 
@@ -308,6 +322,14 @@ async function renderPermitTable() {
     console.error('❌ Error rendering permit table:', error.message);
     tableBody.innerHTML = `<tr><td colspan="9" class="text-center text-danger">Error loading data</td></tr>`;
   }
+}
+
+function handleRefreshButton(){
+    const refreshBtn = document.getElementById('refreshBtn');
+    refreshBtn.addEventListener('click', ()=>{
+      renderPermitTable();
+      NotificationBox.show("Refreshed successfully.");
+    })
 }
 
 async function loadPermit(){

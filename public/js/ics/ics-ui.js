@@ -24,6 +24,28 @@ export function initializePage(){
   initDeleteICSButton();
   document.getElementById("searchBar").addEventListener("input", applySearchFilter);
   setupEditICSFormSubmit();
+  handleRefreshButton();
+}
+
+function normalizeText(text) {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function highlightMatch(text, term) {
+  if (!term) return text;
+
+  const normalizedText = normalizeText(text);
+  const normalizedTerm = normalizeText(term);
+
+  const index = normalizedText.indexOf(normalizedTerm);
+  if (index === -1) return text;
+
+  // Approximate actual match range
+  const regex = new RegExp(`(${term})`, "i");
+  return text.replace(regex, `<mark>$1</mark>`);
 }
 
 function setupAddBtn() {
@@ -100,7 +122,6 @@ function updateAddTotalCost() {
   document.getElementById('totalCostDisplay').textContent =
     `₱${total.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
-
 
 function setupEditQtyAndCostListeners() {
   const qtyInput = document.getElementById('editQty');
@@ -210,7 +231,7 @@ function collectICSFormData() {
 }
 
 // 🔹 Render ICS Table
-async function renderICSTable(dataSet = null, page = 1) {
+async function renderICSTable(dataSet = null, page = 1, searchTerm = '') {
   Spinner.show();
 
   const userId = localStorage.getItem("wrusUserId");
@@ -230,7 +251,6 @@ async function renderICSTable(dataSet = null, page = 1) {
     let dataToUse = dataSet || currentData;
     const usersMap = usersMapGlobal;
 
-    // 🚫 Filter based on user role
     if (userId !== "admin") {
       dataToUse = dataToUse.filter(entry => entry.data.assignedTo === userId);
     }
@@ -241,7 +261,6 @@ async function renderICSTable(dataSet = null, page = 1) {
     }
 
     currentPage = page;
-
     const startIndex = (page - 1) * rowsPerPage;
     const paginatedItems = dataToUse.slice(startIndex, startIndex + rowsPerPage);
 
@@ -255,10 +274,10 @@ async function renderICSTable(dataSet = null, page = 1) {
 
       return `
         <tr>
-          <td>${ICSno || '(no ICSno)'}</td>
-          <td>${assignedName}</td>
-          <td>${description || ''}</td>
-          <td>${dateIssued || ''}</td>
+          <td>${highlightMatch(ICSno || '(no ICSno)', searchTerm)}</td>
+          <td>${highlightMatch(assignedName, searchTerm)}</td>
+          <td>${highlightMatch(description || '', searchTerm)}</td>
+          <td>${highlightMatch(dateIssued || '', searchTerm)}</td>
           <td>${formattedCost}</td>
           <td>
             <div class="d-flex gap-1">
@@ -296,6 +315,14 @@ async function renderICSTable(dataSet = null, page = 1) {
   } finally {
     Spinner.hide();
   }
+}
+
+function handleRefreshButton(){
+    const refreshBtn = document.getElementById('refreshBtn');
+    refreshBtn.addEventListener('click', ()=>{
+      renderICSTable();
+      NotificationBox.show("Refreshed successfully.");
+    })
 }
 
 function renderPaginationControls(dataSet, page) {
@@ -351,22 +378,22 @@ function renderPaginationControls(dataSet, page) {
 }
 
 function applySearchFilter() {
-  const query = document.getElementById("searchBar").value.trim().toLowerCase();
+  const rawQuery = document.getElementById("searchBar").value.trim();
+  const query = normalizeText(rawQuery);
 
   filteredData = currentData.filter(entry => {
     const { ICSno, assignedTo, dateIssued, description } = entry.data;
-
     const assignedName = usersMapGlobal[assignedTo] || "Unknown User";
 
     return (
-      (ICSno || '').toLowerCase().includes(query) ||
-      assignedName.toLowerCase().includes(query) ||
-      (dateIssued || '').toLowerCase().includes(query) ||
-      (description || '').toLowerCase().includes(query)
+      normalizeText(ICSno || '').includes(query) ||
+      normalizeText(assignedName).includes(query) ||
+      normalizeText(dateIssued || '').includes(query) ||
+      normalizeText(description || '').includes(query)
     );
   });
 
-  renderICSTable(filteredData, 1);
+  renderICSTable(filteredData, 1, rawQuery);
 }
 
 async function populateEditModal(icsItem) {
