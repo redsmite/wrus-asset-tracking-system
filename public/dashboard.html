@@ -19,7 +19,7 @@
       <p class="mb-4 fs-4 fw-semibold text-primary bg-light p-3 rounded shadow-sm" id="welcomeText">
         Welcome
       </p>
-
+<!-- 
         <div class="row">
           <div class="col-md-3">
             <div class="card text-white bg-info mb-3">
@@ -48,11 +48,28 @@
               </div>
             </div>
           </div>
-      </div>
+      </div> -->
+<div class="scorecard-wrapper">
+  <div class="scorecard">
+    <div class="scorecard-header">
+      📝 Your Encoded Permits (Monthly)
+    </div>
+
+    <!-- Use a div instead of a table -->
+    <div id="encodedPermitSummary" class="scorecard-list">
+      <!-- JavaScript will insert scorecards here -->
+    </div>
+
+    <div id="noEncodedMessage" class="no-record d-none text-center">
+      No records yet.
+    </div>
+  </div>
+</div>
+
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script type="module" src="./js/dashboard.js"></script>
+  <script type="module" src="./js/dashboard/dashboard-init.js"></script>
 </body>
 </html>

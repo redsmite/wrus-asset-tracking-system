@@ -80,6 +80,7 @@ function handleAddFormSubmit() {
       periodOfUse: document.getElementById('periodOfUse').value.trim(),
       visited: visited,
       pdfUrl: pdfUrl || '',
+      encodedBy: localStorage.getItem("wrusUserId") || null,
       timestamp: new Date()
     };
 

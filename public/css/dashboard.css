@@ -59,6 +59,80 @@
   }
 }
 
+/* Water-themed Scorecard (Card Layout, Not Table) */
+.scorecard-wrapper {
+  margin: 20px auto;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.scorecard {
+  background: linear-gradient(135deg, #e0f7fa, #b2ebf2);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 0 10px rgba(0, 191, 255, 0.3);
+  border: 1px solid #81d4fa;
+  padding: 10px;
+}
+
+.scorecard-header {
+  background: #00bcd4;
+  color: #fff;
+  padding: 12px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.5px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+/* New: Card-style items for each month */
+.scorecard-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.scorecard-item {
+  background: #ffffff;
+  border: 1px solid #81d4fa;
+  border-radius: 10px;
+  padding: 10px;
+  box-shadow: 0 1px 4px rgba(0, 191, 255, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  color: #006064;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.scorecard-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 3px 10px rgba(0, 191, 255, 0.2);
+}
+
+.scorecard-month {
+  font-weight: 600;
+}
+
+.scorecard-count {
+  background: #e0f2f1;
+  color: #004d40;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-weight: bold;
+}
+
+.no-record {
+  padding: 10px;
+  text-align: center;
+  color: #607d8b;
+  font-style: italic;
+  background-color: #e0f2f1;
+  border-radius: 10px;
+  margin-top: 10px;
+}
 
 
 

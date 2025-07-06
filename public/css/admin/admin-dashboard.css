@@ -1,0 +1,91 @@
+.scorecard-grid-container {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.scorecard-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.user-column {
+  background: #f0fdfc;
+  padding: 12px;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0, 191, 255, 0.1);
+}
+
+.user-name {
+  font-weight: bold;
+  color: #00796b;
+  margin-bottom: 8px;
+  text-align: center;
+  font-size: 0.95rem;
+  border-bottom: 1px solid #b2dfdb;
+  padding-bottom: 4px;
+}
+
+
+.scorecard-column {
+  min-width: 220px;
+  background: #e0f7fa;
+  border-radius: 12px;
+  border: 1px solid #81d4fa;
+  box-shadow: 0 2px 8px rgba(0, 191, 255, 0.2);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+}
+
+.scorecard-column .user-header {
+  font-weight: bold;
+  text-align: center;
+  padding: 6px;
+  background-color: #00bcd4;
+  color: white;
+  border-radius: 6px;
+  margin-bottom: 10px;
+}
+
+.scorecard-entry {
+  background: #ffffff;
+  border: 1px solid #b2ebf2;
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 14px;
+  font-size: 0.85rem;
+  color: #004d40;
+  box-shadow: 0 1px 4px rgba(0, 191, 255, 0.1);
+  position: relative;
+}
+
+.scorecard-entry::before {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.scorecard-entry:first-of-type::before {
+  content: none;
+}
+
+
+.scorecard-entry i {
+  margin-right: 5px;
+}
+
+.no-record {
+  padding: 10px;
+  text-align: center;
+  color: #607d8b;
+  font-style: italic;
+  background-color: #e0f2f1;
+  border-radius: 10px;
+  margin-top: 10px;
+}

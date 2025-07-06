@@ -1,37 +1,29 @@
 export const LoginSuccess = {
-  containerId: 'loginSuccessOverlay',
+  render() {
+    if (document.getElementById('login-success-overlay')) return;
 
-  render(containerId = 'loginSuccessOverlay') {
-    this.containerId = containerId;
-    let container = document.getElementById(containerId);
-
-    if (!container) {
-      container = document.createElement('div');
-      container.id = containerId;
-      container.className = 'login-success-overlay';
-
-      container.innerHTML = `
-        <div class="login-success-content">
-          <div class="checkmark">✔</div>
-          <p>Login Successful</p>
+    const overlay = document.createElement('div');
+    overlay.id = 'login-success-overlay';
+    overlay.className = 'login-success-overlay';
+    overlay.innerHTML = `
+      <div class="login-success-content">
+        <div class="aqua-container">
+          <div class="aqua-wave"></div>
+          <div class="gear-icon">
+            <i class="fas fa-cog"></i>
+          </div>
         </div>
-      `;
-
-      document.body.appendChild(container);
-    }
+        <p>Login Successful</p>
+      </div>
+    `;
+    document.body.appendChild(overlay);
   },
-
   show() {
-    const overlay = document.getElementById(this.containerId);
-    if (overlay) {
-      overlay.classList.add('show');
-    }
+    const overlay = document.getElementById('login-success-overlay');
+    if (overlay) overlay.style.display = 'flex';
   },
-
   hide() {
-    const overlay = document.getElementById(this.containerId);
-    if (overlay) {
-      overlay.classList.remove('show');
-    }
+    const overlay = document.getElementById('login-success-overlay');
+    if (overlay) overlay.style.display = 'none';
   }
 };
