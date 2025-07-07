@@ -484,7 +484,7 @@ nav.navbar {
   opacity: 1;
 }
 
-.notification.success { background: #28a745; }
+.notification.success { background: #00bcd4; }
 .notification.error { background: #dc3545; }
 .notification.info { background: #007bff; }
 .notification.warning { background: #ffc107; color: #222; }

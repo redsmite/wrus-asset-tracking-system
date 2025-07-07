@@ -25,6 +25,8 @@ document.addEventListener('DOMContentLoaded', () => {
   fetchWeather();
   checkNetworkSpeed();
   setInterval(checkNetworkSpeed, 30000);
+
+  setInterval(showEncodedPermitsByUserPerMonth, 60000);
 });
 
 // 🔐 Authentication Check
