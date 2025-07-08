@@ -10,7 +10,12 @@ export function initializePage(){
   loadWaterUser();
   handleAddForm();
   handleEditForm();
-  handleRefreshButton();
+  handleRefreshButton({
+    buttonId: "refreshBtn",
+    refreshFn: WUSData.refreshCache,
+    renderFn: renderWaterUsers,
+    cooldownKey: "lastWUSRefresh"
+  });
 }
 
 let currentPage = 1;
@@ -158,12 +163,79 @@ async function renderWaterUsers(term = '') {
 }
 
 
-function handleRefreshButton(){
-    const refreshBtn = document.getElementById('refreshBtn');
-    refreshBtn.addEventListener('click', ()=>{
-      renderWaterUsers();
+function handleRefreshButton({
+  buttonId,
+  refreshFn,
+  renderFn,
+  cooldownKey,
+  cooldownSeconds = 60
+}) {
+  const refreshBtn = document.getElementById(buttonId);
+  const LAST_REFRESH_KEY = cooldownKey;
+
+  function getRemainingCooldown() {
+    const lastRefresh = localStorage.getItem(LAST_REFRESH_KEY);
+    if (!lastRefresh) return 0;
+    const elapsed = (Date.now() - parseInt(lastRefresh, 10)) / 1000;
+    return Math.max(0, cooldownSeconds - Math.floor(elapsed));
+  }
+
+  function startCooldown() {
+    localStorage.setItem(LAST_REFRESH_KEY, Date.now().toString());
+    let remaining = cooldownSeconds;
+    refreshBtn.disabled = true;
+    const originalText = "🔁 Refresh";
+
+    const interval = setInterval(() => {
+      remaining--;
+      refreshBtn.innerText = `Wait ${remaining}s`;
+      if (remaining <= 0) {
+        clearInterval(interval);
+        refreshBtn.disabled = false;
+        refreshBtn.innerText = originalText;
+      }
+    }, 1000);
+  }
+
+  // On page load: apply cooldown if active
+  const remainingCooldown = getRemainingCooldown();
+  if (remainingCooldown > 0) {
+    refreshBtn.disabled = true;
+    refreshBtn.innerText = `Wait ${remainingCooldown}s`;
+
+    let remaining = remainingCooldown;
+    const interval = setInterval(() => {
+      remaining--;
+      refreshBtn.innerText = `Wait ${remaining}s`;
+      if (remaining <= 0) {
+        clearInterval(interval);
+        refreshBtn.disabled = false;
+        refreshBtn.innerText = "🔁 Refresh";
+      }
+    }, 1000);
+  }
+
+  refreshBtn.addEventListener('click', async () => {
+    const remaining = getRemainingCooldown();
+    if (remaining > 0) {
+      NotificationBox.show(`Please wait ${remaining}s before refreshing again.`);
+      return;
+    }
+
+    try {
+      refreshBtn.disabled = true;
+      refreshBtn.innerText = "Refreshing...";
+      await refreshFn();
+      renderFn();
       NotificationBox.show("Refreshed successfully.");
-    })
+      startCooldown();
+    } catch (err) {
+      refreshBtn.disabled = false;
+      refreshBtn.innerText = "🔁 Refresh";
+      console.error(err);
+      NotificationBox.show("Error during refresh.");
+    }
+  });
 }
 
 function attachEditListeners(filteredUsers) {

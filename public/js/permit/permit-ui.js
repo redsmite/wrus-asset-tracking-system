@@ -325,12 +325,74 @@ async function renderPermitTable() {
   }
 }
 
-function handleRefreshButton(){
-    const refreshBtn = document.getElementById('refreshBtn');
-    refreshBtn.addEventListener('click', ()=>{
+function handleRefreshButton() {
+  const refreshBtn = document.getElementById('refreshBtn');
+  const COOLDOWN_SECONDS = 60;
+  const LAST_REFRESH_KEY = 'lastPermitRefresh';
+
+  function getRemainingCooldown() {
+    const lastRefresh = localStorage.getItem(LAST_REFRESH_KEY);
+    if (!lastRefresh) return 0;
+    const elapsed = (Date.now() - parseInt(lastRefresh, 10)) / 1000;
+    return Math.max(0, COOLDOWN_SECONDS - Math.floor(elapsed));
+  }
+
+  function startCooldown() {
+    localStorage.setItem(LAST_REFRESH_KEY, Date.now().toString());
+    let remaining = COOLDOWN_SECONDS;
+    refreshBtn.disabled = true;
+    const originalText = "🔁 Refresh";
+
+    const interval = setInterval(() => {
+      remaining--;
+      refreshBtn.innerText = `Wait ${remaining}s`;
+      if (remaining <= 0) {
+        clearInterval(interval);
+        refreshBtn.disabled = false;
+        refreshBtn.innerText = originalText;
+      }
+    }, 1000);
+  }
+
+  // On load, check if cooldown is active
+  const remainingCooldown = getRemainingCooldown();
+  if (remainingCooldown > 0) {
+    refreshBtn.disabled = true;
+    refreshBtn.innerText = `Wait ${remainingCooldown}s`;
+
+    let remaining = remainingCooldown;
+    const interval = setInterval(() => {
+      remaining--;
+      refreshBtn.innerText = `Wait ${remaining}s`;
+      if (remaining <= 0) {
+        clearInterval(interval);
+        refreshBtn.disabled = false;
+        refreshBtn.innerText = "🔁 Refresh";
+      }
+    }, 1000);
+  }
+
+  refreshBtn.addEventListener('click', async () => {
+    const remaining = getRemainingCooldown();
+    if (remaining > 0) {
+      NotificationBox.show(`Please wait ${remaining}s before refreshing again.`);
+      return;
+    }
+
+    try {
+      refreshBtn.disabled = true;
+      refreshBtn.innerText = "Refreshing...";
+      await Permit.refreshCache();
       renderPermitTable();
       NotificationBox.show("Refreshed successfully.");
-    })
+      startCooldown();
+    } catch (err) {
+      refreshBtn.disabled = false;
+      refreshBtn.innerText = "🔁 Refresh";
+      console.error(err);
+      NotificationBox.show("Error during refresh.");
+    }
+  });
 }
 
 async function loadPermit(){

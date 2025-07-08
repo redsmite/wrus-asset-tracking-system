@@ -15,16 +15,26 @@ import { NotificationBox } from "../components/notification.js";
 
 export const ICS = {
   collectionRef: collection(db, "ICS"),
+  localStorageKey: "cachedICS",
 
-  // 🔸 Fetch all ICS entries with document IDs
+  // 🔸 Fetch all ICS entries (from cache first)
   async fetchAll() {
+    const cached = localStorage.getItem(this.localStorageKey);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      return parsed.sort((a, b) => b.data.timestamp?.seconds - a.data.timestamp?.seconds);
+    }
+
     const q = query(this.collectionRef, orderBy("timestamp", "desc"));
     const snapshot = await getDocs(q);
 
-    return snapshot.docs.map(doc => ({
+    const data = snapshot.docs.map(doc => ({
       id: doc.id,
       data: doc.data(),
     }));
+
+    localStorage.setItem(this.localStorageKey, JSON.stringify(data));
+    return data;
   },
 
   // 🔸 Add a new ICS entry
@@ -41,6 +51,7 @@ export const ICS = {
       };
 
       await addDoc(this.collectionRef, dataToSave);
+      localStorage.removeItem(this.localStorageKey); // Invalidate cache
       NotificationBox.show('ICS entry saved successfully!');
     } catch (err) {
       console.error("Error adding ICS entry:", err);
@@ -52,28 +63,45 @@ export const ICS = {
   async update(docId, updatedData) {
     const docRef = doc(this.collectionRef, docId);
     await updateDoc(docRef, updatedData);
+    localStorage.removeItem(this.localStorageKey); // Invalidate cache
   },
 
   // 🔸 Delete an ICS entry
   async delete(docId) {
     try {
       await deleteDoc(doc(this.collectionRef, docId));
+      localStorage.removeItem(this.localStorageKey); // Invalidate cache
     } catch (error) {
       console.error("Error deleting ICS document:", error);
       throw error;
     }
   },
 
+  // 🔸 Force re-fetch from Firestore and update cache
+  async refreshCache() {
+    const q = query(this.collectionRef, orderBy("timestamp", "desc"));
+    const snapshot = await getDocs(q);
+
+    const data = snapshot.docs.map(doc => ({
+      id: doc.id,
+      data: doc.data(),
+    }));
+
+    localStorage.setItem(this.localStorageKey, JSON.stringify(data));
+    return data;
+  },
+
+  // 🔸 Fetch ICS assigned to a specific user
   async getICSDataByUserId(userId) {
     const q = query(
-      collection(db, "ICS"),
+      this.collectionRef,
       where("assignedTo", "==", userId),
-      orderBy("timestamp", "asc") // ✅ Sort by timestamp ascending
+      orderBy("timestamp", "asc")
     );
 
     const querySnapshot = await getDocs(q);
-
     const items = [];
+
     querySnapshot.forEach((doc) => {
       const data = doc.data();
       items.push({
@@ -88,10 +116,11 @@ export const ICS = {
         remarks: data.remarks || "",
         attachmentURL: data.attachmentURL || "",
         status: data.status || "",
-        timestamp: data.timestamp || null  // 🔥 Optionally include for debugging
+        timestamp: data.timestamp || null
       });
     });
 
     return items;
   }
 };
+

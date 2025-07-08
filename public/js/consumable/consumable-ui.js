@@ -27,7 +27,13 @@ export function initializePage() {
   initSearchHandler();
   initActionButtonHandler();
   pageSizeSelectHandler();
-  handleRefreshButton();
+  handleRefreshButton({
+    buttonId: "refreshBtn",
+    refreshFn: Consumable.refreshCache.bind(Consumable),
+    renderFn: renderConsumableTable,
+    cooldownKey: "lastConsumableRefresh",
+    cooldownSeconds: 60
+  });
 }
 
 function normalizeText(text) {
@@ -331,12 +337,73 @@ function initSearchHandler() {
   });
 }
 
-function handleRefreshButton(){
-    const refreshBtn = document.getElementById('refreshBtn');
-    refreshBtn.addEventListener('click', ()=>{
-      renderConsumableTable();
+function handleRefreshButton({
+  buttonId,
+  refreshFn,
+  renderFn,
+  cooldownKey,
+  cooldownSeconds = 60
+}) {
+  if (!buttonId || !refreshFn || !renderFn || !cooldownKey) {
+    console.error("handleRefreshButton: Missing required arguments.");
+    return;
+  }
+
+  const refreshBtn = document.getElementById(buttonId);
+  if (!refreshBtn) {
+    console.error(`handleRefreshButton: Button with ID "${buttonId}" not found.`);
+    return;
+  }
+
+  let originalText = refreshBtn.textContent;
+  let cooldownTimer = null;
+
+  function startCooldown() {
+    const startTime = Date.now();
+    const endTime = startTime + cooldownSeconds * 1000;
+    localStorage.setItem(cooldownKey, startTime.toString());
+
+    refreshBtn.disabled = true;
+
+    cooldownTimer = setInterval(() => {
+      const now = Date.now();
+      const secondsLeft = Math.ceil((endTime - now) / 1000);
+
+      if (secondsLeft <= 0) {
+        clearInterval(cooldownTimer);
+        refreshBtn.disabled = false;
+        refreshBtn.textContent = originalText;
+      } else {
+        refreshBtn.textContent = `Wait (${secondsLeft}s)`;
+      }
+    }, 1000);
+  }
+
+  // Resume countdown if cooldown still active
+  const lastRefresh = parseInt(localStorage.getItem(cooldownKey)) || 0;
+  const now = Date.now();
+  if (now - lastRefresh < cooldownSeconds * 1000) {
+    startCooldown();
+  }
+
+  refreshBtn.addEventListener("click", async () => {
+    const now = Date.now();
+    const lastRefresh = parseInt(localStorage.getItem(cooldownKey)) || 0;
+
+    if (now - lastRefresh < cooldownSeconds * 1000) {
+      return; // Ignore clicks during cooldown
+    }
+
+    try {
+      await refreshFn();
+      renderFn();
       NotificationBox.show("Refreshed successfully.");
-    })
+      startCooldown();
+    } catch (err) {
+      console.error("Refresh error:", err);
+      NotificationBox.show("Failed to refresh data.");
+    }
+  });
 }
 
 // ---------- Table Rendering ----------

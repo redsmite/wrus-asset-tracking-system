@@ -14,6 +14,7 @@ import {
 
 export const Consumable = {
   collectionRef: collection(db, "consumable"),
+  localStorageKey: "cachedConsumables",
 
   async generateID() {
     const year = new Date().getFullYear();
@@ -53,58 +54,68 @@ export const Consumable = {
       action: "Add Stock",
     });
 
+    localStorage.removeItem(this.localStorageKey); // Invalidate cache
     return id;
   },
 
   async isSpecDuplicate(spec) {
-    const specLower = spec.toLowerCase();
-    const snapshot = await getDocs(this.collectionRef);
+    const cached = localStorage.getItem(this.localStorageKey);
+    const consumables = cached ? JSON.parse(cached) : await this.fetchAll();
 
-    return snapshot.docs.some(doc => {
-      const existingSpec = (doc.data().specification || "").toLowerCase();
-      return existingSpec === specLower;
-    });
+    const specLower = spec.toLowerCase();
+    return consumables.some(item => item.specification.toLowerCase() === specLower);
   },
 
   async fetchAll() {
+    const cached = localStorage.getItem(this.localStorageKey);
+    if (cached) {
+      return JSON.parse(cached);
+    }
+
     const q = query(this.collectionRef, orderBy("timestamp", "desc"));
     const snapshot = await getDocs(q);
 
-    return snapshot.docs.map(doc => {
-      const data = doc.data();
+    const data = snapshot.docs.map(doc => {
+      const d = doc.data();
       return {
         id: doc.id,
-        specification: data.specification,
-        qty: data.qty,
-        unit: data.unit,
-        addedBy: data.addedBy,
-        timestamp: data.timestamp?.toDate().toLocaleString() || "N/A",
+        specification: d.specification,
+        qty: d.qty,
+        unit: d.unit,
+        addedBy: d.addedBy,
+        timestamp: d.timestamp?.toDate().toLocaleString() || "N/A",
       };
     });
+
+    localStorage.setItem(this.localStorageKey, JSON.stringify(data));
+    return data;
   },
 
   async update(cid, updatedData) {
-      const docRef = doc(this.collectionRef, cid);
-      await updateDoc(docRef, updatedData);
-    },
+    const docRef = doc(this.collectionRef, cid);
+    await updateDoc(docRef, updatedData);
+    localStorage.removeItem(this.localStorageKey); // Invalidate cache
+  },
 
   async addStock(cid, amount, remarks = "") {
-      const docRef = doc(this.collectionRef, cid);
-      const snapshot = await getDoc(docRef);
+    const docRef = doc(this.collectionRef, cid);
+    const snapshot = await getDoc(docRef);
 
-      if (!snapshot.exists()) throw new Error("Item not found");
+    if (!snapshot.exists()) throw new Error("Item not found");
 
-      const newQty = (snapshot.data().qty || 0) + amount;
-      await updateDoc(docRef, { qty: newQty });
+    const newQty = (snapshot.data().qty || 0) + amount;
+    await updateDoc(docRef, { qty: newQty });
 
-      await Ledger.addEntry({
-        cid,
-        modifiedBy: localStorage.getItem("userFullName") || "Unknown",
-        amount,
-        remarks,
-        action: "Add Stock",
-      });
-    },
+    await Ledger.addEntry({
+      cid,
+      modifiedBy: localStorage.getItem("userFullName") || "Unknown",
+      amount,
+      remarks,
+      action: "Add Stock",
+    });
+
+    localStorage.removeItem(this.localStorageKey); // Invalidate cache
+  },
 
   async assignItem(cid, amount, assignedTo, remarks = "") {
     const docRef = doc(this.collectionRef, cid);
@@ -129,29 +140,53 @@ export const Consumable = {
       action: "Assign Item",
       assignedTo,
     });
+
+    localStorage.removeItem(this.localStorageKey); // Invalidate cache
   },
 
   async getQty(cid) {
-  const docRef = doc(this.collectionRef, cid);
-  const snapshot = await getDoc(docRef);
+    const docRef = doc(this.collectionRef, cid);
+    const snapshot = await getDoc(docRef);
 
-  if (!snapshot.exists()) {
-    return null; // Or throw new Error("Item not found");
-  }
+    if (!snapshot.exists()) {
+      return null;
+    }
 
-  const data = snapshot.data();
-  return data.qty ?? 0;
+    const data = snapshot.data();
+    return data.qty ?? 0;
   },
+
   async fetchConsumablesMap() {
-    const snapshot = await getDocs(collection(db, "consumable"));
+    const cached = localStorage.getItem(this.localStorageKey);
+    const items = cached ? JSON.parse(cached) : await this.fetchAll();
+
     const map = {};
-    snapshot.forEach((doc) => {
-      const d = doc.data();
-      map[doc.id] = {
-        specification: d.specification || "",
-        unit: d.unit || "",
+    items.forEach(item => {
+      map[item.id] = {
+        specification: item.specification || "",
+        unit: item.unit || "",
       };
     });
+
     return map;
+  },
+  async refreshCache() {
+    const q = query(this.collectionRef, orderBy("timestamp", "desc"));
+    const snapshot = await getDocs(q);
+
+    const data = snapshot.docs.map(doc => {
+      const d = doc.data();
+      return {
+        id: doc.id,
+        specification: d.specification,
+        qty: d.qty,
+        unit: d.unit,
+        addedBy: d.addedBy,
+        timestamp: d.timestamp?.toDate().toLocaleString() || "N/A",
+      };
+    });
+
+    localStorage.setItem(this.localStorageKey, JSON.stringify(data));
+    return data;
   }
 };

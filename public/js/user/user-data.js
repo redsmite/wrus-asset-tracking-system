@@ -12,81 +12,101 @@ import {
 
 export const Users = {
   collectionRef: collection(db, "users"),
+  localStorageKey: "cachedUsers",
 
   async add(userData) {
     await addDoc(this.collectionRef, {
       ...userData,
       timestamp: serverTimestamp()
     });
+    localStorage.removeItem(this.localStorageKey); // Invalidate cache
   },
 
   async fetchAllDesc() {
-    const usersQuery = query(
-      this.collectionRef,
-      orderBy("timestamp", "desc")
-    );
+    const cached = localStorage.getItem(this.localStorageKey);
+    if (cached) {
+      const data = JSON.parse(cached);
+      return data.sort((a, b) => b.timestamp?.seconds - a.timestamp?.seconds);
+    }
+
+    const usersQuery = query(this.collectionRef, orderBy("timestamp", "desc"));
     const userSnapshot = await getDocs(usersQuery);
-    return userSnapshot.docs.map(doc => ({
+    const users = userSnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     }));
+
+    localStorage.setItem(this.localStorageKey, JSON.stringify(users));
+    return users;
   },
 
   async fetchAllAsc() {
-    const usersQuery = query(
-      this.collectionRef,
-      orderBy("timestamp", "asc")
-    );
+    const cached = localStorage.getItem(this.localStorageKey);
+    if (cached) {
+      const data = JSON.parse(cached);
+      return data.sort((a, b) => a.timestamp?.seconds - b.timestamp?.seconds);
+    }
+
+    const usersQuery = query(this.collectionRef, orderBy("timestamp", "asc"));
     const userSnapshot = await getDocs(usersQuery);
-    return userSnapshot.docs.map(doc => ({
+    const users = userSnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     }));
+
+    localStorage.setItem(this.localStorageKey, JSON.stringify(users));
+    return users;
   },
 
   async update(id, updatedData) {
     const userRef = doc(db, "users", id);
     try {
       await updateDoc(userRef, updatedData);
+      localStorage.removeItem(this.localStorageKey); // Invalidate cache
     } catch (error) {
       console.error("Error updating user:", error);
       throw error;
     }
   },
-  async getUsersMap() {
-    const snapshot = await getDocs(this.collectionRef);
-    const usersMap = {};
 
-    snapshot.forEach(doc => {
-      const data = doc.data();
-      usersMap[doc.id] = `${data.lastName}, ${data.firstName} ${data.middleInitial || ''}.`.trim();
+  async getUsersMap() {
+    const cached = localStorage.getItem(this.localStorageKey);
+    const users = cached ? JSON.parse(cached) : await this.fetchAllAsc();
+
+    const usersMap = {};
+    users.forEach(user => {
+      usersMap[user.id] = `${user.lastName}, ${user.firstName} ${user.middleInitial || ''}.`.trim();
     });
 
     return usersMap;
   },
+
   async fetchUsersSummary() {
-    const q = query(collection(db, "users"), orderBy("timestamp", "asc"));
-    const querySnapshot = await getDocs(q);
-    const users = [];
+    const cached = localStorage.getItem(this.localStorageKey);
+    const users = cached ? JSON.parse(cached) : await this.fetchAllAsc();
 
-    querySnapshot.forEach((doc) => {
-      const data = doc.data();
+    return users
+      .filter(user => user.id.toLowerCase() !== "admin")
+      .map(user => ({
+        id: user.id,
+        username: user.username || '',
+        lastName: user.lastName || '',
+        firstName: user.firstName || '',
+        middleInitial: user.middleInitial || '',
+        type: user.type || '',
+        status: user.status || ''
+      }));
+  },
 
-      // Skip if role is admin
-      if (doc.id.toLowerCase() === "admin") return;
+  async refreshCache() {
+    const usersQuery = query(this.collectionRef, orderBy("timestamp", "desc"));
+    const userSnapshot = await getDocs(usersQuery);
+    const users = userSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
 
-      users.push({
-        id: doc.id,
-        username: data.username || '',
-        lastName: data.lastName || '',
-        firstName: data.firstName || '',
-        middleInitial: data.middleInitial || '',
-        type: data.type || '',
-        status: data.status || ''
-      });
-    });
-
+    localStorage.setItem(this.localStorageKey, JSON.stringify(users));
     return users;
   }
 };
-

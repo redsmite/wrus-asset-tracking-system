@@ -15,7 +15,12 @@ export function initializePage(){
   Spinner.render();
   loadUsers();
   initializeAddUserModal();
-  handleRefreshButton();
+  handleRefreshButton({
+    buttonId: "refreshBtn",
+    refreshFn: Users.refreshCache.bind(Users),
+    renderFn: () => renderUsersTable(1),
+    cooldownKey: "lastUsersRefresh"
+  });
   handleSearchBar();
 }
 
@@ -198,13 +203,79 @@ function renderUsersTable(page = 1, searchQuery = "") {
   renderPaginationControls(Math.ceil(filteredUsers.length / usersPerPage), page, searchQuery);
 }
 
+function handleRefreshButton({
+  buttonId,
+  refreshFn,
+  renderFn,
+  cooldownKey,
+  cooldownSeconds = 60
+}) {
+  if (!buttonId || !refreshFn || !renderFn || !cooldownKey) {
+    console.error("handleRefreshButton: Missing required arguments.");
+    return;
+  }
 
-function handleRefreshButton(){
-    const refreshBtn = document.getElementById('refreshBtn');
-    refreshBtn.addEventListener('click', ()=>{
-      renderUsersTable(1);
+  const refreshBtn = document.getElementById(buttonId);
+  if (!refreshBtn) {
+    console.error(`handleRefreshButton: Button with ID "${buttonId}" not found.`);
+    return;
+  }
+
+  let originalText = refreshBtn.textContent;
+  let cooldownTimer = null;
+
+  function startCooldown() {
+    const startTime = Date.now();
+    const endTime = startTime + cooldownSeconds * 1000;
+    localStorage.setItem(cooldownKey, startTime.toString());
+
+    refreshBtn.disabled = true;
+
+    cooldownTimer = setInterval(() => {
+      const now = Date.now();
+      const secondsLeft = Math.ceil((endTime - now) / 1000);
+
+      if (secondsLeft <= 0) {
+        clearInterval(cooldownTimer);
+        refreshBtn.disabled = false;
+        refreshBtn.textContent = originalText;
+      } else {
+        refreshBtn.textContent = `Wait (${secondsLeft}s)`;
+      }
+    }, 1000);
+  }
+
+  // On load, resume cooldown if within cooldown time
+  const lastRefresh = parseInt(localStorage.getItem(cooldownKey)) || 0;
+  const now = Date.now();
+  const elapsed = now - lastRefresh;
+  const cooldownMs = cooldownSeconds * 1000;
+
+  if (elapsed < cooldownMs) {
+    const remaining = Math.ceil((cooldownMs - elapsed) / 1000);
+    startCooldown(); // Resume countdown
+  }
+
+  refreshBtn.addEventListener("click", async () => {
+    const now = Date.now();
+    const lastRefresh = parseInt(localStorage.getItem(cooldownKey)) || 0;
+    const cooldownMs = cooldownSeconds * 1000;
+
+    if (now - lastRefresh < cooldownMs) {
+      // Already handled by interval timer
+      return;
+    }
+
+    try {
+      await refreshFn();
+      renderFn();
       NotificationBox.show("Refreshed successfully.");
-    })
+      startCooldown();
+    } catch (err) {
+      console.error("Refresh error:", err);
+      NotificationBox.show("Failed to refresh data.");
+    }
+  });
 }
 
 function initializeEditFunctionality() {

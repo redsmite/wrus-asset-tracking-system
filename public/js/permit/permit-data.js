@@ -16,16 +16,18 @@ import {
 const permitCollection = collection(db, 'permits');
 
 export const Permit = {
+  localStorageKey: "cachedPermits",
+
+  // 🔸 Add a new permit
   async add(data) {
     try {
       const permitNoToCheck = data.permitNo.trim();
 
-      // 🔍 Check for duplicate permitNo (case-sensitive)
+      // 🔍 Check for duplicate permitNo
       const duplicateQuery = query(
         permitCollection,
         where('permitNo', '==', permitNoToCheck)
       );
-
       const duplicateSnapshot = await getDocs(duplicateQuery);
 
       if (!duplicateSnapshot.empty) {
@@ -38,11 +40,9 @@ export const Permit = {
         orderBy('createdAt', 'desc'),
         limit(1)
       );
-
       const latestSnapshot = await getDocs(latestQuery);
 
       let newIdNumber = '0001';
-
       if (!latestSnapshot.empty) {
         const lastDoc = latestSnapshot.docs[0];
         const lastId = lastDoc.id;
@@ -52,19 +52,27 @@ export const Permit = {
       }
 
       const newDocId = `2025-${newIdNumber}`;
-
       const newData = {
         ...data,
         createdAt: serverTimestamp(),
       };
 
       await setDoc(doc(db, 'permits', newDocId), newData);
+      localStorage.removeItem(this.localStorageKey); // ❌ Invalidate cache
     } catch (error) {
       console.error('Error adding permit:', error.message);
       throw error;
     }
   },
+
+  // 🔸 Get all permits (from localStorage first)
   async getAll() {
+    const cached = localStorage.getItem(this.localStorageKey);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      return parsed.sort((a, b) => b.createdAt?.seconds - a.createdAt?.seconds);
+    }
+
     try {
       const querySnapshot = await getDocs(
         query(permitCollection, orderBy('createdAt', 'desc'))
@@ -73,6 +81,8 @@ export const Permit = {
       querySnapshot.forEach((doc) => {
         permits.push({ id: doc.id, ...doc.data() });
       });
+
+      localStorage.setItem(this.localStorageKey, JSON.stringify(permits));
       return permits;
     } catch (error) {
       console.error('Error fetching permits:', error.message);
@@ -80,6 +90,26 @@ export const Permit = {
     }
   },
 
+  // 🔸 Force refresh cache
+  async refreshCache() {
+    try {
+      const querySnapshot = await getDocs(
+        query(permitCollection, orderBy('createdAt', 'desc'))
+      );
+      const permits = [];
+      querySnapshot.forEach((doc) => {
+        permits.push({ id: doc.id, ...doc.data() });
+      });
+
+      localStorage.setItem(this.localStorageKey, JSON.stringify(permits));
+      return permits;
+    } catch (error) {
+      console.error("Error refreshing permit cache:", error.message);
+      throw error;
+    }
+  },
+
+  // 🔸 Update a permit
   async update(id, data) {
     try {
       const docRef = doc(permitCollection, id);
@@ -87,14 +117,19 @@ export const Permit = {
         ...data,
         updatedAt: serverTimestamp(),
       }, { merge: true });
+
+      localStorage.removeItem(this.localStorageKey); // ❌ Invalidate cache
     } catch (error) {
       console.error('Error updating permit:', error.message);
       throw error;
     }
   },
+
+  // 🔸 Delete a permit
   async delete(id) {
     try {
       await deleteDoc(doc(permitCollection, id));
+      localStorage.removeItem(this.localStorageKey); // ❌ Invalidate cache
       console.log(`🗑️ Permit ${id} deleted successfully`);
     } catch (error) {
       throw error;
