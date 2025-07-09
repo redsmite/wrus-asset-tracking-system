@@ -35,7 +35,6 @@
           </div>
         </div>
 
-
         <!-- Add Permit Button -->
         <div class="flex-shrink-0">
           <button class="btn btn-primary shadow-sm px-3 py-2 d-flex align-items-center gap-2" id="addPermitBtn">
@@ -80,22 +79,39 @@
 
       <!-- Pagination control -->
       <div class="d-flex justify-content-between align-items-center mb-1 mt-1">
-        <div class="rows-per-page-container">
-          <label for="rowsPerPage" class="form-label me-2">Rows per page:</label>
-          <select id="rowsPerPage" class="form-select d-inline-block w-auto">
-            <option value="10" selected>10</option>
-            <option value="25">25</option>
-            <option value="50">50</option>
-          </select>
+        <!-- Left Side: Rows per page and Pagination -->
+        <div class="d-flex align-items-center gap-3">
+          <div class="rows-per-page-container">
+            <label for="rowsPerPage" class="form-label me-2">Rows per page:</label>
+            <select id="rowsPerPage" class="form-select d-inline-block w-auto">
+              <option value="10" selected>10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+            </select>
+          </div>
+
+          <nav aria-label="Page navigation">
+            <ul class="pagination mb-0" id="pagination"></ul>
+          </nav>
         </div>
 
-        <nav aria-label="Page navigation">
-          <ul class="pagination mb-0" id="pagination"></ul>
-        </nav>
-        <button id="refreshBtn" class="btn btn-primary shadow-sm px-3 py-2 d-flex align-items-center justify-content-center">
-        <i class="bi bi-arrow-clockwise me-1"></i> Refresh 
-        </button>
+        <!-- Right Side: Export PDF and Refresh Button grouped -->
+        <div class="d-flex align-items-center gap-2">
+          <!-- Export as PDF File -->
+          <button class="btn btn-success shadow-sm px-3 py-2 d-flex align-items-center gap-2" id="exportPermitsBtn">
+            <span class="d-inline-flex justify-content-center align-items-center bg-light text-success rounded-circle" style="width: 24px; height: 24px;">
+              <i class="bi bi-download"></i>
+            </span>
+            Export
+          </button>
+
+          <!-- Refresh Button -->
+          <button id="refreshBtn" class="btn btn-primary shadow-sm px-3 py-2 d-flex align-items-center justify-content-center">
+            <i class="bi bi-arrow-clockwise me-1"></i> 
+          </button>
+        </div>
       </div>
+
 
       <!-- Data Table -->
       <div class="table-responsive">
@@ -268,7 +284,7 @@
                       <!-- Period of Use -->
                       <div class="col-md-6">
                         <label class="form-label"><i class="bi bi-calendar-event me-1"></i> During the Month of</label>
-                        <input type="text" class="form-control" id="periodOfUse" required>
+                        <input type="text" class="form-control" id="periodOfUse" value="January to December" required>
                         <div class="invalid-feedback">Period of Use is required.</div>
                       </div>
 
@@ -528,5 +544,6 @@
   </div>
   <script type="module" src="js/permit/permit-init.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </body>
 </html>

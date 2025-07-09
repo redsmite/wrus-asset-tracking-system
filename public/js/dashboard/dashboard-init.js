@@ -2,7 +2,12 @@
 
 import { Sidebar } from "../components/sidebar.js";
 import { PortalBubble } from "../components/PortalBubble.js";
+import { Users } from '../user/user-data.js';
+import { Consumable } from '../consumable/consumable-data.js';
+import { ICS } from '../ics/ics-data.js';
 import { Permit } from "../permit/permit-data.js";
+import { WUSData } from "../wrus/wrus-data.js";
+import { NotificationBox } from "../components/notification.js";
 
 import {
   displayWelcomeText,
@@ -12,20 +17,22 @@ import {
   displayWeatherError,
   displayNetworkSpeed,
 } from './dashboard-ui.js';
+import { Spinner } from "../components/spinner.js";
 
 document.addEventListener('DOMContentLoaded', () => {
   checkAuthentication();
-  setupLogoutButtons();
   displayWelcomeText();
   Sidebar.render();
   showEncodedPermitsByMonth();
+  refreshAllCachesEvery8Hours();
+  handleEncodedRefreshButton();
 
-  updateDateTime();
-  setInterval(updateDateTime, 1000);
+  // updateDateTime();
+  // setInterval(updateDateTime, 1000);
 
-  fetchWeather();
-  checkNetworkSpeed();
-  setInterval(checkNetworkSpeed, 30000);
+  // fetchWeather();
+  // checkNetworkSpeed();
+  // setInterval(checkNetworkSpeed, 30000);
 });
 
 // 🔐 Authentication Check
@@ -34,23 +41,31 @@ function checkAuthentication() {
   if (!user) window.location.href = "index.html";
 }
 
-// 🚪 Logout Buttons
-function setupLogoutButtons() {
-  const logout = () => {
-    localStorage.removeItem("loggedInUser");
-    localStorage.removeItem("userFullName");
-    window.location.href = "index.html";
-  };
+export async function refreshAllDailyCaches() {
+  await Promise.all([
+    Users.autoRefreshDaily?.(),
+    Consumable.autoRefreshDaily?.(),
+    ICS.autoRefreshDaily?.(),
+    Permit.autoRefreshDaily?.(),
+    WUSData.autoRefreshDaily?.(),
+  ]);
 
-  const logoutBtn = document.getElementById("logoutBtn");
-  const logoutBtnMobile = document.getElementById("logoutBtnMobile");
+  console.log("✅ All daily caches refreshed.");
+}
 
-  if (logoutBtn) logoutBtn.addEventListener("click", logout);
-  if (logoutBtnMobile) logoutBtnMobile.addEventListener("click", logout);
+export async function refreshAllCachesEvery8Hours() {
+  await Promise.all([
+    Users.autoRefreshEvery8Hours?.(),
+    Consumable.autoRefreshEvery8Hours?.(),
+    ICS.autoRefreshEvery8Hours?.(),
+    Permit.autoRefreshEvery8Hours?.(),
+    WUSData.autoRefreshEvery8Hours?.(),
+  ]);
 }
 
 // 📊 Load Encoded Permits Summary
 async function showEncodedPermitsByMonth() {
+  PortalBubble.trigger();
   const userId = localStorage.getItem('wrusUserId');
   if (!userId) return;
 
@@ -93,6 +108,77 @@ async function showEncodedPermitsByMonth() {
   } catch (err) {
     console.error('Failed to load encoded permit summary:', err);
   }
+}
+
+function handleEncodedRefreshButton() {
+  PortalBubble.trigger();
+  const refreshBtn = document.getElementById('refreshEncodedBtn');
+  const COOLDOWN_SECONDS = 60;
+  const LAST_REFRESH_KEY = 'lastEncodedRefresh';
+
+  function getRemainingCooldown() {
+    const lastRefresh = localStorage.getItem(LAST_REFRESH_KEY);
+    if (!lastRefresh) return 0;
+    const elapsed = (Date.now() - parseInt(lastRefresh, 10)) / 1000;
+    return Math.max(0, COOLDOWN_SECONDS - Math.floor(elapsed));
+  }
+
+  function startCooldown() {
+    localStorage.setItem(LAST_REFRESH_KEY, Date.now().toString());
+    let remaining = COOLDOWN_SECONDS;
+    refreshBtn.disabled = true;
+    const originalHTML = refreshBtn.innerHTML;
+
+    const interval = setInterval(() => {
+      remaining--;
+      refreshBtn.innerHTML = `<i class="bi bi-hourglass-split me-1"></i> ${remaining}s`;
+      if (remaining <= 0) {
+        clearInterval(interval);
+        refreshBtn.disabled = false;
+        refreshBtn.innerHTML = originalHTML;
+      }
+    }, 1000);
+  }
+
+  // On load, check if cooldown is active
+  const remainingCooldown = getRemainingCooldown();
+  if (remainingCooldown > 0) {
+    refreshBtn.disabled = true;
+    let remaining = remainingCooldown;
+    const originalHTML = refreshBtn.innerHTML;
+    refreshBtn.innerHTML = `<i class="bi bi-hourglass-split me-1"></i> ${remaining}s`;
+
+    const interval = setInterval(() => {
+      remaining--;
+      refreshBtn.innerHTML = `<i class="bi bi-hourglass-split me-1"></i> ${remaining}s`;
+      if (remaining <= 0) {
+        clearInterval(interval);
+        refreshBtn.disabled = false;
+        refreshBtn.innerHTML = originalHTML;
+      }
+    }, 1000);
+  }
+
+  refreshBtn.addEventListener('click', async () => {
+    const remaining = getRemainingCooldown();
+    if (remaining > 0) {
+      NotificationBox.show(`Please wait ${remaining}s before refreshing again.`);
+      return;
+    }
+
+    try {
+      refreshBtn.disabled = true;
+      refreshBtn.innerHTML = `<i class="bi bi-arrow-clockwise me-1"></i> Refreshing...`;
+      await showEncodedPermitsByMonth();
+      NotificationBox.show("Encoded permits refreshed.");
+      startCooldown();
+    } catch (err) {
+      refreshBtn.disabled = false;
+      refreshBtn.innerHTML = `<i class="bi bi-arrow-clockwise"></i>`;
+      console.error(err);
+      NotificationBox.show("Error during encoded refresh.");
+    }
+  });
 }
 
 // 🌤️ Fetch Weather

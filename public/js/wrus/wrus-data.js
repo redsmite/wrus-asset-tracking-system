@@ -115,5 +115,28 @@ export const WUSData = {
     localStorage.removeItem(CACHE_KEY);
     localStorage.removeItem(CACHE_KEY_ASC);
     localStorage.removeItem(CACHE_KEY_DESC);
+  },
+
+  async autoRefreshDaily() {
+    const dateKey = 'cachedWUS_lastRefreshDate';
+    const today = new Date().toISOString().split("T")[0]; // e.g., "2025-07-08"
+
+    const lastRefresh = localStorage.getItem(dateKey);
+    if (lastRefresh !== today) {
+      await this.refreshCache();
+      localStorage.setItem(dateKey, today);
+      console.log("[WUS] Cache auto-refreshed for the day.");
+    }
+  },
+    async autoRefreshEvery8Hours() {
+    const key = 'cachedWUS_lastRefresh';
+    const now = Date.now();
+    const last = localStorage.getItem(key);
+
+    if (!last || now - parseInt(last, 10) > 8 * 60 * 60 * 1000) {
+      await this.refreshCache();
+      localStorage.setItem(key, now.toString());
+      console.log("[WUS] Cache refreshed (8-hour interval).");
+    }
   }
 };

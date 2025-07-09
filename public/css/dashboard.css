@@ -78,13 +78,33 @@
   background: #00bcd4;
   color: #fff;
   padding: 12px;
-  text-align: center;
   font-weight: 600;
   font-size: 0.95rem;
   letter-spacing: 0.5px;
   border-radius: 10px;
   margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
+
+/* Refresh button inside header */
+.scorecard-refresh-btn {
+  background-color: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 1rem;
+  padding: 4px 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.scorecard-refresh-btn:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  transform: rotate(90deg);
+}
+
 
 /* New: Card-style items for each month */
 .scorecard-list {

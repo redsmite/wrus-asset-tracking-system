@@ -14,6 +14,7 @@ export function initializePage(){
   setupToggle('toggleFilter', 'filterSection', 'Show Filters', 'Hide Filters');
   initializePermitUpdate();
   handleRefreshButton();
+  setupExportButtonListener();
 }
 
 function handleAddButton(){
@@ -544,6 +545,86 @@ function initializePermitUpdate() {
     }
   });
 }
+
+function setupExportButtonListener() {
+  Spinner.show();
+  try{ 
+      const exportBtn = document.getElementById('exportPermitsBtn');
+      if (!exportBtn) return;
+
+      exportBtn.addEventListener('click', () => {
+        const cached = localStorage.getItem('cachedPermits');
+        if (!cached) return;
+
+        const data = JSON.parse(cached);
+
+        const formattedData = data.map(item => {
+          const {
+            permitNo,
+            permittee,
+            mailingAddress,
+            diversionPoint,
+            latitude,
+            longitude,
+            waterSource,
+            waterDiversion,
+            flowRate,
+            purpose,
+            periodOfUse,
+            visited
+          } = item;
+
+          return {
+            "Permit No": permitNo || '',
+            "Permittee": permittee || '',
+            "Mailing Address": mailingAddress || '',
+            "Diversion Point": diversionPoint || '',
+            "Latitude": latitude || '',
+            "Longitude": longitude || '',
+            "Water Source": waterSource || '',
+            "Water Diversion": waterDiversion || '',
+            "Flow Rate": flowRate || '',
+            "Purpose": purpose || '',
+            "Period of Use": periodOfUse || '',
+            __visited: visited === true
+          };
+        });
+
+        const worksheet = XLSX.utils.json_to_sheet(formattedData, {
+          skipHeader: false
+        });
+
+        const range = XLSX.utils.decode_range(worksheet['!ref']);
+        for (let R = 1; R <= range.e.r; ++R) {
+          const visited = formattedData[R - 1]?.__visited;
+          if (visited) {
+            for (let C = 0; C <= range.e.c; ++C) {
+              const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+              if (!worksheet[cellAddress]) continue;
+
+              worksheet[cellAddress].s = {
+                fill: {
+                  fgColor: { rgb: "DFF0D8" } // light green
+                }
+              };
+            }
+          }
+        }
+
+        formattedData.forEach(row => delete row.__visited);
+
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Permits");
+        XLSX.writeFile(workbook, "permits-export.xlsx");
+      });
+
+  } finally {
+    Spinner.hide();
+  }
+}
+
+
+
 
 
 

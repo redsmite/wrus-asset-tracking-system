@@ -121,6 +121,31 @@ export const ICS = {
     });
 
     return items;
+  },
+  async autoRefreshDaily() {
+    const key = this.localStorageKey;
+    const dateKey = `${key}_lastRefreshDate`;
+    const today = new Date().toISOString().split("T")[0]; // Format: '2025-07-08'
+
+    const lastRefresh = localStorage.getItem(dateKey);
+
+    if (lastRefresh !== today) {
+      await this.refreshCache();
+      localStorage.setItem(dateKey, today);
+      console.log("[ICS] Cache auto-refreshed for the day.");
+    }
+  },
+    async autoRefreshEvery8Hours() {
+    const key = 'cachedICS_lastRefresh';
+    const now = Date.now();
+    const last = localStorage.getItem(key);
+
+    if (!last || now - parseInt(last, 10) > 8 * 60 * 60 * 1000) {
+      await this.refreshCache();
+      localStorage.setItem(key, now.toString());
+      console.log("[ICS] Cache refreshed (8-hour interval).");
+    }
   }
+
 };
 

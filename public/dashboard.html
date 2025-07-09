@@ -49,22 +49,25 @@
             </div>
           </div>
       </div> -->
-<div class="scorecard-wrapper">
-  <div class="scorecard">
-    <div class="scorecard-header">
-      📝 Your Encoded Permits (Monthly)
-    </div>
+    <div class="scorecard-wrapper">
+      <div class="scorecard">
+        <div class="scorecard-header">
+          📝 Your Encoded Permits (Monthly)
+          <!-- Refresh Button -->
+          <button id="refreshEncodedBtn" class="scorecard-refresh-btn" title="Refresh">
+            <i class="bi bi-arrow-clockwise"></i>
+          </button>
+        </div>
+        <!-- Use a div instead of a table -->
+        <div id="encodedPermitSummary" class="scorecard-list">
+          <!-- JavaScript will insert scorecards here -->
+        </div>
 
-    <!-- Use a div instead of a table -->
-    <div id="encodedPermitSummary" class="scorecard-list">
-      <!-- JavaScript will insert scorecards here -->
+        <div id="noEncodedMessage" class="no-record d-none text-center">
+          No records yet.
+        </div>
+      </div>
     </div>
-
-    <div id="noEncodedMessage" class="no-record d-none text-center">
-      No records yet.
-    </div>
-  </div>
-</div>
 
     </div>
   </div>

@@ -108,5 +108,30 @@ export const Users = {
 
     localStorage.setItem(this.localStorageKey, JSON.stringify(users));
     return users;
+  },
+  
+  async autoRefreshDaily() {
+    const now = Date.now();
+    const lastFetch = parseInt(localStorage.getItem("lastUsersFetch") || "0");
+    const oneDayMs = 24 * 60 * 60 * 1000;
+
+    if (now - lastFetch > oneDayMs) {
+      await this.refreshCache();
+      localStorage.setItem("lastUsersFetch", now.toString());
+      console.log("User cache refreshed automatically (daily).");
+    } else {
+      console.log("User cache still fresh. No need to auto-refresh.");
+    }
+  },
+    async autoRefreshEvery8Hours() {
+    const key = 'cachedUser_lastRefresh';
+    const now = Date.now();
+    const last = localStorage.getItem(key);
+
+    if (!last || now - parseInt(last, 10) > 8 * 60 * 60 * 1000) {
+      await this.refreshCache();
+      localStorage.setItem(key, now.toString());
+      console.log("[User] Cache refreshed (8-hour interval).");
+    }
   }
 };

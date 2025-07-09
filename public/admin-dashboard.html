@@ -22,22 +22,22 @@
         Welcome Admin
       </p>
 
-<div class="scorecard-wrapper">
-  <div class="scorecard">
-    <div class="scorecard-header">
-      <i class="bi bi-person-badge-fill"></i> User Encoded Permits
+    <div class="scorecard-wrapper">
+      <div class="scorecard">
+        <div class="scorecard-header"> User Encoded Permits
+          <button id="refreshEncodedBtn" class="scorecard-refresh-btn" title="Refresh">
+            <i class="bi bi-arrow-clockwise"></i>
+          </button>
+        </div>
+
+        <!-- Card-style entries injected here -->
+        <div class="scorecard-grid-container" id="encodedPermitTableBody">
+          <!-- JS fills this -->
+        </div>
+
+        <p id="noEncodedMessage" class="no-record d-none">No encoded permits found.</p>
+      </div>
     </div>
-
-    <!-- Card-style entries injected here -->
-    <div class="scorecard-grid-container" id="encodedPermitTableBody">
-      <!-- JS fills this -->
-    </div>
-
-    <p id="noEncodedMessage" class="no-record d-none">No encoded permits found.</p>
-  </div>
-</div>
-
-
 
       <!-- <div class="row">
         <div class="col-md-3">
