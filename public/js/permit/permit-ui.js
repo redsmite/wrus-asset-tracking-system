@@ -17,6 +17,8 @@ export function initializePage(){
   setupExportButtonListener();
 }
 
+let filteredPermits = [];
+
 function handleAddButton(){
   document.getElementById('addPermitBtn').addEventListener('click', () => {
     const permitModal = new bootstrap.Modal(document.getElementById('addPermitModal'));
@@ -38,6 +40,7 @@ function handleAddFormSubmit() {
     }
 
     const visited = document.getElementById('visited').checked;
+    const cancelled = document.getElementById('isCancelled').checked;
     const pdfFile = document.getElementById('pdfAttachment').files[0];
 
     let pdfUrl = null;
@@ -80,6 +83,7 @@ function handleAddFormSubmit() {
       purpose: document.getElementById('purpose').value.trim(),
       periodOfUse: document.getElementById('periodOfUse').value.trim(),
       visited: visited,
+      cancelled: cancelled,
       pdfUrl: pdfUrl || '',
       encodedBy: localStorage.getItem("wrusUserId") || null,
       timestamp: new Date()
@@ -173,7 +177,7 @@ async function renderPermitTable() {
   pagination.innerHTML = '';
 
   try {
-    const permits = await Permit.getAll();
+    const permits = await Permit.getAll(); // <-- Your Firestore data fetching here
 
     function renderRows(data) {
       tableBody.innerHTML = '';
@@ -199,7 +203,7 @@ async function renderPermitTable() {
         row.innerHTML = `
           <td>${highlightMatch(permit.permitNo || '', searchTerm)}</td>
           <td>${highlightMatch(permit.permittee || '', searchTerm)}</td>
-          <td>${highlightMatch(permit.mailingAddress || '', searchTerm)}</td>
+          <td>${highlightMatch(permit.mailingAddress || '')}</td>
           <td>${highlightMatch(permit.diversionPoint || '', searchTerm)}</td>
           <td>${latitude}</td>
           <td>${longitude}</td>
@@ -233,7 +237,6 @@ async function renderPermitTable() {
     function renderPagination(totalItems) {
       pagination.innerHTML = '';
       const totalPages = Math.ceil(totalItems / rowsPerPage);
-
       if (totalPages <= 1) return;
 
       const createButton = (label, page, disabled = false, active = false) => {
@@ -279,7 +282,6 @@ async function renderPermitTable() {
         const matchesSearch =
           (permit.permitNo && normalizeText(permit.permitNo).includes(searchTerm)) ||
           (permit.permittee && normalizeText(permit.permittee).includes(searchTerm)) ||
-          (permit.mailingAddress && normalizeText(permit.mailingAddress).includes(searchTerm)) ||
           (permit.diversionPoint && normalizeText(permit.diversionPoint).includes(searchTerm));
 
         let matchesVisited = true;
@@ -297,6 +299,9 @@ async function renderPermitTable() {
       currentPage = 1;
       renderRows(filteredPermits);
       renderPagination(filteredPermits.length);
+
+      // Store filtered results for export
+      localStorage.setItem('cachedPermits', JSON.stringify(filteredPermits));
     }
 
     rowsPerPageSelect.addEventListener('change', () => {
@@ -307,18 +312,16 @@ async function renderPermitTable() {
     });
 
     searchBar.addEventListener('input', applyFilters);
-
     visitedFilter.addEventListener('change', () => {
       showVisitedFilter.disabled = visitedFilter.checked;
       applyFilters();
     });
-
     showVisitedFilter.addEventListener('change', () => {
       visitedFilter.disabled = showVisitedFilter.checked;
       applyFilters();
     });
 
-    applyFilters();
+    applyFilters(); // Initial filter and render
 
   } catch (error) {
     console.error('❌ Error rendering permit table:', error.message);
@@ -436,6 +439,7 @@ function populateEditModal(permit) {
   document.getElementById('editPeriodOfUse').value = permit.periodOfUse || '';
   document.getElementById('editPurpose').value = permit.purpose || '';
   document.getElementById('editVisited').checked = !!permit.visited;
+  document.getElementById('editIsCancelled').checked = !!permit.cancelled;
   document.getElementById('editPdfExistingUrl').value = permit.pdfUrl || '';
 }
 
@@ -523,6 +527,7 @@ function initializePermitUpdate() {
         periodOfUse: document.getElementById('editPeriodOfUse').value.trim(),
         purpose: document.getElementById('editPurpose').value.trim(),
         visited: document.getElementById('editVisited').checked,
+        cancelled: document.getElementById('editIsCancelled').checked,
 
         pdfUrl: permitFileUrl
       };
@@ -547,81 +552,73 @@ function initializePermitUpdate() {
 }
 
 function setupExportButtonListener() {
-  Spinner.show();
-  try{ 
-      const exportBtn = document.getElementById('exportPermitsBtn');
-      if (!exportBtn) return;
+  const exportBtn = document.getElementById('exportPermitsBtn');
+  if (!exportBtn) return;
 
-      exportBtn.addEventListener('click', () => {
-        const cached = localStorage.getItem('cachedPermits');
-        if (!cached) return;
+  exportBtn.addEventListener('click', () => {
+    const data = JSON.parse(localStorage.getItem('cachedPermits')) || [];
+    if (!data || data.length === 0) return;
 
-        const data = JSON.parse(cached);
+    const formattedData = data.map(item => {
+      const {
+        permitNo,
+        permittee,
+        mailingAddress,
+        diversionPoint,
+        latitude,
+        longitude,
+        waterSource,
+        waterDiversion,
+        flowRate,
+        purpose,
+        periodOfUse,
+        visited,
+        cancelled
+      } = item;
 
-        const formattedData = data.map(item => {
-          const {
-            permitNo,
-            permittee,
-            mailingAddress,
-            diversionPoint,
-            latitude,
-            longitude,
-            waterSource,
-            waterDiversion,
-            flowRate,
-            purpose,
-            periodOfUse,
-            visited
-          } = item;
+      return {
+        "Permit No": permitNo || '',
+        "Permittee": permittee || '',
+        "Mailing Address": mailingAddress || '',
+        "Diversion Point": diversionPoint || '',
+        "Latitude": latitude || '',
+        "Longitude": longitude || '',
+        "Water Source": waterSource || '',
+        "Water Diversion": waterDiversion || '',
+        "Flow Rate": flowRate || '',
+        "Purpose": purpose || '',
+        "Period of Use": periodOfUse || '',
+        __visited: visited === true,
+        __cancelled: cancelled === true
+      };
+    });
 
-          return {
-            "Permit No": permitNo || '',
-            "Permittee": permittee || '',
-            "Mailing Address": mailingAddress || '',
-            "Diversion Point": diversionPoint || '',
-            "Latitude": latitude || '',
-            "Longitude": longitude || '',
-            "Water Source": waterSource || '',
-            "Water Diversion": waterDiversion || '',
-            "Flow Rate": flowRate || '',
-            "Purpose": purpose || '',
-            "Period of Use": periodOfUse || '',
-            __visited: visited === true
+    const worksheet = XLSX.utils.json_to_sheet(formattedData, {
+      skipHeader: false
+    });
+
+    const range = XLSX.utils.decode_range(worksheet['!ref']);
+    for (let R = 1; R <= range.e.r; ++R) {
+      const visited = formattedData[R - 1]?.__visited;
+      if (visited) {
+        for (let C = 0; C <= range.e.c; ++C) {
+          const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+          if (!worksheet[cellAddress]) continue;
+          worksheet[cellAddress].s = {
+            fill: { fgColor: { rgb: "DFF0D8" } }
           };
-        });
-
-        const worksheet = XLSX.utils.json_to_sheet(formattedData, {
-          skipHeader: false
-        });
-
-        const range = XLSX.utils.decode_range(worksheet['!ref']);
-        for (let R = 1; R <= range.e.r; ++R) {
-          const visited = formattedData[R - 1]?.__visited;
-          if (visited) {
-            for (let C = 0; C <= range.e.c; ++C) {
-              const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
-              if (!worksheet[cellAddress]) continue;
-
-              worksheet[cellAddress].s = {
-                fill: {
-                  fgColor: { rgb: "DFF0D8" } // light green
-                }
-              };
-            }
-          }
         }
+      }
+    }
 
-        formattedData.forEach(row => delete row.__visited);
+    formattedData.forEach(row => delete row.__visited);
 
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Permits");
-        XLSX.writeFile(workbook, "permits-export.xlsx");
-      });
-
-  } finally {
-    Spinner.hide();
-  }
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Permits");
+    XLSX.writeFile(workbook, "permits-export.xlsx");
+  });
 }
+
 
 
 

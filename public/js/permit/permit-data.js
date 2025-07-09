@@ -148,5 +148,17 @@ export const Permit = {
       localStorage.setItem(dateKey, today);
       console.log("[Permit] Cache auto-refreshed for the day.");
     }
+  },
+  async autoRefreshEvery8Hours() {
+    const key = 'cachedPermit_lastRefresh';
+    const now = Date.now();
+    const last = localStorage.getItem(key);
+
+    if (!last || now - parseInt(last, 10) > 8 * 60 * 60 * 1000) {
+      await this.refreshCache();
+      localStorage.setItem(key, now.toString());
+      console.log("[Permit] Cache refreshed (8-hour interval).");
+    }
   }
+  
 };

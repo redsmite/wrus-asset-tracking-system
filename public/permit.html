@@ -28,7 +28,7 @@
         <!-- Search Bar (Expands) -->
         <div class="flex-grow-1">
           <div class="input-group water-search">
-            <input type="text" id="searchBar" class="form-control" placeholder="Search Permit No.">
+            <input type="text" id="searchBar" class="form-control" placeholder="Search Permit No. or City">
             <span class="input-group-text">
               <i class="bi bi-search"></i>
             </span>
@@ -78,11 +78,12 @@
       </div>
 
       <!-- Pagination control -->
-      <div class="d-flex justify-content-between align-items-center mb-1 mt-1">
+      <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-1 mt-1 flex-wrap">
+        
         <!-- Left Side: Rows per page and Pagination -->
-        <div class="d-flex align-items-center gap-3">
-          <div class="rows-per-page-container">
-            <label for="rowsPerPage" class="form-label me-2">Rows per page:</label>
+        <div class="d-flex flex-wrap flex-sm-nowrap align-items-center gap-3">
+          <div class="rows-per-page-container d-flex align-items-center">
+            <label for="rowsPerPage" class="form-label me-2 mb-0">Rows per page:</label>
             <select id="rowsPerPage" class="form-select d-inline-block w-auto">
               <option value="10" selected>10</option>
               <option value="25">25</option>
@@ -96,8 +97,7 @@
         </div>
 
         <!-- Right Side: Export PDF and Refresh Button grouped -->
-        <div class="d-flex align-items-center gap-2">
-          <!-- Export as PDF File -->
+        <div class="d-flex flex-row align-items-center gap-2">
           <button class="btn btn-success shadow-sm px-3 py-2 d-flex align-items-center gap-2" id="exportPermitsBtn">
             <span class="d-inline-flex justify-content-center align-items-center bg-light text-success rounded-circle" style="width: 24px; height: 24px;">
               <i class="bi bi-download"></i>
@@ -105,13 +105,11 @@
             Export
           </button>
 
-          <!-- Refresh Button -->
           <button id="refreshBtn" class="btn btn-primary shadow-sm px-3 py-2 d-flex align-items-center justify-content-center">
             <i class="bi bi-arrow-clockwise me-1"></i> 
           </button>
         </div>
       </div>
-
 
       <!-- Data Table -->
       <div class="table-responsive">
@@ -316,6 +314,15 @@
                         <div class="form-text">Upload a PDF document related to this permit.</div>
                       </div>
 
+                      <!-- Is Cancelled Checkbox -->
+                      <div class="col-md-6">
+                        <div class="form-check mt-4">
+                          <input class="form-check-input" type="checkbox" id="isCancelled">
+                          <label class="form-check-label" for="isCancelled">
+                            <i class="bi bi-check2-circle me-1"></i> Is Cancelled?
+                          </label>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -517,6 +524,16 @@
                         <input type="hidden" id="editPdfExistingUrl">
                         <div class="form-text">Upload a new PDF to replace the existing one (optional).</div>
                       </div>
+
+                      <!-- Is Cancelled Checkbox -->
+                    <div class="col-md-6">
+                      <div class="form-check mt-4">
+                        <input class="form-check-input" type="checkbox" id="editIsCancelled">
+                        <label class="form-check-label" for="editIsCancelled">
+                          <i class="bi bi-check2-circle me-1"></i> Is Cancelled?
+                        </label>
+                      </div>
+                    </div>
 
                     </div>
                   </div>
