@@ -54,7 +54,16 @@ export const Consumable = {
       action: "Add Stock",
     });
 
-    localStorage.removeItem(this.localStorageKey); // Invalidate cache
+    // Append to cache instead of invalidating
+    const cached = localStorage.getItem(this.localStorageKey);
+    const data = cached ? JSON.parse(cached) : [];
+    data.unshift({
+      id,
+      ...newItem,
+      timestamp: newItem.timestamp.toLocaleString(),
+    });
+    localStorage.setItem(this.localStorageKey, JSON.stringify(data));
+
     return id;
   },
 
@@ -68,9 +77,7 @@ export const Consumable = {
 
   async fetchAll() {
     const cached = localStorage.getItem(this.localStorageKey);
-    if (cached) {
-      return JSON.parse(cached);
-    }
+    if (cached) return JSON.parse(cached);
 
     const q = query(this.collectionRef, orderBy("timestamp", "desc"));
     const snapshot = await getDocs(q);
@@ -94,7 +101,17 @@ export const Consumable = {
   async update(cid, updatedData) {
     const docRef = doc(this.collectionRef, cid);
     await updateDoc(docRef, updatedData);
-    localStorage.removeItem(this.localStorageKey); // Invalidate cache
+
+    // Update cache without clearing it
+    const cached = localStorage.getItem(this.localStorageKey);
+    if (cached) {
+      const data = JSON.parse(cached);
+      const index = data.findIndex(item => item.id === cid);
+      if (index !== -1) {
+        data[index] = { ...data[index], ...updatedData };
+        localStorage.setItem(this.localStorageKey, JSON.stringify(data));
+      }
+    }
   },
 
   async addStock(cid, amount, remarks = "") {
@@ -114,7 +131,16 @@ export const Consumable = {
       action: "Add Stock",
     });
 
-    localStorage.removeItem(this.localStorageKey); // Invalidate cache
+    // Update cache with new qty
+    const cached = localStorage.getItem(this.localStorageKey);
+    if (cached) {
+      const data = JSON.parse(cached);
+      const index = data.findIndex(item => item.id === cid);
+      if (index !== -1) {
+        data[index].qty = newQty;
+        localStorage.setItem(this.localStorageKey, JSON.stringify(data));
+      }
+    }
   },
 
   async assignItem(cid, amount, assignedTo, remarks = "") {
@@ -124,7 +150,6 @@ export const Consumable = {
     if (!snapshot.exists()) throw new Error("Item not found");
 
     const currentQty = snapshot.data().qty || 0;
-
     if (amount > currentQty) {
       throw new Error(`Cannot assign more than available quantity (${currentQty}).`);
     }
@@ -141,16 +166,23 @@ export const Consumable = {
       assignedTo,
     });
 
-    localStorage.removeItem(this.localStorageKey); // Invalidate cache
+    // Update cache with new qty
+    const cached = localStorage.getItem(this.localStorageKey);
+    if (cached) {
+      const data = JSON.parse(cached);
+      const index = data.findIndex(item => item.id === cid);
+      if (index !== -1) {
+        data[index].qty = newQty;
+        localStorage.setItem(this.localStorageKey, JSON.stringify(data));
+      }
+    }
   },
 
   async getQty(cid) {
     const docRef = doc(this.collectionRef, cid);
     const snapshot = await getDoc(docRef);
 
-    if (!snapshot.exists()) {
-      return null;
-    }
+    if (!snapshot.exists()) return null;
 
     const data = snapshot.data();
     return data.qty ?? 0;
@@ -170,6 +202,7 @@ export const Consumable = {
 
     return map;
   },
+
   async refreshCache() {
     const q = query(this.collectionRef, orderBy("timestamp", "desc"));
     const snapshot = await getDocs(q);
@@ -189,22 +222,22 @@ export const Consumable = {
     localStorage.setItem(this.localStorageKey, JSON.stringify(data));
     return data;
   },
-  
+
   async autoRefreshDaily() {
     const key = this.localStorageKey;
     const dateKey = `${key}_lastRefreshDate`;
-    const today = new Date().toISOString().split("T")[0]; // e.g., "2025-07-08"
+    const today = new Date().toISOString().split("T")[0];
 
     const lastRefresh = localStorage.getItem(dateKey);
-
     if (lastRefresh !== today) {
       await this.refreshCache();
       localStorage.setItem(dateKey, today);
       console.log("[Consumable] Cache auto-refreshed for the day.");
     }
   },
+
   async autoRefreshEvery8Hours() {
-    const key = 'cachedConsumable_lastRefresh';
+    const key = "cachedConsumable_lastRefresh";
     const now = Date.now();
     const last = localStorage.getItem(key);
 

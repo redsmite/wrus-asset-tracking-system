@@ -383,6 +383,8 @@ function handleRefreshButton({
     try {
       await refreshFn();
       renderFn();
+      ICS.refreshCache();
+      renderICSTable();
       NotificationBox.show("Refreshed successfully.");
       startCooldown();
     } catch (err) {

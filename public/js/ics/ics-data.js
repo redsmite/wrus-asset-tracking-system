@@ -25,19 +25,10 @@ export const ICS = {
       return parsed.sort((a, b) => b.data.timestamp?.seconds - a.data.timestamp?.seconds);
     }
 
-    const q = query(this.collectionRef, orderBy("timestamp", "desc"));
-    const snapshot = await getDocs(q);
-
-    const data = snapshot.docs.map(doc => ({
-      id: doc.id,
-      data: doc.data(),
-    }));
-
-    localStorage.setItem(this.localStorageKey, JSON.stringify(data));
-    return data;
+    return await this.refreshCache();
   },
 
-  // 🔸 Add a new ICS entry
+  // 🔸 Add a new ICS entry (and append to cache)
   async add(icsData) {
     try {
       if (!icsData.ICSno || typeof icsData.ICSno !== 'string' || icsData.ICSno.trim() === '') {
@@ -50,8 +41,19 @@ export const ICS = {
         timestamp: serverTimestamp(),
       };
 
-      await addDoc(this.collectionRef, dataToSave);
-      localStorage.removeItem(this.localStorageKey); // Invalidate cache
+      const docRef = await addDoc(this.collectionRef, dataToSave);
+      const newDoc = await getDoc(docRef);
+      const newEntry = {
+        id: newDoc.id,
+        data: newDoc.data()
+      };
+
+      // Append to cache
+      const cached = localStorage.getItem(this.localStorageKey);
+      const entries = cached ? JSON.parse(cached) : [];
+      entries.push(newEntry);
+      localStorage.setItem(this.localStorageKey, JSON.stringify(entries));
+
       NotificationBox.show('ICS entry saved successfully!');
     } catch (err) {
       console.error("Error adding ICS entry:", err);
@@ -59,18 +61,36 @@ export const ICS = {
     }
   },
 
-  // 🔸 Update an existing ICS entry
+  // 🔸 Update an existing ICS entry (and patch cache)
   async update(docId, updatedData) {
     const docRef = doc(this.collectionRef, docId);
     await updateDoc(docRef, updatedData);
-    localStorage.removeItem(this.localStorageKey); // Invalidate cache
+
+    const cached = localStorage.getItem(this.localStorageKey);
+    if (cached) {
+      const entries = JSON.parse(cached);
+      const index = entries.findIndex(item => item.id === docId);
+
+      if (index !== -1) {
+        entries[index].data = {
+          ...entries[index].data,
+          ...updatedData
+        };
+        localStorage.setItem(this.localStorageKey, JSON.stringify(entries));
+      }
+    }
   },
 
-  // 🔸 Delete an ICS entry
+  // 🔸 Delete an ICS entry (and remove from cache)
   async delete(docId) {
     try {
       await deleteDoc(doc(this.collectionRef, docId));
-      localStorage.removeItem(this.localStorageKey); // Invalidate cache
+
+      const cached = localStorage.getItem(this.localStorageKey);
+      if (cached) {
+        const entries = JSON.parse(cached).filter(item => item.id !== docId);
+        localStorage.setItem(this.localStorageKey, JSON.stringify(entries));
+      }
     } catch (error) {
       console.error("Error deleting ICS document:", error);
       throw error;
@@ -122,10 +142,11 @@ export const ICS = {
 
     return items;
   },
+
   async autoRefreshDaily() {
     const key = this.localStorageKey;
     const dateKey = `${key}_lastRefreshDate`;
-    const today = new Date().toISOString().split("T")[0]; // Format: '2025-07-08'
+    const today = new Date().toISOString().split("T")[0];
 
     const lastRefresh = localStorage.getItem(dateKey);
 
@@ -135,7 +156,8 @@ export const ICS = {
       console.log("[ICS] Cache auto-refreshed for the day.");
     }
   },
-    async autoRefreshEvery8Hours() {
+
+  async autoRefreshEvery8Hours() {
     const key = 'cachedICS_lastRefresh';
     const now = Date.now();
     const last = localStorage.getItem(key);
@@ -146,6 +168,6 @@ export const ICS = {
       console.log("[ICS] Cache refreshed (8-hour interval).");
     }
   }
-
 };
+
 

@@ -3,6 +3,7 @@ import {
   collection,
   query,
   where,
+  getDoc,
   getDocs,
   orderBy,
   limit,
@@ -23,7 +24,6 @@ export const Permit = {
     try {
       const permitNoToCheck = data.permitNo.trim();
 
-      // 🔍 Check for duplicate permitNo
       const duplicateQuery = query(
         permitCollection,
         where('permitNo', '==', permitNoToCheck)
@@ -34,7 +34,6 @@ export const Permit = {
         throw new Error(`Permit No "${permitNoToCheck}" already exists.`);
       }
 
-      // 🔢 Generate new custom document ID
       const latestQuery = query(
         permitCollection,
         orderBy('createdAt', 'desc'),
@@ -52,25 +51,47 @@ export const Permit = {
       }
 
       const newDocId = `2025-${newIdNumber}`;
-      const newData = {
+      const docRef = doc(db, 'permits', newDocId);
+
+      await setDoc(docRef, {
         ...data,
         createdAt: serverTimestamp(),
-      };
+      });
 
-      await setDoc(doc(db, 'permits', newDocId), newData);
-      localStorage.removeItem(this.localStorageKey); // ❌ Invalidate cache
+      // ✅ Re-fetch saved document to get server timestamp and all accurate fields
+      const savedDoc = await getDoc(docRef);
+      if (!savedDoc.exists()) {
+        throw new Error("Failed to fetch the newly added permit");
+      }
+
+      const savedData = { id: savedDoc.id, ...savedDoc.data() };
+
+      // ✅ Update cache
+      const cached = localStorage.getItem(this.localStorageKey);
+      const parsed = cached ? JSON.parse(cached) : [];
+
+      // Remove any existing entry with same ID to avoid duplicates
+      const updatedCache = parsed.filter(item => item.id !== savedData.id);
+
+      // Add new item at the beginning for descending order
+      updatedCache.unshift(savedData);
+
+      // Save updated cache
+      localStorage.setItem(this.localStorageKey, JSON.stringify(updatedCache));
+
     } catch (error) {
       console.error('Error adding permit:', error.message);
       throw error;
     }
   },
 
+
   // 🔸 Get all permits (from localStorage first)
   async getAll() {
     const cached = localStorage.getItem(this.localStorageKey);
     if (cached) {
       const parsed = JSON.parse(cached);
-      return parsed.sort((a, b) => b.createdAt?.seconds - a.createdAt?.seconds);
+      return parsed.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     }
 
     try {
@@ -118,7 +139,13 @@ export const Permit = {
         updatedAt: serverTimestamp(),
       }, { merge: true });
 
-      localStorage.removeItem(this.localStorageKey); // ❌ Invalidate cache
+      // ✅ Update cache
+      const cached = localStorage.getItem(this.localStorageKey);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        const updated = parsed.map(p => p.id === id ? { ...p, ...data, updatedAt: new Date() } : p);
+        localStorage.setItem(this.localStorageKey, JSON.stringify(updated));
+      }
     } catch (error) {
       console.error('Error updating permit:', error.message);
       throw error;
@@ -129,17 +156,25 @@ export const Permit = {
   async delete(id) {
     try {
       await deleteDoc(doc(permitCollection, id));
-      localStorage.removeItem(this.localStorageKey); // ❌ Invalidate cache
+
+      // ✅ Remove from cache
+      const cached = localStorage.getItem(this.localStorageKey);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        const filtered = parsed.filter(p => p.id !== id);
+        localStorage.setItem(this.localStorageKey, JSON.stringify(filtered));
+      }
+
       console.log(`🗑️ Permit ${id} deleted successfully`);
     } catch (error) {
       throw error;
     }
   },
-  
+
   async autoRefreshDaily() {
     const key = this.localStorageKey;
     const dateKey = `${key}_lastRefreshDate`;
-    const today = new Date().toISOString().split("T")[0]; // Format: '2025-07-08'
+    const today = new Date().toISOString().split("T")[0];
 
     const lastRefresh = localStorage.getItem(dateKey);
 
@@ -149,6 +184,7 @@ export const Permit = {
       console.log("[Permit] Cache auto-refreshed for the day.");
     }
   },
+
   async autoRefreshEvery8Hours() {
     const key = 'cachedPermit_lastRefresh';
     const now = Date.now();
@@ -160,5 +196,4 @@ export const Permit = {
       console.log("[Permit] Cache refreshed (8-hour interval).");
     }
   }
-  
 };

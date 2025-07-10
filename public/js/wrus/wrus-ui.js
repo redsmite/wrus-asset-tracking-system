@@ -226,6 +226,8 @@ function handleRefreshButton({
       refreshBtn.disabled = true;
       refreshBtn.innerText = "Refreshing...";
       await refreshFn();
+      await WUSData.refreshCache();
+      renderWaterUsers();
       renderFn();
       NotificationBox.show("Refreshed successfully.");
       startCooldown();

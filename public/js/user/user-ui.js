@@ -268,6 +268,8 @@ function handleRefreshButton({
 
     try {
       await refreshFn();
+      await Users.refreshCache();
+      renderUsersTable();
       renderFn();
       NotificationBox.show("Refreshed successfully.");
       startCooldown();

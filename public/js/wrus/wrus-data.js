@@ -89,10 +89,18 @@ export const WUSData = {
     const docRef = doc(db, 'water_users', newId);
     await setDoc(docRef, newData);
 
-    // ❌ Invalidate all cache
-    localStorage.removeItem(CACHE_KEY);
-    localStorage.removeItem(CACHE_KEY_ASC);
-    localStorage.removeItem(CACHE_KEY_DESC);
+    // ✅ Update localStorage cache without removing it
+    const entry = { id: newId, ...data, timestamp: { seconds: Date.now() / 1000 } };
+
+    const updateCache = (key, sortFn) => {
+      const existing = JSON.parse(localStorage.getItem(key) || '[]');
+      const updated = [...existing, entry].sort(sortFn);
+      localStorage.setItem(key, JSON.stringify(updated));
+    };
+
+    updateCache(CACHE_KEY, () => 0);
+    updateCache(CACHE_KEY_ASC, (a, b) => a.timestamp?.seconds - b.timestamp?.seconds);
+    updateCache(CACHE_KEY_DESC, (a, b) => b.timestamp?.seconds - a.timestamp?.seconds);
 
     return { id: newId, ...newData };
   },
@@ -101,20 +109,32 @@ export const WUSData = {
     const docRef = doc(db, 'water_users', id);
     await updateDoc(docRef, { ...data });
 
-    // ❌ Invalidate cache
-    localStorage.removeItem(CACHE_KEY);
-    localStorage.removeItem(CACHE_KEY_ASC);
-    localStorage.removeItem(CACHE_KEY_DESC);
+    const updateCache = (key) => {
+      const existing = JSON.parse(localStorage.getItem(key) || '[]');
+      const updated = existing.map(entry => {
+        return entry.id === id ? { ...entry, ...data } : entry;
+      });
+      localStorage.setItem(key, JSON.stringify(updated));
+    };
+
+    updateCache(CACHE_KEY);
+    updateCache(CACHE_KEY_ASC);
+    updateCache(CACHE_KEY_DESC);
   },
 
   async delete(id) {
     const docRef = doc(db, 'water_users', id);
     await deleteDoc(docRef);
 
-    // ❌ Invalidate cache
-    localStorage.removeItem(CACHE_KEY);
-    localStorage.removeItem(CACHE_KEY_ASC);
-    localStorage.removeItem(CACHE_KEY_DESC);
+    const updateCache = (key) => {
+      const existing = JSON.parse(localStorage.getItem(key) || '[]');
+      const updated = existing.filter(entry => entry.id !== id);
+      localStorage.setItem(key, JSON.stringify(updated));
+    };
+
+    updateCache(CACHE_KEY);
+    updateCache(CACHE_KEY_ASC);
+    updateCache(CACHE_KEY_DESC);
   },
 
   async autoRefreshDaily() {

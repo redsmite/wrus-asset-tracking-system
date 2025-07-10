@@ -397,6 +397,8 @@ function handleRefreshButton({
     try {
       await refreshFn();
       renderFn();
+      Consumable.refreshCache();
+      renderConsumableTable();
       NotificationBox.show("Refreshed successfully.");
       startCooldown();
     } catch (err) {

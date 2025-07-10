@@ -17,8 +17,6 @@ export function initializePage(){
   setupExportButtonListener();
 }
 
-let filteredPermits = [];
-
 function handleAddButton(){
   document.getElementById('addPermitBtn').addEventListener('click', () => {
     const permitModal = new bootstrap.Modal(document.getElementById('addPermitModal'));

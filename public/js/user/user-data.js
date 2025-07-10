@@ -15,11 +15,40 @@ export const Users = {
   localStorageKey: "cachedUsers",
 
   async add(userData) {
-    await addDoc(this.collectionRef, {
+    const docRef = await addDoc(this.collectionRef, {
       ...userData,
       timestamp: serverTimestamp()
     });
-    localStorage.removeItem(this.localStorageKey); // Invalidate cache
+
+    const newUserDoc = await getDoc(docRef);
+    const newUser = { id: newUserDoc.id, ...newUserDoc.data() };
+
+    // Append to cached data
+    const cached = localStorage.getItem(this.localStorageKey);
+    const users = cached ? JSON.parse(cached) : [];
+    users.push(newUser);
+    localStorage.setItem(this.localStorageKey, JSON.stringify(users));
+  },
+
+  async update(id, updatedData) {
+    const userRef = doc(db, "users", id);
+    try {
+      await updateDoc(userRef, updatedData);
+
+      // Update cache in-place
+      const cached = localStorage.getItem(this.localStorageKey);
+      if (cached) {
+        const users = JSON.parse(cached);
+        const index = users.findIndex(user => user.id === id);
+        if (index !== -1) {
+          users[index] = { ...users[index], ...updatedData };
+          localStorage.setItem(this.localStorageKey, JSON.stringify(users));
+        }
+      }
+    } catch (error) {
+      console.error("Error updating user:", error);
+      throw error;
+    }
   },
 
   async fetchAllDesc() {
@@ -56,17 +85,6 @@ export const Users = {
 
     localStorage.setItem(this.localStorageKey, JSON.stringify(users));
     return users;
-  },
-
-  async update(id, updatedData) {
-    const userRef = doc(db, "users", id);
-    try {
-      await updateDoc(userRef, updatedData);
-      localStorage.removeItem(this.localStorageKey); // Invalidate cache
-    } catch (error) {
-      console.error("Error updating user:", error);
-      throw error;
-    }
   },
 
   async getUsersMap() {
@@ -109,7 +127,7 @@ export const Users = {
     localStorage.setItem(this.localStorageKey, JSON.stringify(users));
     return users;
   },
-  
+
   async autoRefreshDaily() {
     const now = Date.now();
     const lastFetch = parseInt(localStorage.getItem("lastUsersFetch") || "0");
@@ -123,7 +141,8 @@ export const Users = {
       console.log("User cache still fresh. No need to auto-refresh.");
     }
   },
-    async autoRefreshEvery8Hours() {
+
+  async autoRefreshEvery8Hours() {
     const key = 'cachedUser_lastRefresh';
     const now = Date.now();
     const last = localStorage.getItem(key);
@@ -135,3 +154,4 @@ export const Users = {
     }
   }
 };
+
