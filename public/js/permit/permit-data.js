@@ -195,5 +195,32 @@ export const Permit = {
       localStorage.setItem(key, now.toString());
       console.log("[Permit] Cache refreshed (8-hour interval).");
     }
+  },
+  async getById(id) {
+    const cached = localStorage.getItem(this.localStorageKey);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      const found = parsed.find(p => p.id === id);
+      if (found) return found;
+    }
+
+    try {
+      const docRef = doc(permitCollection, id);
+      const snapshot = await getDoc(docRef);
+      if (snapshot.exists()) {
+        const data = { id: snapshot.id, ...snapshot.data() };
+        
+        const parsed = cached ? JSON.parse(cached) : [];
+        parsed.push(data);
+        localStorage.setItem(this.localStorageKey, JSON.stringify(parsed));
+
+        return data;
+      } else {
+        throw new Error(`Permit with ID "${id}" not found.`);
+      }
+    } catch (error) {
+      console.error('Error in getById:', error.message);
+      throw error;
+    }
   }
 };

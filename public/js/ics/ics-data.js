@@ -1,5 +1,6 @@
 import {
   collection,
+  getDoc,
   getDocs,
   doc,
   addDoc,
@@ -53,7 +54,6 @@ export const ICS = {
       const entries = cached ? JSON.parse(cached) : [];
       entries.push(newEntry);
       localStorage.setItem(this.localStorageKey, JSON.stringify(entries));
-
       NotificationBox.show('ICS entry saved successfully!');
     } catch (err) {
       console.error("Error adding ICS entry:", err);

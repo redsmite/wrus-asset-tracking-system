@@ -91,3 +91,38 @@ label[for="rowsPerPage"] {
   color: #1565c0;
   font-weight: 500;
 }
+
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.action-buttons .btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 6px;
+}
+
+#imageUploadModal .modal-body {
+  min-height: 500px;
+}
+
+
+#imagePreview {
+  max-height: 400px;
+  object-fit: contain;
+  transition: all 0.3s ease-in-out;
+}
+
+#imagePreview.placeholder {
+  opacity: 0.5;
+  filter: grayscale(100%);
+  border: 2px dashed #ccc;
+}

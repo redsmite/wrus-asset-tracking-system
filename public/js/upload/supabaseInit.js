@@ -1,4 +1,3 @@
-// This line MUST be exactly as shown — +esm makes it browser-compatible
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
 const supabaseUrl = 'https://vkffjcptpznbidjnubqx.supabase.co';

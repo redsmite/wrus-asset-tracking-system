@@ -2,6 +2,7 @@ import { Sidebar } from "../components/sidebar.js";
 import { Spinner } from "../components/spinner.js";
 import { Permit } from "./permit-data.js";
 import { FileService } from "../upload/upload.js";
+import { GeotaggedFileService } from "../upload/uploadImg.js";
 import { CoordinateUtils } from "../utils/coordinates.js";
 import { NotificationBox } from "../components/notification.js";
 
@@ -15,6 +16,7 @@ export function initializePage(){
   initializePermitUpdate();
   handleRefreshButton();
   setupExportButtonListener();
+  setupImageUploadModal();
 }
 
 function handleAddButton(){
@@ -208,18 +210,25 @@ async function renderPermitTable() {
           <td>${permit.waterSource || ''}</td>
           <td>${permit.purpose || ''}</td>
           <td>
-            <button class="btn btn-sm btn-warning" data-id="${permit.id}">
-              <i class="bi bi-pencil-square"></i>
-            </button>
-            <a href="${permit.pdfUrl}" target="_blank" class="btn btn-sm btn-info">
-              <i class="bi bi-eye-fill"></i>
-            </a>
+            <div class="action-buttons">
+              <button class="btn btn-sm btn-warning edit-btn" data-id="${permit.id}">
+                <i class="bi bi-pencil-square"></i>
+              </button>
+              <a href="${permit.pdfUrl}" target="_blank" class="btn btn-sm btn-info">
+                <i class="bi bi-eye-fill"></i>
+              </a>
+              <button class="btn btn-sm ${isVisited ? 'btn-secondary' : 'btn-success'} visit-btn" data-id="${permit.id}">
+                <i class="bi ${isVisited ? 'bi-check-circle-fill' : 'bi-geo-alt-fill'}"></i>
+              </button>
+            </div>
           </td>
         `;
 
         tableBody.appendChild(row);
 
-        const editButton = row.querySelector('button[data-id]');
+        const editButton = row.querySelector('.edit-btn');
+        const visitButton = row.querySelector('.visit-btn');
+
         editButton.addEventListener('click', () => {
           const permitId = editButton.getAttribute('data-id');
           const permitData = permits.find((p) => p.id === permitId);
@@ -229,6 +238,32 @@ async function renderPermitTable() {
             editModal.show();
           }
         });
+
+        visitButton.addEventListener('click', async () => {
+          const imageModalEl = document.getElementById('imageUploadModal');
+          const imageModal = new bootstrap.Modal(imageModalEl);
+          const imagePreview = document.getElementById('imagePreview');
+          const permitId = visitButton.getAttribute('data-id');
+          const placeholderURL = './images/placeholder.png';
+
+          let imageUrl = placeholderURL;
+
+          try {
+            const doc = await Permit.getById(permitId); // 
+            if (doc?.geotaggedUrl) {
+              imageUrl = doc.geotaggedUrl;
+            }
+          } catch (error) {
+            console.error('Error loading permit or image:', error);
+          }
+
+          setupImageUploadModal(permitId, imageUrl);
+
+          // Show the modal
+          imageModal.show();
+        });
+
+
       });
     }
 
@@ -617,7 +652,190 @@ function setupExportButtonListener() {
   });
 }
 
+function setupImageUploadModal(permitId, geotaggedUrl = '') {
+  const imageInput = document.getElementById('imageInput');
+  const imagePreview = document.getElementById('imagePreview');
+  const modal = document.getElementById('imageUploadModal');
+  const dropZone = document.getElementById('dropZone');
+  const uploadBtn = document.getElementById('uploadGeotaggedBtn');
+  const placeholderURL = './images/placeholder2.png';
+  const viewImageLink = document.getElementById('viewImageLink');
+  const hiddenInput = document.getElementById('currentGeotaggedUrl');
 
+  const setImage = (src, isPlaceholder = true) => {
+    imagePreview.src = src;
+    imagePreview.classList.toggle('placeholder', isPlaceholder);
+    uploadBtn.classList.toggle('d-none', isPlaceholder);
+  };
+
+  const handleFile = (file) => {
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (e) => setImage(e.target.result, false);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  imageInput.onchange = () => {
+    const file = imageInput.files[0];
+    handleFile(file);
+  };
+
+  // Drag & drop
+  ['dragenter', 'dragover'].forEach(eventName => {
+    dropZone.addEventListener(eventName, e => {
+      e.preventDefault();
+      dropZone.classList.add('border-primary');
+    });
+  });
+
+  ['dragleave', 'drop'].forEach(eventName => {
+    dropZone.addEventListener(eventName, e => {
+      e.preventDefault();
+      dropZone.classList.remove('border-primary');
+    });
+  });
+
+  dropZone.ondrop = (e) => {
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      handleFile(file);
+    }
+  };
+
+  modal.addEventListener('show.bs.modal', () => {
+    setImage(placeholderURL, true);
+    hiddenInput.value = geotaggedUrl || '';
+
+    // Show or hide the view button
+    if (geotaggedUrl) {
+      viewImageLink.href = geotaggedUrl;
+      viewImageLink.classList.remove('d-none');
+      createDeleteButtonIfNeeded(geotaggedUrl); // 💡 Add delete button if image exists
+    } else {
+      viewImageLink.classList.add('d-none');
+      removeDeleteButton(); // 💡 Ensure delete button is removed
+    }
+  }, { once: true });
+
+  // Replace upload button
+  uploadBtn.replaceWith(uploadBtn.cloneNode(true));
+  const freshUploadBtn = document.getElementById('uploadGeotaggedBtn');
+  freshUploadBtn.classList.add('d-none');
+  freshUploadBtn.addEventListener('click', () => handleGeotaggedUpload(permitId));
+
+  imageInput.onchange = () => {
+    const file = imageInput.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        imagePreview.src = e.target.result;
+        imagePreview.classList.remove('placeholder');
+        freshUploadBtn.classList.remove('d-none');
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Add a delete button only if it doesn't exist
+  function createDeleteButtonIfNeeded() {
+    if (document.getElementById('deleteGeotaggedBtn')) return;
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.id = 'deleteGeotaggedBtn';
+    deleteBtn.className = 'btn btn-outline-danger';
+    deleteBtn.innerHTML = '<i class="bi bi-trash me-1"></i> Delete Image';
+
+    deleteBtn.addEventListener('click', async () => {
+      Spinner.show();
+      try {
+        try {
+          deleteBtn.disabled = true;
+          deleteBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Deleting...';
+
+          // Delete from storage
+          await GeotaggedFileService.delete(hiddenInput.value);
+
+          await Permit.update(permitId, { 
+            geotaggedUrl: '',
+            visited: false
+          });
+
+          setImage(placeholderURL, true);
+          hiddenInput.value = '';
+          viewImageLink.classList.add('d-none');
+          removeDeleteButton();
+          renderPermitTable();
+
+          NotificationBox.show('Image deleted and permit updated.');
+        } catch (err) {
+          NotificationBox.show(`Failed to delete image: ${err.message}`, 'danger');
+        } finally {
+          deleteBtn.disabled = false;
+          deleteBtn.innerHTML = '<i class="bi bi-trash me-1"></i> Delete Image';
+        }
+      }
+      finally{
+        Spinner.hide();
+      }
+    });
+
+    viewImageLink.parentElement.appendChild(deleteBtn);
+  }
+
+  // Remove delete button if exists
+  function removeDeleteButton() {
+    const deleteBtn = document.getElementById('deleteGeotaggedBtn');
+    if (deleteBtn) deleteBtn.remove();
+  }
+}
+
+async function handleGeotaggedUpload(permitId) {
+  Spinner.show();
+
+  try {
+    const fileInput = document.getElementById("imageInput");
+    const file = fileInput.files[0];
+
+    if (!file) {
+      NotificationBox.show("No file selected.");
+      return;
+    }
+
+    if (!permitId) {
+      NotificationBox.show("Permit ID is required.");
+      return;
+    }
+
+    // Fetch existing geotaggedUrl from Firestore
+    const existingUrl = document.getElementById('currentGeotaggedUrl').value;
+
+    // Delete old image if it exists
+    if (existingUrl) {
+      await GeotaggedFileService.delete(existingUrl);
+    }
+
+    // Upload new image to Supabase
+    const newImageUrl = await GeotaggedFileService.upload(file);
+    if (!newImageUrl) {
+      NotificationBox.show("Upload failed.");
+      return;
+    }
+
+    // Update Firestore with new image URL
+    await Permit.update(permitId, {
+      geotaggedUrl: newImageUrl,
+      visited: true
+    });
+    renderPermitTable();
+    NotificationBox.show("Geotagged image updated successfully.");
+  } catch (error) {
+    console.error("Error during upload:", error.message);
+    NotificationBox.show("An error occurred: " + error.message);
+  } finally {
+    Spinner.hide();
+  }
+}
 
 
 
