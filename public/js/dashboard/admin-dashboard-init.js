@@ -19,10 +19,10 @@ import {
 document.addEventListener('DOMContentLoaded', () => {
   adminVerification();
   checkAuthentication();
+  refreshAllCachesEvery8Hours();
   displayWelcomeText();
   showEncodedPermitsByUserPerMonth();
   Sidebar.render();
-  refreshAllCachesEvery8Hours();
   handleEncodedRefreshButton();
   // updateDateTime();
   // setInterval(updateDateTime, 1000);

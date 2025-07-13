@@ -195,7 +195,10 @@ async function renderPermitTable() {
         const latitude = permit.latitude ? Number(permit.latitude).toFixed(5) : '';
         const longitude = permit.longitude ? Number(permit.longitude).toFixed(5) : '';
         const isVisited = permit.visited === true;
-        const rowClass = isVisited ? 'table-water-highlight' : '';
+        let rowClass = isVisited ? 'table-water-highlight' : '';
+        const isCancelled = permit.cancelled === true;
+        rowClass = isCancelled ?
+        'table-water-cancelled' : '';
 
         const row = document.createElement('tr');
         row.className = rowClass;
@@ -334,7 +337,7 @@ async function renderPermitTable() {
       renderPagination(filteredPermits.length);
 
       // Store filtered results for export
-      localStorage.setItem('cachedPermits', JSON.stringify(filteredPermits));
+      localStorage.setItem('cachedPermitsExcel', JSON.stringify(filteredPermits));
     }
 
     rowsPerPageSelect.addEventListener('change', () => {
@@ -589,7 +592,7 @@ function setupExportButtonListener() {
   if (!exportBtn) return;
 
   exportBtn.addEventListener('click', () => {
-    const data = JSON.parse(localStorage.getItem('cachedPermits')) || [];
+    const data = JSON.parse(localStorage.getItem('cachedPermitsExcel')) || [];
     if (!data || data.length === 0) return;
 
     const formattedData = data.map(item => {

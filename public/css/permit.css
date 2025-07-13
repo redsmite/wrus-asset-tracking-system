@@ -18,6 +18,23 @@
   transform: scale(1.01);
 }
 
+.table-water-cancelled td {
+  background-color: #e9b2bb;
+  color: #220202;
+  font-weight: 500;
+  box-shadow: 0 0 10px rgba(255, 0, 0, 0.7),
+              0 0 20px rgba(255, 0, 0, 0.5);
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.table-water-cancelled td:hover {
+  box-shadow: 0 0 15px rgba(255, 0, 0, 0.9),
+              0 0 30px rgba(255, 0, 0, 0.7);
+  transform: scale(1.01);
+}
+
+
 #toggleFilter {
   background-color: #f7fbff;        /* near-white with hint of blue */
   color: #1565c0;                   /* soft readable blue */
@@ -125,4 +142,10 @@ label[for="rowsPerPage"] {
   opacity: 0.5;
   filter: grayscale(100%);
   border: 2px dashed #ccc;
+}
+
+@media (max-width: 576px) {
+  #extrasSection {
+    margin-bottom: 1rem;
+  }
 }

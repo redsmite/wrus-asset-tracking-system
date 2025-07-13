@@ -1,5 +1,5 @@
 export const NotificationBox = {
-  show(message, type = 'success', duration = 5000) {
+  show(message, type = 'success', duration = 3000) {
     // Notification Box
     const notif = document.createElement('div');
     notif.classList.add('notification', type);

@@ -18,14 +18,16 @@ import {
   displayNetworkSpeed,
 } from './dashboard-ui.js';
 import { Spinner } from "../components/spinner.js";
+import { filterPermitsByCity } from "./permit-city-summary.js";
 
 document.addEventListener('DOMContentLoaded', () => {
   checkAuthentication();
+  refreshAllCachesEvery8Hours();
   displayWelcomeText();
   Sidebar.render();
   showEncodedPermitsByMonth();
-  refreshAllCachesEvery8Hours();
   handleEncodedRefreshButton();
+  filterPermitsByCity();
 
   // updateDateTime();
   // setInterval(updateDateTime, 1000);

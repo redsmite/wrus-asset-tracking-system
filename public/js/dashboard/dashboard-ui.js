@@ -2,10 +2,31 @@
 
 export function displayWelcomeText() {
   const welcomeText = document.getElementById("welcomeText");
-  const userFullName = localStorage.getItem("userFullName");
+  const positionText = document.getElementById("userPositionText");
 
-  if (welcomeText && userFullName) {
-    welcomeText.textContent = `Welcome ${userFullName}`;
+  const userId = localStorage.getItem('wrusUserId');
+  const cachedUsers = localStorage.getItem("cachedUsers");
+
+  if (!userId || !cachedUsers) return;
+
+  const users = JSON.parse(cachedUsers);
+  const currentUser = users.find(user => user.id === userId);
+
+  if (!currentUser) return;
+
+  const fullName = `${currentUser.firstName} ${currentUser.middleInitial ? currentUser.middleInitial + '.' : ''} ${currentUser.lastName}`.trim();
+  const position = currentUser.position || "";
+  const type = currentUser.type || "";
+
+  if (welcomeText) {
+    welcomeText.textContent = `Welcome ${fullName}`;
+  }
+
+  if (positionText) {
+    positionText.innerHTML = `
+      <span class="fw-semibold text-primary">${position}</span>
+      <span class="badge bg-secondary">${type}</span>
+    `;
   }
 }
 
