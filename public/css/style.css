@@ -82,69 +82,6 @@ body {
   color: #fff !important;
 }
 
-/* Welcome Text */
-#welcomeText {
-  background: linear-gradient(to right, #caf0f8, #ade8f4, #90e0ef);
-  color: #023e8a;
-  padding: 15px 25px;
-  border-radius: 12px;
-  font-size: 1.5rem;
-  font-weight: 600;
-  box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2);
-  border: 1px solid #90e0ef;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-#welcomeText:hover {
-  transform: scale(1.02);
-  box-shadow: 0 6px 15px rgba(0, 150, 255, 0.4);
-}
-
-p.welcome-banner {
-  background: linear-gradient(to right, #a6e3f3, #90e0ef, #48cae4);
-  color: #01497c;
-  padding: 15px 25px;
-  border-radius: 12px;
-  font-size: 1.6rem;
-  font-weight: 600;
-  box-shadow: 0 4px 12px rgba(0, 180, 255, 0.3);
-  border: 1px solid #90e0ef;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-p.welcome-banner:hover {
-  transform: scale(1.02);
-  box-shadow: 0 6px 18px rgba(0, 150, 255, 0.4);
-}
-
-
-/* Cards Styling */
-.card {
-  height: 200px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  background-color: rgba(0, 188, 212, 0.9) !important;
-  color: white !important;
-  border: none;
-  border-radius: 16px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-}
-
-.card h5 {
-  color: white !important;
-}
-
-.card:hover {
-  transform: scale(1.03);
-  box-shadow: 0 12px 25px rgba(0,0,0,0.15);
-}
-
-.card .card-header {
-  background-color: rgba(0, 150, 255, 0.8);
-  border-bottom: none;
-}
-
 nav.navbar {
   min-height: 100vh;
 }

@@ -1,7 +1,4 @@
 .profile-banner {
-  min-height: 89vh;
-  max-height: 100vh; /* Optional: prevent growing beyond viewport */
-  overflow-y: auto;   /* Enable vertical scroll when needed */
   background: linear-gradient(to bottom, #e0f7fa, #caf0f8, #ade8f4);
   display: flex;
   flex-direction: column;
@@ -12,6 +9,7 @@
   box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
   width: 100%;
   box-sizing: border-box;
+  /* Removed min-height and overflow */
 }
 
 .profile-banner:hover {
@@ -20,51 +18,56 @@
 
 .welcome-text {
   font-size: 1.75rem;
-  font-weight: 600;
-  color: #023e8a;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.05);
+  font-weight: 700;
+  color: #1e3a8a;
+  margin-bottom: 0.25rem;
+  line-height: 1.2;
 }
 
 .user-position {
-  font-size: 1.1rem;
-  color: #555;
-  font-style: italic;
+  font-size: 1rem;
+  color: #6c757d;
+  font-style: normal;
+  font-weight: 500;
+  margin-bottom: 1.5rem;
 }
 
-
-#portal-fade {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  width: 100vw;
-  height: 100vh;
-  background: white;
-  border-radius: 50%;
-  transform: translate(-50%, -50%) scale(0.2); /* Start small */
-  opacity: 0;
-  pointer-events: none;
-  z-index: 9999;
+/* Base nav-tabs container */
+.nav-tabs {
+  border-bottom: 3px solid #00b4d8;
+  background: linear-gradient(to right, #e0f7fa, #caf0f8);
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  overflow-x: auto;
+  scrollbar-width: none; /* for Firefox */
+}
+.nav-tabs::-webkit-scrollbar {
+  display: none; /* for Chrome, Safari */
 }
 
-#portal-fade.active {
-  animation: portalFadeClose 5s ease forwards;
+/* Individual tabs */
+.nav-tabs .nav-link {
+  color: #0077b6;
+  background-color: transparent;
+  border: none;
+  border-radius: 0.75rem;
+  margin: 0 0.25rem;
+  padding: 0.6rem 1.2rem;
+  font-weight: 600;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-@keyframes portalFadeClose {
-  0% {
-    transform: translate(-50%, -50%) scale(50);
-    opacity: 1;
-    background: white;
-  }
-  70% {
-    transform: translate(-50%, -50%) scale(5);
-    opacity: 0.7;
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(0.2);
-    opacity: 0;
-    background: transparent;
-  }
+/* Hover effect */
+.nav-tabs .nav-link:hover {
+  background-color: rgba(0, 180, 216, 0.1);
+  color: #023e8a;
+}
+
+/* Active tab */
+.nav-tabs .nav-link.active {
+  background-color: #00b4d8;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 180, 216, 0.2);
 }
 
 .bubble {
@@ -292,3 +295,58 @@
   filter: none; /* default black close button */
 }
 
+#settingsTab form .form-label {
+  font-weight: 500;
+}
+#passwordStatus {
+  font-weight: 500;
+}
+
+.text-water {
+  color: #0077b6;
+}
+
+.btn-water {
+  background-color: #00b4d8;
+  border: none;
+  color: white;
+  font-weight: 600;
+  transition: background-color 0.3s ease;
+}
+
+.btn-water:hover {
+  background-color: #023e8a;
+  box-shadow: 0 4px 12px rgba(0, 119, 182, 0.3);
+  filter: brightness(1.05);
+  color: #fafafa;
+}
+
+.form-water:focus {
+  border-color: #00b4d8;
+  box-shadow: 0 0 0 0.2rem rgba(0, 180, 216, 0.25);
+}
+
+.water-card {
+  background: linear-gradient(to bottom right, #caf0f8, #ade8f4);
+  border-left: 6px solid #00b4d8;
+  border-radius: 1.5rem;
+  padding: 2rem;
+  max-width: 600px;
+  width: 90%;
+  margin: auto;
+  box-shadow: 0 8px 20px rgba(0, 180, 216, 0.2);
+  transition: transform 0.3s ease;
+}
+
+.gear-icon {
+  font-size: 2.5rem;
+  color: #00b4d8;
+  animation: rotateGear 3s linear infinite;
+  display: inline-block;
+  margin-bottom: 0.5rem;
+}
+
+@keyframes rotateGear {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

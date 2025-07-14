@@ -16,17 +16,19 @@ import {
 } from './dashboard-ui.js';
 
 import { filterPermitsByCity } from "./permit-city-summary.js";
+import { initializePasswordChange } from "./change-password.js";
 
 document.addEventListener('DOMContentLoaded', () => {
   checkAuthentication();
   refreshAllCachesEvery8Hours();
   Sidebar.render();
   displayWelcomeText();
-  showAnnouncementModal('');
+  showAnnouncementModal('No Announcement...');
   renderEncodedPermitsSummary();
   handleEncodedRefreshButton();
   filterPermitsByCity();
   checkForAppUpdate();
+  initializePasswordChange();
 });
 
 function checkAuthentication() {
