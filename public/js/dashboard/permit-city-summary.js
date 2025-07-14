@@ -15,7 +15,8 @@ export async function filterPermitsByCity() {
     const matches = allPermits.filter(p => {
       const diversion = p.diversionPoint || "";
       const normalizedDiversion = diversion.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-      return normalizedDiversion.includes(normalizedCity);
+      const regex = new RegExp(`(?:^|\\W)${normalizedCity}(?:\\W|$)`, 'i');
+      return regex.test(normalizedDiversion);
     });
 
     if (matches.length > 0) {
@@ -43,7 +44,22 @@ function renderCityPermitTable(cityCounts) {
   const container = document.getElementById('cityPermitTable');
   if (!container) return;
 
+  const today = new Date();
+  const dateStr = today.toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+
+  // Compute totals
+  const totalPermits = cityCounts.reduce((sum, c) => sum + c.total, 0);
+  const totalVisited = cityCounts.reduce((sum, c) => sum + c.visited, 0);
+  const totalCancelled = cityCounts.reduce((sum, c) => sum + c.cancelled, 0);
+  const validCount = totalPermits - totalCancelled;
+  const totalPercent = validCount > 0 ? ((totalVisited / validCount) * 100).toFixed(2) : "0.00";
+
   let html = `
+    <h3 class="mb-3">City / Municipality Permit Statistics <span class="fs-6 fw-normal"> — As of ${dateStr}</span></h3>
     <table class="table table-bordered table-striped align-middle text-center">
       <thead class="table-primary">
         <tr>
@@ -76,6 +92,25 @@ function renderCityPermitTable(cityCounts) {
       </tr>
     `;
   });
+
+  // Add Total row
+  html += `
+      <tr class="table-secondary fw-bold">
+        <td>Total</td>
+        <td>${totalPermits}</td>
+        <td>${totalVisited}</td>
+        <td>${totalCancelled}</td>
+        <td>
+          <div class="city-progress-container">
+            <div class="progress city-progress-bar" role="progressbar" title="${totalPercent}% visited"
+                aria-valuenow="${totalPercent}" aria-valuemin="0" aria-valuemax="100">
+              <div class="progress-bar bg-info" style="width: ${totalPercent}%"></div>
+            </div>
+            <div class="progress-text">${totalPercent}%</div>
+          </div>
+        </td>
+      </tr>
+  `;
 
   html += `</tbody></table>`;
   container.innerHTML = html;

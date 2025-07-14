@@ -195,10 +195,9 @@ async function renderPermitTable() {
         const latitude = permit.latitude ? Number(permit.latitude).toFixed(5) : '';
         const longitude = permit.longitude ? Number(permit.longitude).toFixed(5) : '';
         const isVisited = permit.visited === true;
-        let rowClass = isVisited ? 'table-water-highlight' : '';
-        const isCancelled = permit.cancelled === true;
-        rowClass = isCancelled ?
-        'table-water-cancelled' : '';
+        let rowClass = '';
+        if (permit.cancelled === true) rowClass += ' table-water-cancelled';
+        if (permit.visited === true) rowClass += ' table-water-highlight';
 
         const row = document.createElement('tr');
         row.className = rowClass;
@@ -360,7 +359,7 @@ async function renderPermitTable() {
     applyFilters(); // Initial filter and render
 
   } catch (error) {
-    console.error('❌ Error rendering permit table:', error.message);
+    console.error('Error rendering permit table:', error.message);
     tableBody.innerHTML = `<tr><td colspan="9" class="text-center text-danger">Error loading data</td></tr>`;
   }
 }

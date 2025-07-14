@@ -172,6 +172,7 @@ function handleEncodedRefreshButton() {
       refreshBtn.disabled = true;
       refreshBtn.innerHTML = `<i class="bi bi-arrow-clockwise me-1"></i> Refreshing...`;
       await showEncodedPermitsByMonth();
+      await filterPermitsByCity();
       NotificationBox.show("Encoded permits refreshed.");
       startCooldown();
     } catch (err) {
