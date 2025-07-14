@@ -39,3 +39,34 @@ tr.table-info:hover > th {
   color: inherit;
 }
 
+/* Water Source Filter Section Styles */
+#waterSourceFilterSection {
+  border: 1px solid #b6d4fe;
+  background-color: #e9f5ff;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  transition: all 0.3s ease-in-out;
+  box-shadow: 0 0 8px rgba(0, 123, 255, 0.1);
+}
+
+/* Legend styling */
+#waterSourceFilterSection .badge {
+  border-radius: 4px;
+}
+
+#waterSourceFilterSection .form-check {
+  margin-bottom: 0.75rem;
+}
+
+/* Toggle Button Styling */
+#toggleWaterSourceFilterBtn {
+  font-weight: 600;
+  transition: background-color 0.3s ease;
+}
+
+#toggleWaterSourceFilterBtn:hover {
+  color: #fafafa;
+  background-color: #00bcd4;
+}
+
+

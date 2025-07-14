@@ -67,29 +67,15 @@ export const WUSData = {
   },
 
   async add(data) {
-    const q = query(WUSCollection, orderBy('__name__', 'desc'), limit(1));
-    const snapshot = await getDocs(q);
-
-    let newNumber = 1;
-    if (!snapshot.empty) {
-      const lastId = snapshot.docs[0].id;
-      const match = lastId.match(/2025-(\d{4})/);
-      const lastNumber = match ? parseInt(match[1]) : 0;
-      newNumber = lastNumber + 1;
-    }
-
-    const formattedNumber = String(newNumber).padStart(4, '0');
-    const newId = `2025-${formattedNumber}`;
-
     const newData = {
       ...data,
       timestamp: serverTimestamp()
     };
 
-    const docRef = doc(db, 'water_users', newId);
-    await setDoc(docRef, newData);
+    const docRef = await addDoc(WUSCollection, newData); // Use Firestore auto-generated ID
+    const newId = docRef.id;
 
-    // ✅ Update localStorage cache without removing it
+    // ✅ Update localStorage cache
     const entry = { id: newId, ...data, timestamp: { seconds: Date.now() / 1000 } };
 
     const updateCache = (key, sortFn) => {
@@ -104,6 +90,7 @@ export const WUSData = {
 
     return { id: newId, ...newData };
   },
+
 
   async update(id, data) {
     const docRef = doc(db, 'water_users', id);

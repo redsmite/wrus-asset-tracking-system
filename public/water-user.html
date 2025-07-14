@@ -19,41 +19,77 @@
         <i class="bi bi-droplet-half"></i> Water Users and Sources
       </h2>
       <div class="container mb-3">
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
-
-          <div class="flex-grow-1 w-100">
+        <div class="d-flex flex-column flex-lg-row align-items-stretch gap-2">
+          
+          <!-- Search Input -->
+          <div class="flex-grow-1">
             <input type="text" id="searchInput" class="form-control form-water" placeholder="Search water user or source...">
           </div>
 
-          <button id="refreshBtn" class="btn btn-primary shadow-sm px-3 py-2 d-flex align-items-center justify-content-center">
-            <i class="bi bi-arrow-clockwise me-1"></i>
-          </button>
+          <!-- Buttons -->
+          <div class="d-flex flex-wrap flex-lg-nowrap gap-2 justify-content-center justify-content-lg-start">
+            <button id="refreshBtn" class="btn btn-primary shadow-sm px-3 py-2 d-flex align-items-center justify-content-center">
+              <i class="bi bi-arrow-clockwise me-1"></i>
+            </button>
 
-          <div>
+            <button class="btn btn-success shadow-sm px-3 py-2 d-flex align-items-center gap-2" id="exportBtn">
+              <span class="d-inline-flex justify-content-center align-items-center bg-light text-success rounded-circle" style="width: 24px; height: 24px;">
+                <i class="bi bi-download"></i>
+              </span>
+              Export
+            </button>
+
             <button class="btn btn-primary shadow-sm px-3 py-2 d-flex align-items-center justify-content-center" data-bs-toggle="modal" data-bs-target="#addwusModal">
-              <i class="bi bi-plus-circle"></i> Add
+              <i class="bi bi-plus-circle"></i>
             </button>
           </div>
+
         </div>
       </div>
+      
+      <!-- Water Source Filter Toggle Button -->
+      <button class="btn btn-outline-info mb-2" id="toggleWaterSourceFilterBtn">
+        Show Water Source Filter
+      </button>
 
-      <div class="mb-2 d-flex align-items-center">
-        <span class="badge bg-info me-2">&nbsp;&nbsp;</span>
-        <small class="text-muted">Rows highlighted in blue indicate a water source</small>
+      <!-- Water Source Filter Section (Hidden by Default via CSS) -->
+      <div class="mb-3 water-source-filter-section d-none" id="waterSourceFilterSection">
+        <!-- Legend -->
+        <div class="d-flex align-items-center mb-1">
+          <span class="badge bg-info me-2" style="width: 20px; height: 20px;">&nbsp;</span>
+          <span>Rows highlighted in <strong>blue</strong> indicate the entry is a <strong>Water Source</strong>.</span>
+        </div>
+
+        <!-- Checkbox Filter: Show Only Water Sources -->
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="waterSourceOnlyFilter">
+          <label class="form-check-label" for="waterSourceOnlyFilter">
+            <strong>Show only water sources</strong><br>
+            <small>(If checked, shows only entries marked as <strong>Water Source</strong>. If unchecked, shows <strong>all entries</strong>.)</small>
+          </label>
+        </div>
+
+        <!-- Checkbox Filter: Show Only Non-Water Sources -->
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="nonWaterSourceOnlyFilter">
+          <label class="form-check-label" for="nonWaterSourceOnlyFilter">
+            <strong>Show only non-water sources</strong><br>
+            <small>(If checked, shows only entries <strong>not marked</strong> as a Water Source. If unchecked, shows <strong>all entries</strong>.)</small>
+          </label>
+        </div>
       </div>
 
       <div class="table-responsive">
         <table>
         <thead>
           <tr class="bg-info text-white">
-            <th class="align-middle">ID</th>
-            <th class="align-middle">Name of Water User</th>
-            <th class="align-middle">Location</th>
+            <th class="align-middle">Owner</th>
+            <th class="align-middle">Street / Bldg</th>
+            <th class="align-middle">Barangay</th>
+            <th class="align-middle">City</th>
             <th class="align-middle">Latitude</th>
             <th class="align-middle">Longitude</th>
-            <th class="align-middle">Type</th>
-            <th class="align-middle">Remarks</th>
-            <th class="align-middle">Update</th>
+            <th class="align-middle">Action</th>
         </thead>
           <tbody id="waterUserTableBody">
             <!-- Dynamic rows will be inserted here -->
@@ -72,67 +108,96 @@
           <div class="modal-content shadow-sm">
             <form id="addWusForm" class="needs-validation" novalidate>
               <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title text-light" id="addwusModalLabel"><i class="bi bi-droplet-half me-2"></i>Add Water User</h5>
+                <h5 class="modal-title text-light" id="addwusModalLabel">
+                  <i class="bi bi-droplet-half me-2"></i>Add Water User
+                </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
 
               <div class="modal-body px-4 py-3">
                 <div class="row g-3">
 
-                  <!-- Name of Water User -->
-                  <div class="col-md-6">
-                    <label for="nameOfWaterUser" class="form-label">Name of Water User <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" id="nameOfWaterUser" required>
-                    <div class="invalid-feedback">
-                      Please enter the water user’s name.
-                    </div>
-                  </div>
+              <div class="col-md-6">
+                <label for="nameOfWaterUser" class="form-label">Owner <span class="text-danger">*</span></label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-person-fill"></i></span>
+                  <input type="text" class="form-control" id="nameOfWaterUser" required>
+                  <div class="invalid-feedback">Please enter the water user’s name.</div>
+                </div>
+              </div>
 
-                  <!-- Location -->
-                  <div class="col-md-6">
-                    <label for="location" class="form-label">Location <span class="text-danger">*</span></label>
-                    <textarea class="form-control" id="location" rows="2" required></textarea>
-                    <div class="invalid-feedback">
-                      Please enter the location.
-                    </div>
-                  </div>
+              <div class="col-md-6">
+                <label for="city" class="form-label">City <span class="text-danger">*</span></label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-building"></i></span>
+                  <select class="form-select" id="city" required>
+                    <option selected disabled value="">Select City</option>
+                  </select>
+                </div>
+              </div>
 
-                  <!-- Latitude -->
-                  <div class="col-md-6">
-                    <label for="latitude" class="form-label">Latitude <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" id="latitude" 
+              <div class="col-md-6">
+                <label for="barangay" class="form-label">Barangay <span class="text-danger">*</span></label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-geo-alt-fill"></i></span>
+                  <input type="text" class="form-control" id="barangay" required placeholder="Enter Barangay">
+                  <div class="invalid-feedback">Please enter the barangay.</div>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <label for="street" class="form-label">Street / Bldg Name <span class="text-danger">*</span></label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-signpost-split-fill"></i></span>
+                  <input type="text" class="form-control" id="street" required>
+                  <div class="invalid-feedback">Please enter the street or building name.</div>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <label for="latitude" class="form-label">Latitude <span class="text-danger">*</span></label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-compass-fill"></i></span>
+                  <input type="text" class="form-control" id="latitude" 
                     pattern="^-?([1-8]?[0-9](\.\d+)?|90(\.0+)?)$" required>
-                    <div class="form-text">Format: decimal degrees (e.g. 14.676)</div>
-                    <div class="invalid-feedback">
-                      Please enter a valid latitude.
-                    </div>
-                  </div>
+                  <select class="form-select" disabled style="max-width: 70px;">
+                    <option value="N" selected>N</option>
+                  </select>
+                  <div class="form-text"></div>
+                  <div class="invalid-feedback">Please enter a valid latitude.</div>
+                </div>
+              </div>
 
-                  <!-- Longitude -->
-                  <div class="col-md-6">
-                    <label for="longitude" class="form-label">Longitude <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" id="longitude" 
+              <div class="col-md-6">
+                <label for="longitude" class="form-label">Longitude <span class="text-danger">*</span></label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-compass"></i></span>
+                  <input type="text" class="form-control" id="longitude" 
                     pattern="^-?(((1[0-7][0-9])|([1-9]?[0-9]))(\.\d+)?|180(\.0+)?)$" required>
-                    <div class="form-text">Format: decimal degrees (e.g. 121.043)</div>
-                    <div class="invalid-feedback">
-                      Please enter a valid longitude.
-                    </div>
-                  </div>
+                    <select class="form-select" disabled style="max-width: 70px;">
+                    <option value="W" selected>W</option>
+                  </select>
+                  <div class="form-text"></div>
+                  <div class="invalid-feedback">Please enter a valid longitude.</div>
+                </div>
+              </div>
 
-                  <!-- Type -->
-                  <div class="col-md-6">
-                    <label for="type" class="form-label">Type of Water Source <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" id="type" required>
-                    <div class="invalid-feedback">
-                      Please specify the water user type.
-                    </div>
-                  </div>
+              <div class="col-md-6">
+                <label for="type" class="form-label">Type of Water Source <span class="text-danger">*</span></label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-toggles2"></i></span>
+                  <input type="text" class="form-control" id="type" required>
+                  <div class="invalid-feedback">Please specify the water user type.</div>
+                </div>
+              </div>
 
-                  <!-- Remarks -->
-                  <div class="col-md-6">
-                    <label for="remarks" class="form-label">Remarks</label>
-                    <textarea class="form-control" id="remarks" rows="2"></textarea>
-                  </div>
+              <div class="col-md-6">
+                <label for="remarks" class="form-label">Remarks</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-chat-left-text"></i></span>
+                  <textarea class="form-control" id="remarks" rows="2"></textarea>
+                </div>
+              </div>
 
                   <!-- Is Water Source -->
                   <div class="col-12">
@@ -148,14 +213,11 @@
               </div>
 
               <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-                  Cancel
-                </button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button type="submit" class="btn btn-primary">
                   <i class="bi bi-save me-1"></i> Save
                 </button>
               </div>
-
             </form>
           </div>
         </div>
@@ -166,72 +228,95 @@
         <div class="modal-dialog modal-lg modal-dialog-centered">
           <div class="modal-content shadow-sm">
             <form id="editWusForm" class="needs-validation" novalidate>
-              <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title text-light" id="editwusModalLabel">
+              <input type="hidden" id="editWusId">
+              <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="editwusModalLabel">
                   <i class="bi bi-pencil-square me-2"></i>Edit Water User
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
 
               <div class="modal-body px-4 py-3">
                 <div class="row g-3">
 
-                  <!-- Hidden ID -->
-                  <input type="hidden" id="editWusId">
-
-                  <!-- Name of Water User -->
                   <div class="col-md-6">
-                    <label for="editNameOfWaterUser" class="form-label">Name of Water User <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" id="editNameOfWaterUser" required>
-                    <div class="invalid-feedback">
-                      Please enter the water user’s name.
+                    <label for="editOwner" class="form-label">Owner <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                      <span class="input-group-text"><i class="bi bi-person-fill"></i></span>
+                      <input type="text" class="form-control" id="editOwner" required>
+                      <div class="invalid-feedback">Please enter the water user’s name.</div>
                     </div>
                   </div>
 
-                  <!-- Location -->
                   <div class="col-md-6">
-                    <label for="editLocation" class="form-label">Location <span class="text-danger">*</span></label>
-                    <textarea class="form-control" id="editLocation" rows="2" required></textarea>
-                    <div class="invalid-feedback">
-                      Please enter the location.
+                    <label for="editCity" class="form-label">City <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                      <span class="input-group-text"><i class="bi bi-building"></i></span>
+                      <select class="form-select" id="editCity" required>
+                        <option selected disabled value="">Select City</option>
+                      </select>
                     </div>
                   </div>
 
-                  <!-- Latitude -->
+                  <div class="col-md-6">
+                    <label for="editBarangay" class="form-label">Barangay <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                      <span class="input-group-text"><i class="bi bi-geo-alt-fill"></i></span>
+                      <input type="text" class="form-control" id="editBarangay" required placeholder="Enter Barangay">
+                      <div class="invalid-feedback">Please enter the barangay.</div>
+                    </div>
+                  </div>
+
+                  <div class="col-md-6">
+                    <label for="editStreet" class="form-label">Street / Bldg Name <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                      <span class="input-group-text"><i class="bi bi-signpost-split-fill"></i></span>
+                      <input type="text" class="form-control" id="editStreet" required>
+                      <div class="invalid-feedback">Please enter the street or building name.</div>
+                    </div>
+                  </div>
+
                   <div class="col-md-6">
                     <label for="editLatitude" class="form-label">Latitude <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" id="editLatitude"
-                      pattern="^-?([0-8]?[0-9](\.\d+)?|90(\.0+)?)$" required>
-                    <div class="form-text">Format: decimal degrees (e.g. 14.676)</div>
-                    <div class="invalid-feedback">
-                      Please enter a valid latitude.
+                    <div class="input-group">
+                      <span class="input-group-text"><i class="bi bi-compass-fill"></i></span>
+                      <input type="text" class="form-control" id="editLatitude" 
+                        pattern="^-?([1-8]?[0-9](\.\d+)?|90(\.0+)?)$" required>
+                      <select class="form-select" disabled style="max-width: 70px;">
+                        <option value="N" selected>N</option>
+                      </select>
+                      <div class="invalid-feedback">Please enter a valid latitude.</div>
                     </div>
                   </div>
 
-                  <!-- Longitude -->
                   <div class="col-md-6">
                     <label for="editLongitude" class="form-label">Longitude <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" id="editLongitude"
-                      pattern="^-?((1[0-7][0-9]|0?[0-9]{1,2})(\.\d+)?|180(\.0+)?)$" required>
-                    <div class="form-text">Format: decimal degrees (e.g. 121.043)</div>
-                    <div class="invalid-feedback">
-                      Please enter a valid longitude.
+                    <div class="input-group">
+                      <span class="input-group-text"><i class="bi bi-compass"></i></span>
+                      <input type="text" class="form-control" id="editLongitude" 
+                        pattern="^-?(((1[0-7][0-9])|([1-9]?[0-9]))(\.\d+)?|180(\.0+)?)$" required>
+                      <select class="form-select" disabled style="max-width: 70px;">
+                        <option value="W" selected>W</option>
+                      </select>
+                      <div class="invalid-feedback">Please enter a valid longitude.</div>
                     </div>
                   </div>
 
-                  <!-- Type -->
                   <div class="col-md-6">
-                    <label for="editType" class="form-label">Type of Water Source<span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" id="editType" required>
-                    <div class="invalid-feedback">
-                      Please specify the water user type.
+                    <label for="editType" class="form-label">Type of Water Source <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                      <span class="input-group-text"><i class="bi bi-toggles2"></i></span>
+                      <input type="text" class="form-control" id="editType" required>
+                      <div class="invalid-feedback">Please specify the water user type.</div>
                     </div>
                   </div>
 
-                  <!-- Remarks -->
                   <div class="col-md-6">
                     <label for="editRemarks" class="form-label">Remarks</label>
-                    <textarea class="form-control" id="editRemarks" rows="2"></textarea>
+                    <div class="input-group">
+                      <span class="input-group-text"><i class="bi bi-chat-left-text"></i></span>
+                      <textarea class="form-control" id="editRemarks" rows="2"></textarea>
+                    </div>
                   </div>
 
                   <!-- Is Water Source -->
@@ -248,14 +333,11 @@
               </div>
 
               <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-                  Cancel
-                </button>
-                <button type="submit" class="btn btn-primary">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-warning">
                   <i class="bi bi-save me-1"></i> Update
                 </button>
               </div>
-
             </form>
           </div>
         </div>
@@ -263,6 +345,7 @@
 
     </div>
   </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script type="module" src="js/wrus/wrus-init.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

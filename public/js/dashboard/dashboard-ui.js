@@ -1,5 +1,10 @@
 // dashboard-ui.js
 
+import { Permit } from "../permit/permit-data.js";
+import { PortalBubble } from "../components/PortalBubble.js";
+import { NotificationBox } from "../components/notification.js";
+import { filterPermitsByCity } from "./permit-city-summary.js";
+
 export function displayWelcomeText() {
   const welcomeText = document.getElementById("welcomeText");
   const positionText = document.getElementById("userPositionText");
@@ -31,7 +36,6 @@ export function displayWelcomeText() {
 }
 
 export function showAnnouncementModal(message) {
-  // Check if modal already exists to avoid duplicates
   if (!document.getElementById('announcementModal')) {
     const modalHTML = `
       <div class="modal fade" id="announcementModal" tabindex="-1" aria-labelledby="announcementModalLabel" aria-hidden="true">
@@ -50,72 +54,126 @@ export function showAnnouncementModal(message) {
     `;
     document.body.insertAdjacentHTML('beforeend', modalHTML);
   } else {
-    // If it exists, just update the message
     document.getElementById('announcementMessage').innerHTML = message;
   }
 
-  // Show the modal
   const modalElement = document.getElementById('announcementModal');
   const modal = new bootstrap.Modal(modalElement);
   modal.show();
 }
 
-export function updateDateTime() {
-  const now = new Date();
-  const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+export async function renderEncodedPermitsSummary() {
+  PortalBubble.trigger();
+  const userId = localStorage.getItem('wrusUserId');
+  if (!userId) return;
 
-  const dateElement = document.getElementById('date');
-  const timeElement = document.getElementById('time');
+  try {
+    const permits = await Permit.getAll();
+    const userPermits = permits.filter(p => p.encodedBy === userId);
+    const monthlyCounts = {};
 
-  if (dateElement) {
-    dateElement.textContent = now.toLocaleDateString(undefined, dateOptions);
-  }
+    userPermits.forEach(p => {
+      const date = p.createdAt?.toDate?.() || new Date(p.timestamp?.seconds * 1000);
+      const label = date.toLocaleString('default', { month: 'long', year: 'numeric' });
+      monthlyCounts[label] = (monthlyCounts[label] || 0) + 1;
+    });
 
-  if (timeElement) {
-    timeElement.textContent = now.toLocaleTimeString();
+    const container = document.getElementById('encodedPermitSummary');
+    container.innerHTML = '';
+
+    if (Object.keys(monthlyCounts).length === 0) {
+      container.classList.add('d-none');
+      document.getElementById('noEncodedMessage').classList.remove('d-none');
+      return;
+    }
+
+    Object.entries(monthlyCounts).forEach(([month, count]) => {
+      const card = document.createElement('div');
+      card.className = 'scorecard-item';
+      card.innerHTML = `
+        <div class="scorecard-month">
+          <i class="bi bi-calendar3"></i> ${month}
+        </div>
+        <div class="scorecard-count">
+          <i class="bi bi-check2-circle"></i> ${count} Permit${count > 1 ? 's' : ''}
+        </div>
+      `;
+      container.appendChild(card);
+    });
+
+    container.classList.remove('d-none');
+    document.getElementById('noEncodedMessage').classList.add('d-none');
+  } catch (err) {
+    console.error('Failed to load encoded permit summary:', err);
   }
 }
 
-export function renderEncodedPermitsTable(monthlyCounts) {
-  const table = document.getElementById('encodedPermitTable');
-  const message = document.getElementById('noEncodedMessage');
-  const tbody = document.getElementById('encodedPermitTableBody');
+export function handleEncodedRefreshButton() {
+  const refreshBtn = document.getElementById('refreshEncodedBtn');
+  const COOLDOWN_SECONDS = 60;
+  const LAST_REFRESH_KEY = 'lastEncodedRefresh';
 
-  tbody.innerHTML = '';
-
-  if (Object.keys(monthlyCounts).length === 0) {
-    table.classList.add('d-none');
-    message.classList.remove('d-none');
-    return;
+  function getRemainingCooldown() {
+    const lastRefresh = localStorage.getItem(LAST_REFRESH_KEY);
+    if (!lastRefresh) return 0;
+    const elapsed = (Date.now() - parseInt(lastRefresh, 10)) / 1000;
+    return Math.max(0, COOLDOWN_SECONDS - Math.floor(elapsed));
   }
 
-  table.classList.remove('d-none');
-  message.classList.add('d-none');
+  function startCooldown() {
+    localStorage.setItem(LAST_REFRESH_KEY, Date.now().toString());
+    let remaining = COOLDOWN_SECONDS;
+    refreshBtn.disabled = true;
+    const originalHTML = refreshBtn.innerHTML;
 
-  Object.entries(monthlyCounts).forEach(([month, count]) => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${month}</td><td>${count}</td>`;
-    tbody.appendChild(tr);
+    const interval = setInterval(() => {
+      remaining--;
+      refreshBtn.innerHTML = `<i class="bi bi-hourglass-split me-1"></i> ${remaining}s`;
+      if (remaining <= 0) {
+        clearInterval(interval);
+        refreshBtn.disabled = false;
+        refreshBtn.innerHTML = originalHTML;
+      }
+    }, 1000);
+  }
+
+  const remainingCooldown = getRemainingCooldown();
+  if (remainingCooldown > 0) {
+    refreshBtn.disabled = true;
+    let remaining = remainingCooldown;
+    const originalHTML = refreshBtn.innerHTML;
+
+    const interval = setInterval(() => {
+      remaining--;
+      refreshBtn.innerHTML = `<i class="bi bi-hourglass-split me-1"></i> ${remaining}s`;
+      if (remaining <= 0) {
+        clearInterval(interval);
+        refreshBtn.disabled = false;
+        refreshBtn.innerHTML = originalHTML;
+      }
+    }, 1000);
+  }
+
+  refreshBtn.addEventListener('click', async () => {
+    const remaining = getRemainingCooldown();
+    if (remaining > 0) {
+      NotificationBox.show(`Please wait ${remaining}s before refreshing again.`);
+      return;
+    }
+
+    try {
+      refreshBtn.disabled = true;
+      refreshBtn.innerHTML = `<i class="bi bi-arrow-clockwise me-1"></i> Refreshing...`;
+      await Permit.refreshCache();
+      await renderEncodedPermitsSummary();
+      await filterPermitsByCity();
+      NotificationBox.show("Encoded permits refreshed.");
+      startCooldown();
+    } catch (err) {
+      refreshBtn.disabled = false;
+      refreshBtn.innerHTML = `<i class="bi bi-arrow-clockwise"></i>`;
+      console.error(err);
+      NotificationBox.show("Error during encoded refresh.");
+    }
   });
-}
-
-export function displayWeather(description, temp) {
-  const weatherElement = document.getElementById('weather');
-  const tempElement = document.getElementById('temperature');
-
-  if (weatherElement) weatherElement.textContent = description;
-  if (tempElement) tempElement.textContent = `${temp} °C`;
-}
-
-export function displayWeatherError() {
-  const weatherElement = document.getElementById('weather');
-  const tempElement = document.getElementById('temperature');
-
-  if (weatherElement) weatherElement.textContent = 'Unable to fetch weather';
-  if (tempElement) tempElement.textContent = '';
-}
-
-export function displayNetworkSpeed(text) {
-  const speedElement = document.getElementById('speed-value');
-  if (speedElement) speedElement.textContent = text;
 }

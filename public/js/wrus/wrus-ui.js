@@ -2,12 +2,16 @@ import { WUSData } from './wrus-data.js';
 import { Sidebar } from "../components/sidebar.js";
 import { Spinner } from '../components/spinner.js';
 import { NotificationBox } from '../components/notification.js';
+import { METRO_MANILA_CITIES } from '../constants/metroManilaCities.js';
 
 export function initializePage(){
   Sidebar.render();
   Spinner.render();
   initializeSearchBar();
   loadWaterUser();
+  setupWaterSourceFilterToggle();
+  setupAddModalCities();
+  setupEditModalCities();
   handleAddForm();
   handleEditForm();
   handleRefreshButton({
@@ -16,12 +20,66 @@ export function initializePage(){
     renderFn: renderWaterUsers,
     cooldownKey: "lastWUSRefresh"
   });
+  initializeExportButton();
 }
 
 let currentPage = 1;
 const rowsPerPage = 10;
 let allUsers = [];
 let searchTerm = '';
+
+function setupWaterSourceFilterToggle() {
+  const section = document.getElementById('waterSourceFilterSection');
+  const button = document.getElementById('toggleWaterSourceFilterBtn');
+  const waterSourceOnly = document.getElementById('waterSourceOnlyFilter');
+  const nonWaterSourceOnly = document.getElementById('nonWaterSourceOnlyFilter');
+
+  // Toggle visibility of filter section
+  button.addEventListener('click', () => {
+    const isHidden = section.classList.contains('d-none');
+    section.classList.toggle('d-none');
+    button.textContent = isHidden ? 'Hide Water Source Filter' : 'Show Water Source Filter';
+  });
+
+  // Disable the other checkbox when one is checked and re-render table
+  waterSourceOnly.addEventListener('change', () => {
+    nonWaterSourceOnly.disabled = waterSourceOnly.checked;
+    renderWaterUsers(); // refresh table with filter
+  });
+
+  nonWaterSourceOnly.addEventListener('change', () => {
+    waterSourceOnly.disabled = nonWaterSourceOnly.checked;
+    renderWaterUsers(); // refresh table with filter
+  });
+}
+
+function setupAddModalCities() {
+  const citySelect = document.getElementById("city");
+  if (!citySelect) return;
+
+  citySelect.innerHTML = '<option selected disabled value="">Select City</option>';
+
+  METRO_MANILA_CITIES.forEach(city => {
+    const option = document.createElement("option");
+    option.value = city;
+    option.textContent = city;
+    citySelect.appendChild(option);
+  });
+}
+
+function setupEditModalCities() {
+  const citySelect = document.getElementById("editCity");
+  if (!citySelect) return;
+
+  citySelect.innerHTML = '<option selected disabled value="">Select City</option>';
+
+  METRO_MANILA_CITIES.forEach(city => {
+    const option = document.createElement("option");
+    option.value = city;
+    option.textContent = city;
+    citySelect.appendChild(option);
+  });
+}
 
 function handleAddForm() {
   const form = document.getElementById('addWusForm');
@@ -36,13 +94,15 @@ function handleAddForm() {
     }
 
     const data = {
-      nameOfWaterUser: form.nameOfWaterUser.value.trim(),
-      location: form.location.value.trim(),
+      owner: form.nameOfWaterUser.value.trim(),
+      city: form.city.value.trim(),
+      barangay: form.barangay.value.trim(),
+      street: form.street.value.trim(),
       latitude: form.latitude.value.trim(),
       longitude: form.longitude.value.trim(),
       type: form.type.value.trim(),
       remarks: form.remarks.value.trim(),
-      isWaterSource: form.isWaterSource.checked,
+      isWaterSource: form.isWaterSource.checked
     };
 
     Spinner.show();
@@ -51,7 +111,7 @@ function handleAddForm() {
 
     try {
       await WUSData.add(data);
-      allUsers = []; // Clear cache to force reload
+      allUsers = []; // Clear local cache to force reload
 
       form.reset();
       form.classList.remove('was-validated');
@@ -115,20 +175,34 @@ async function renderWaterUsers(term = '') {
     );
   }
 
+  const waterSourceOnly = document.getElementById('waterSourceOnlyFilter');
+  const nonWaterSourceOnly = document.getElementById('nonWaterSourceOnlyFilter');
+
+  let filteredUsers = allUsers;
+
+  if (waterSourceOnly.checked) {
+    filteredUsers = filteredUsers.filter(u => u.isWaterSource === true);
+  } else if (nonWaterSourceOnly.checked) {
+    filteredUsers = filteredUsers.filter(u => u.isWaterSource === false);
+  }
+
   const searchTerm = term.trim();
   const normalizedSearch = normalizeText(searchTerm);
 
-  const filteredUsers = normalizedSearch
-    ? allUsers.filter(u =>
-        normalizeText(u.id || '').includes(normalizedSearch) ||
-        normalizeText(u.nameOfWaterUser || '').includes(normalizedSearch) ||
-        normalizeText(u.location || '').includes(normalizedSearch) ||
-        normalizeText(u.type || '').includes(normalizedSearch) ||
-        normalizeText(u.remarks || '').includes(normalizedSearch) ||
-        (u.latitude || '').toString().includes(normalizedSearch) ||
-        (u.longitude || '').toString().includes(normalizedSearch)
-      )
-    : allUsers;
+  if (normalizedSearch) {
+    filteredUsers = filteredUsers.filter(u =>
+      normalizeText(u.id || '').includes(normalizedSearch) ||
+      normalizeText(u.owner || '').includes(normalizedSearch) ||
+      normalizeText(u.street || '').includes(normalizedSearch) ||
+      normalizeText(u.barangay || '').includes(normalizedSearch) ||
+      normalizeText(u.city || '').includes(normalizedSearch) ||
+      (u.latitude || '').toString().includes(normalizedSearch) ||
+      (u.longitude || '').toString().includes(normalizedSearch)
+    );
+  }
+
+  // ✅ Save filtered users to localStorage (for reuse like export)
+  localStorage.setItem('filteredWaterUsers', JSON.stringify(filteredUsers));
 
   const totalPages = Math.ceil(filteredUsers.length / rowsPerPage) || 1;
   if (currentPage > totalPages) currentPage = totalPages;
@@ -142,13 +216,12 @@ async function renderWaterUsers(term = '') {
     if (user.isWaterSource) tr.classList.add('table-info');
 
     tr.innerHTML = `
-      <td>${highlightMatch(user.id || '', searchTerm)}</td>
-      <td>${highlightMatch(user.nameOfWaterUser || '', searchTerm)}</td>
-      <td>${highlightMatch(user.location || '', searchTerm)}</td>
+      <td>${highlightMatch(user.owner || '', searchTerm)}</td>
+      <td>${highlightMatch(user.street || '', searchTerm)}</td>
+      <td>${highlightMatch(user.barangay || '', searchTerm)}</td>
+      <td>${highlightMatch(user.city || '', searchTerm)}</td>
       <td>${highlightMatch(user.latitude?.toString() || '', searchTerm)}</td>
       <td>${highlightMatch(user.longitude?.toString() || '', searchTerm)}</td>
-      <td>${highlightMatch(user.type || '', searchTerm)}</td>
-      <td>${highlightMatch(user.remarks || '', searchTerm)}</td>
       <td>
         <button class="btn btn-sm btn-warning edit-btn" data-id="${user.id}">
           <i class="bi bi-pencil-square"></i>
@@ -247,9 +320,12 @@ function attachEditListeners(filteredUsers) {
       const user = filteredUsers.find(u => u.id === id);
       if (!user) return;
 
-      document.getElementById('editWusId').value = user.id;
-      document.getElementById('editNameOfWaterUser').value = user.nameOfWaterUser || '';
-      document.getElementById('editLocation').value = user.location || '';
+      // Update form field IDs to match your new structure
+      document.getElementById('editWusId').value = user.id || '';
+      document.getElementById('editOwner').value = user.owner || '';
+      document.getElementById('editStreet').value = user.street || '';
+      document.getElementById('editBarangay').value = user.barangay || '';
+      document.getElementById('editCity').value = user.city || '';
       document.getElementById('editLatitude').value = user.latitude || '';
       document.getElementById('editLongitude').value = user.longitude || '';
       document.getElementById('editType').value = user.type || '';
@@ -334,13 +410,15 @@ function handleEditForm() {
 
     const id = document.getElementById('editWusId').value;
     const payload = {
-      nameOfWaterUser: document.getElementById('editNameOfWaterUser').value.trim(),
-      location: document.getElementById('editLocation').value.trim(),
+      owner: document.getElementById('editOwner').value.trim(),
+      street: document.getElementById('editStreet').value.trim(),
+      barangay: document.getElementById('editBarangay').value.trim(),
+      city: document.getElementById('editCity').value.trim(),
       latitude: document.getElementById('editLatitude').value.trim(),
       longitude: document.getElementById('editLongitude').value.trim(),
       type: document.getElementById('editType').value.trim(),
       remarks: document.getElementById('editRemarks').value.trim(),
-      isWaterSource: document.getElementById('editIsWaterSource').checked,
+      isWaterSource: document.getElementById('editIsWaterSource').checked
     };
 
     try {
@@ -371,3 +449,42 @@ function initializeSearchBar() {
     renderWaterUsers(term);
   });
 }
+
+function initializeExportButton() {
+  const exportBtn = document.getElementById('exportBtn');
+  if (!exportBtn) return;
+
+  exportBtn.addEventListener('click', () => {
+    const XLSX = window.XLSX; // Get XLSX from global scope
+
+    if (!XLSX || !XLSX.utils) {
+      alert('XLSX library not loaded.');
+      return;
+    }
+
+    const filteredUsers = JSON.parse(localStorage.getItem('filteredWaterUsers') || '[]');
+
+    if (filteredUsers.length === 0) {
+      alert('No filtered data to export.');
+      return;
+    }
+
+    const dataForExcel = filteredUsers.map(user => ({
+      Owner: user.owner || '',
+      Street: user.street || '',
+      Barangay: user.barangay || '',
+      City: user.city || '',
+      Latitude: user.latitude || '',
+      Longitude: user.longitude || '',
+      IsWaterSource: user.isWaterSource ? 'Yes' : 'No'
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(dataForExcel);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'FilteredUsers');
+    XLSX.writeFile(workbook, 'FilteredWaterUsers.xlsx');
+  });
+}
+
+
+
