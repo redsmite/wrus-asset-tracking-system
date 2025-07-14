@@ -8,6 +8,7 @@ import { ICS } from '../ics/ics-data.js';
 import { Permit } from "../permit/permit-data.js";
 import { WUSData } from "../wrus/wrus-data.js";
 import { NotificationBox } from "../components/notification.js";
+import { checkForAppUpdate } from "./version-control.js";
 
 import {
   displayWelcomeText,
@@ -16,6 +17,7 @@ import {
   displayWeather,
   displayWeatherError,
   displayNetworkSpeed,
+  showAnnouncementModal
 } from './dashboard-ui.js';
 import { Spinner } from "../components/spinner.js";
 import { filterPermitsByCity } from "./permit-city-summary.js";
@@ -23,11 +25,15 @@ import { filterPermitsByCity } from "./permit-city-summary.js";
 document.addEventListener('DOMContentLoaded', () => {
   checkAuthentication();
   refreshAllCachesEvery8Hours();
-  displayWelcomeText();
   Sidebar.render();
+  displayWelcomeText();
+  showAnnouncementModal(
+    ''
+  );
   showEncodedPermitsByMonth();
   handleEncodedRefreshButton();
   filterPermitsByCity();
+  checkForAppUpdate();
 
   // updateDateTime();
   // setInterval(updateDateTime, 1000);
@@ -171,6 +177,7 @@ function handleEncodedRefreshButton() {
     try {
       refreshBtn.disabled = true;
       refreshBtn.innerHTML = `<i class="bi bi-arrow-clockwise me-1"></i> Refreshing...`;
+      Permit.refreshCache();
       await showEncodedPermitsByMonth();
       await filterPermitsByCity();
       NotificationBox.show("Encoded permits refreshed.");

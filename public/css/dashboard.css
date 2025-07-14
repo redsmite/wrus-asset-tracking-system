@@ -274,3 +274,21 @@
   text-align: right;
   font-size: 0.85rem;
 }
+
+.modal-header {
+  background-color: #c2d4e2;
+  color: #007c91; /* deep aqua text */
+  border-bottom: 1px solid #00bcd4;
+}
+
+.modal-content {
+  background-color: white; /* ensures body stays white */
+  border-radius: 12px;
+  border: 1px solid #b2ebf2;
+  box-shadow: 0 0 15px rgba(0, 188, 212, 0.2);
+}
+
+.modal-header .btn-close {
+  filter: none; /* default black close button */
+}
+

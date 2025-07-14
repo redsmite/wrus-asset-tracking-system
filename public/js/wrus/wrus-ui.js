@@ -151,7 +151,7 @@ async function renderWaterUsers(term = '') {
       <td>${highlightMatch(user.remarks || '', searchTerm)}</td>
       <td>
         <button class="btn btn-sm btn-warning edit-btn" data-id="${user.id}">
-          <i class="bi bi-pencil-square"></i> Update
+          <i class="bi bi-pencil-square"></i>
         </button>
       </td>
     `;
@@ -161,7 +161,6 @@ async function renderWaterUsers(term = '') {
   attachEditListeners(filteredUsers);
   renderPagination(totalPages);
 }
-
 
 function handleRefreshButton({
   buttonId,
