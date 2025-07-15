@@ -1,6 +1,5 @@
-// dashboard-init.js
-
 import { Sidebar } from "../components/sidebar.js";
+import { Spinner } from "../components/spinner.js";
 import { Users } from '../user/user-data.js';
 import { Consumable } from '../consumable/consumable-data.js';
 import { ICS } from '../ics/ics-data.js';
@@ -17,11 +16,13 @@ import {
 
 import { filterPermitsByCity } from "./permit-city-summary.js";
 import { initializePasswordChange } from "./change-password.js";
+import { PortalBubble } from "../components/PortalBubble.js";
 
 document.addEventListener('DOMContentLoaded', () => {
   checkAuthentication();
   refreshAllCachesEvery8Hours();
   Sidebar.render();
+  Spinner.render();
   displayWelcomeText();
   showAnnouncementModal('No Announcement...');
   renderEncodedPermitsSummary();

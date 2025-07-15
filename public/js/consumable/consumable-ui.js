@@ -34,6 +34,7 @@ export function initializePage() {
     cooldownKey: "lastConsumableRefresh",
     cooldownSeconds: 60
   });
+  setupExportFilteredConsumablesToExcel();
 }
 
 function normalizeText(text) {
@@ -331,6 +332,8 @@ function initSearchHandler() {
       normalizeText(item.specification || '').includes(normalizedTerm)
     );
 
+    localStorage.setItem("filteredConsumables", JSON.stringify(filteredItems));
+
     currentPage = 1;
     renderTablePage();
     renderPagination();
@@ -415,6 +418,7 @@ async function renderConsumableTable() {
   try {
     currentItems = await Consumable.fetchAll();
     filteredItems = [...currentItems];
+    localStorage.setItem("filteredConsumables", JSON.stringify(filteredItems));
     currentPage = 1;
     renderTablePage();
     renderPagination();
@@ -575,7 +579,6 @@ function renderPagination() {
   paginationContainer.appendChild(nav);
 }
 
-
 function pageSizeSelectHandler() {
   const pageSizeSelect = document.getElementById('pageSizeSelect');
   if (!pageSizeSelect) return;
@@ -585,6 +588,33 @@ function pageSizeSelectHandler() {
     currentPage = 1; // Reset to first page
     renderTablePage();
     renderPagination();
+  });
+}
+
+function setupExportFilteredConsumablesToExcel() {
+  const exportBtn = document.getElementById("exportBtn");
+  if (!exportBtn) return;
+
+  exportBtn.addEventListener("click", () => {
+    const data = JSON.parse(localStorage.getItem("filteredConsumables") || "[]");
+
+    if (data.length === 0) {
+      alert("No data to export.");
+      return;
+    }
+
+    const exportData = data.map(item => ({
+      ID: item.id,
+      Specification: item.specification,
+      Quantity: item.qty,
+      Unit: item.unit
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Consumables");
+
+    XLSX.writeFile(workbook, "filtered_consumables.xlsx");
   });
 }
 

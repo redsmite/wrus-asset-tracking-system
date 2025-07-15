@@ -31,7 +31,6 @@
             id="searchInput"
             class="form-control border-0"
             placeholder="Search for consumable items..."
-            style="background: linear-gradient(to right, #ffffff, #cbefff); color: #01579b;"
           />
         </div>
           <button id="showAddFormBtn" class="btn btn-primary" style="white-space: nowrap;">
@@ -41,7 +40,8 @@
       </div>
 
       
-      <div class="d-flex align-items-center justify-content-between gap-2 my-2">
+      <div class="d-flex align-items-center justify-content-between gap-2 my-2 flex-wrap">
+        <!-- Left: Page size selector -->
         <div class="d-flex align-items-center gap-2">
           <label for="pageSizeSelect" class="form-label mb-0">Show</label>
           <select id="pageSizeSelect" class="form-select form-select-sm" style="width: auto;">
@@ -52,10 +52,21 @@
           <span>entries</span>
         </div>
 
-        <button id="refreshBtn" class="btn btn-primary shadow-sm px-3 py-2 d-flex align-items-center gap-2">
-          <i class="bi bi-arrow-clockwise me-1"></i> Refresh 
-        </button>
+        <!-- Right: Buttons side-by-side -->
+        <div class="d-flex align-items-center gap-2">
+          <button class="btn btn-success shadow-sm px-3 py-2 d-flex align-items-center gap-2" id="exportBtn">
+            <span class="d-inline-flex justify-content-center align-items-center bg-light text-success rounded-circle" style="width: 24px; height: 24px;">
+              <i class="bi bi-download"></i>
+            </span>
+            Export
+          </button>
+
+          <button id="refreshBtn" class="btn btn-primary shadow-sm px-3 py-2 d-flex align-items-center gap-2">
+            <i class="bi bi-arrow-clockwise me-1"></i> Refresh 
+          </button>
+        </div>
       </div>
+
 
 
       <div class="table-responsive">
@@ -277,8 +288,6 @@
         </div>
       </div>
 
-
-
       <!-- Ledger Modal -->
       <div class="modal fade" id="ledgerModal" tabindex="-1" aria-labelledby="ledgerModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-scrollable">
@@ -303,6 +312,7 @@
   <!-- jsPDF and AutoTable -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
   <script type="module" src="js/consumable/consumable-init.js"></script>
 </body>
 </html>

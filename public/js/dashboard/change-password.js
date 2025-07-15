@@ -1,6 +1,7 @@
 import bcrypt from "https://esm.sh/bcryptjs@2.4.3";
 import { Users } from "../user/user-data.js";
 import { NotificationBox } from "../components/notification.js";
+import { Spinner } from "../components/spinner.js";
 
 export function initializePasswordChange() {
   const form = document.getElementById("changePasswordForm");
@@ -15,26 +16,28 @@ export function initializePasswordChange() {
   form.onsubmit = async (e) => {
     e.preventDefault();
 
-    const userId = localStorage.getItem("wrusUserId");
-    const pass = newPassword.value.trim();
-    const confirm = confirmPassword.value.trim();
-
-    if (!userId) {
-      NotificationBox.show("User not found.");
-      return;
-    }
-
-    if (pass.length < 6) {
-      NotificationBox.show("Password must be at least 6 characters.");
-      return;
-    }
-
-    if (pass !== confirm) {
-      NotificationBox.show("Passwords do not match.");
-      return;
-    }
+    Spinner.show();
 
     try {
+      const userId = localStorage.getItem("wrusUserId");
+      const pass = newPassword.value.trim();
+      const confirm = confirmPassword.value.trim();
+
+      if (!userId) {
+        NotificationBox.show("User not found.");
+        return;
+      }
+
+      if (pass.length < 6) {
+        NotificationBox.show("Password must be at least 6 characters.");
+        return;
+      }
+
+      if (pass !== confirm) {
+        NotificationBox.show("Passwords do not match.");
+        return;
+      }
+
       const hashedPassword = await bcrypt.hash(pass, 10);
       await Users.update(userId, { password: hashedPassword });
 
@@ -43,6 +46,8 @@ export function initializePasswordChange() {
     } catch (error) {
       console.error("Error changing password:", error);
       NotificationBox.show("An error occurred while updating the password.");
+    } finally {
+      Spinner.hide();
     }
   };
 }
