@@ -9,7 +9,7 @@
   box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
   width: 100%;
   box-sizing: border-box;
-  /* Removed min-height and overflow */
+  min-height: 85vh;
 }
 
 .profile-banner:hover {

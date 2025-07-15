@@ -3,6 +3,7 @@ import { Sidebar } from "../components/sidebar.js";
 import { Spinner } from '../components/spinner.js';
 import { NotificationBox } from '../components/notification.js';
 import { METRO_MANILA_CITIES } from '../constants/metroManilaCities.js';
+import { GeotaggedFileService } from '../upload/uploadImg.js';
 
 export function initializePage(){
   Sidebar.render();
@@ -150,10 +151,7 @@ async function renderWaterUsers(term = '') {
   }
 
   function normalizeText(str) {
-    return str
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .toLowerCase();
+    return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
   }
 
   function highlightMatch(text, searchTerm) {
@@ -201,7 +199,6 @@ async function renderWaterUsers(term = '') {
     );
   }
 
-  // ✅ Save filtered users to localStorage (for reuse like export)
   localStorage.setItem('filteredWaterUsers', JSON.stringify(filteredUsers));
 
   const totalPages = Math.ceil(filteredUsers.length / rowsPerPage) || 1;
@@ -226,8 +223,20 @@ async function renderWaterUsers(term = '') {
         <button class="btn btn-sm btn-warning edit-btn" data-id="${user.id}">
           <i class="bi bi-pencil-square"></i>
         </button>
+        <button class="btn btn-sm btn-info geotag-btn" data-id="${user.id}">
+          <i class="bi bi-geo-alt-fill"></i>
+        </button>
       </td>
     `;
+
+    const geotagBtn = tr.querySelector('.geotag-btn');
+    geotagBtn.addEventListener('click', () => {
+      const geotaggedUrl = user?.geotaggedUrl || '';
+      setupImageUploadModal(user.id, geotaggedUrl);
+      const modal = new bootstrap.Modal(document.getElementById('imageUploadModal'));
+      modal.show();
+    });
+
     tableBody.appendChild(tr);
   });
 
@@ -486,5 +495,191 @@ function initializeExportButton() {
   });
 }
 
+function setupImageUploadModal(wusId, geotaggedUrl = '') {
+  const imageInput = document.getElementById('imageInput');
+  const imagePreview = document.getElementById('imagePreview');
+  const modal = document.getElementById('imageUploadModal');
+  const dropZone = document.getElementById('dropZone');
+  const placeholderURL = './images/placeholder2.png';
+  const viewImageLink = document.getElementById('viewImageLink');
+  const hiddenInput = document.getElementById('currentGeotaggedUrl');
 
+  const setImage = (src, isPlaceholder = true) => {
+    imagePreview.src = src;
+    imagePreview.classList.toggle('placeholder', isPlaceholder);
+    const uploadBtn = document.getElementById('uploadGeotaggedBtn');
+    if (uploadBtn) {
+      uploadBtn.classList.toggle('d-none', isPlaceholder);
+    }
+  };
+
+  const handleFile = (file) => {
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (e) => setImage(e.target.result, false);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Drag-and-drop events
+  ['dragenter', 'dragover'].forEach(eventName => {
+    dropZone.addEventListener(eventName, e => {
+      e.preventDefault();
+      dropZone.classList.add('border-primary');
+    });
+  });
+
+  ['dragleave', 'drop'].forEach(eventName => {
+    dropZone.addEventListener(eventName, e => {
+      e.preventDefault();
+      dropZone.classList.remove('border-primary');
+    });
+  });
+
+  dropZone.ondrop = (e) => {
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  };
+
+  // Bootstrap modal show event
+  modal.addEventListener('show.bs.modal', () => {
+    setImage(placeholderURL, true);
+    hiddenInput.value = geotaggedUrl || '';
+    imageInput.value = '';
+
+    if (geotaggedUrl) {
+      viewImageLink.href = geotaggedUrl;
+      viewImageLink.classList.remove('d-none');
+      createDeleteButtonIfNeeded();
+    } else {
+      viewImageLink.classList.add('d-none');
+      removeDeleteButton();
+    }
+
+    refreshUploadButton();
+  });
+
+  const refreshUploadButton = () => {
+    let uploadBtn = document.getElementById('uploadGeotaggedBtn');
+    if (!uploadBtn || !uploadBtn.parentNode) {
+      console.warn('uploadBtn or its parentNode is null. Skipping button refresh.');
+      return;
+    }
+
+    const newBtn = uploadBtn.cloneNode(true);
+    uploadBtn.parentNode.replaceChild(newBtn, uploadBtn);
+    uploadBtn = newBtn;
+    uploadBtn.classList.add('d-none');
+    uploadBtn.addEventListener('click', () => handleGeotaggedUpload(wusId));
+  };
+
+  // Image file input
+  imageInput.onchange = () => {
+    const file = imageInput.files[0];
+    const uploadBtn = document.getElementById('uploadGeotaggedBtn');
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImage(e.target.result, false);
+        if (uploadBtn) {
+          uploadBtn.classList.remove('d-none');
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  function createDeleteButtonIfNeeded() {
+    removeDeleteButton();
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.id = 'deleteGeotaggedBtn';
+    deleteBtn.className = 'btn btn-outline-danger';
+    deleteBtn.innerHTML = '<i class="bi bi-trash me-1"></i> Delete Image';
+
+    deleteBtn.addEventListener('click', async () => {
+      Spinner.show();
+      try {
+        deleteBtn.disabled = true;
+        deleteBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Deleting...';
+
+        await GeotaggedFileService.delete(hiddenInput.value);
+        await WUSData.update(wusId, { geotaggedUrl: '' });
+
+        setImage(placeholderURL, true);
+        hiddenInput.value = '';
+        viewImageLink.classList.add('d-none');
+        removeDeleteButton();
+        allUsers = await WUSData.fetchAllDesc();
+        await renderWaterUsers();
+
+        NotificationBox.show('Image deleted and water user updated.');
+      } catch (err) {
+        NotificationBox.show(`Failed to delete image: ${err.message}`, 'danger');
+      } finally {
+        deleteBtn.disabled = false;
+        deleteBtn.innerHTML = '<i class="bi bi-trash me-1"></i> Delete Image';
+        Spinner.hide();
+      }
+    });
+
+    viewImageLink.parentElement.appendChild(deleteBtn);
+  }
+
+  function removeDeleteButton() {
+    const deleteBtn = document.getElementById('deleteGeotaggedBtn');
+    if (deleteBtn) deleteBtn.remove();
+  }
+}
+
+async function handleGeotaggedUpload(wusId) {
+  Spinner.show();
+
+  try {
+    const fileInput = document.getElementById("imageInput");
+    const file = fileInput.files[0];
+
+    if (!file) {
+      NotificationBox.show("No file selected.");
+      return;
+    }
+
+    if (!wusId) {
+      NotificationBox.show("Water user ID is required.");
+      return;
+    }
+
+    // Fetch existing geotaggedUrl from Firestore
+    const existingUrl = document.getElementById('currentGeotaggedUrl').value;
+
+    console.log(existingUrl);
+    // Delete old image if it exists
+    if (existingUrl) {
+      await GeotaggedFileService.delete(existingUrl);
+    }
+
+    // Upload new image to Supabase
+    const newImageUrl = await GeotaggedFileService.upload(file);
+    if (!newImageUrl) {
+      NotificationBox.show("Upload failed.");
+      return;
+    }
+
+    // Update Firestore with new image URL
+    await WUSData.update(wusId, {
+      geotaggedUrl: newImageUrl
+    });
+    allUsers = await WUSData.fetchAllDesc();
+    await renderWaterUsers();
+    NotificationBox.show("Geotagged image updated successfully.");
+    const modalEl = document.getElementById('imageUploadModal');
+    const modal = bootstrap.Modal.getInstance(modalEl);
+if (modal) modal.hide();
+  } catch (error) {
+    console.error("Error during upload:", error.message);
+    NotificationBox.show("An error occurred: " + error.message);
+  } finally {
+    Spinner.hide();
+  }
+}
 

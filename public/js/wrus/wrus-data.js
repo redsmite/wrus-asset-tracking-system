@@ -8,48 +8,19 @@ const CACHE_KEY_ASC = 'cachedWUSAsc';
 const CACHE_KEY_DESC = 'cachedWUSDesc';
 
 export const WUSData = {
-  async fetchAll() {
+  fetchAll() {
     const cached = localStorage.getItem(CACHE_KEY);
-    if (cached) {
-      return JSON.parse(cached);
-    }
-
-    const snapshot = await getDocs(WUSCollection);
-    const data = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
-
-    localStorage.setItem(CACHE_KEY, JSON.stringify(data));
-    return data;
+    return cached ? JSON.parse(cached) : [];
   },
 
-  async fetchAllAsc() {
+  fetchAllAsc() {
     const cached = localStorage.getItem(CACHE_KEY_ASC);
-    if (cached) {
-      return JSON.parse(cached);
-    }
-
-    const q = query(WUSCollection, orderBy('timestamp', 'asc'));
-    const snapshot = await getDocs(q);
-    const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-
-    localStorage.setItem(CACHE_KEY_ASC, JSON.stringify(data));
-    return data;
+    return cached ? JSON.parse(cached) : [];
   },
 
-  async fetchAllDesc() {
+  fetchAllDesc() {
     const cached = localStorage.getItem(CACHE_KEY_DESC);
-    if (cached) {
-      return JSON.parse(cached);
-    }
-
-    const q = query(WUSCollection, orderBy('timestamp', 'desc'));
-    const snapshot = await getDocs(q);
-    const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-
-    localStorage.setItem(CACHE_KEY_DESC, JSON.stringify(data));
-    return data;
+    return cached ? JSON.parse(cached) : [];
   },
 
   async refreshCache() {
@@ -60,8 +31,14 @@ export const WUSData = {
     }));
 
     localStorage.setItem(CACHE_KEY, JSON.stringify(data));
-    localStorage.setItem(CACHE_KEY_ASC, JSON.stringify([...data].sort((a, b) => a.timestamp?.seconds - b.timestamp?.seconds)));
-    localStorage.setItem(CACHE_KEY_DESC, JSON.stringify([...data].sort((a, b) => b.timestamp?.seconds - a.timestamp?.seconds)));
+    localStorage.setItem(
+      CACHE_KEY_ASC,
+      JSON.stringify([...data].sort((a, b) => a.timestamp?.seconds - b.timestamp?.seconds))
+    );
+    localStorage.setItem(
+      CACHE_KEY_DESC,
+      JSON.stringify([...data].sort((a, b) => b.timestamp?.seconds - a.timestamp?.seconds))
+    );
 
     return data;
   },
@@ -72,11 +49,14 @@ export const WUSData = {
       timestamp: serverTimestamp()
     };
 
-    const docRef = await addDoc(WUSCollection, newData); // Use Firestore auto-generated ID
+    const docRef = await addDoc(WUSCollection, newData);
     const newId = docRef.id;
 
-    // ✅ Update localStorage cache
-    const entry = { id: newId, ...data, timestamp: { seconds: Date.now() / 1000 } };
+    const entry = {
+      id: newId,
+      ...data,
+      timestamp: { seconds: Date.now() / 1000 } // fallback until actual timestamp is updated
+    };
 
     const updateCache = (key, sortFn) => {
       const existing = JSON.parse(localStorage.getItem(key) || '[]');
@@ -91,16 +71,15 @@ export const WUSData = {
     return { id: newId, ...newData };
   },
 
-
   async update(id, data) {
     const docRef = doc(db, 'water_users', id);
     await updateDoc(docRef, { ...data });
 
     const updateCache = (key) => {
       const existing = JSON.parse(localStorage.getItem(key) || '[]');
-      const updated = existing.map(entry => {
-        return entry.id === id ? { ...entry, ...data } : entry;
-      });
+      const updated = existing.map(entry =>
+        entry.id === id ? { ...entry, ...data } : entry
+      );
       localStorage.setItem(key, JSON.stringify(updated));
     };
 
@@ -135,7 +114,8 @@ export const WUSData = {
       console.log("[WUS] Cache auto-refreshed for the day.");
     }
   },
-    async autoRefreshEvery8Hours() {
+
+  async autoRefreshEvery8Hours() {
     const key = 'cachedWUS_lastRefresh';
     const now = Date.now();
     const last = localStorage.getItem(key);
@@ -147,3 +127,4 @@ export const WUSData = {
     }
   }
 };
+

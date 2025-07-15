@@ -18,11 +18,14 @@ export const GeotaggedFileService = {
     try {
       const compressedFile = await imageCompression(file, options);
 
-      const fileName = `${Date.now()}_${file.name}`;
+      // Clean up filename: remove or replace unsafe characters
+      const timestamp = Date.now();
+      const sanitizedFileName = `${timestamp}_${file.name.replace(/[^\w\-\.() ]+/g, '').replace(/\s+/g, '_')}`;
+
       const { data, error } = await supabase
         .storage
         .from('geotagged')
-        .upload(fileName, compressedFile);
+        .upload(sanitizedFileName, compressedFile);
 
       if (error) {
         console.error("Upload failed:", error.message);
@@ -30,6 +33,7 @@ export const GeotaggedFileService = {
         return null;
       }
 
+      // No need to encode path here — Supabase handles it for the URL
       const publicURL = supabase
         .storage
         .from('geotagged')
@@ -51,20 +55,17 @@ export const GeotaggedFileService = {
     }
 
     try {
-      // Match and extract everything after 'geotagged/' (including subfolders or filenames)
-      const match = publicUrl.match(/geotagged\/+(.+)/);
+      const decodedUrl = decodeURIComponent(publicUrl);
+      const match = decodedUrl.match(/\/geotagged\/(.+)$/);
+
       if (!match || !match[1]) {
         console.error("Invalid geotagged URL format.");
-        //NotificationBox.show("Invalid image URL.");
         return;
       }
 
-      const filePath = match[1]; // Extracted path like "1752222804244_1.png"
-      
-      const { error } = await supabase
-        .storage
-        .from('geotagged')
-        .remove([filePath]);
+      const filePath = match[1].replace(/^\/+/, ''); // Remove any leading slashes
+
+      const { error } = await supabase.storage.from('geotagged').remove([filePath]);
 
       if (error) {
         console.error("Delete failed:", error.message);
@@ -77,5 +78,4 @@ export const GeotaggedFileService = {
       NotificationBox.show("Failed to process deletion.");
     }
   }
-
 };

@@ -770,6 +770,7 @@ function setupImageUploadModal(permitId, geotaggedUrl = '') {
           renderPermitTable();
 
           NotificationBox.show('Image deleted and permit updated.');
+          
         } catch (err) {
           NotificationBox.show(`Failed to delete image: ${err.message}`, 'danger');
         } finally {
@@ -831,6 +832,9 @@ async function handleGeotaggedUpload(permitId) {
     });
     renderPermitTable();
     NotificationBox.show("Geotagged image updated successfully.");
+    const modalEl = document.getElementById('imageUploadModal'); // Replace with your actual modal ID
+    const modal = bootstrap.Modal.getInstance(modalEl);
+if (modal) modal.hide();
   } catch (error) {
     console.error("Error during upload:", error.message);
     NotificationBox.show("An error occurred: " + error.message);
@@ -838,10 +842,6 @@ async function handleGeotaggedUpload(permitId) {
     Spinner.hide();
   }
 }
-
-
-
-
 
 
 

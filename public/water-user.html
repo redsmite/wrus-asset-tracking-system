@@ -343,10 +343,53 @@
         </div>
       </div>
 
+      <!-- Geotagged Photo Modal -->
+      <div class="modal fade" id="imageUploadModal" tabindex="-1" aria-labelledby="imageUploadModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+          <div class="modal-content">
+
+            <!-- Header -->
+            <div class="modal-header">
+              <h5 class="modal-title" id="imageUploadModalLabel">
+                <i class="bi bi-image-fill me-2 text-primary"></i> Upload and Preview Image
+              </h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <!-- Body -->
+            <div class="modal-body text-center">
+              <!-- Dropzone with Preview -->
+              <label id="dropZone" class="d-inline-block position-relative border rounded p-2" style="cursor: pointer;">
+                <img id="imagePreview" src="./images/placeholder.png" alt="Preview"
+                    class="img-fluid rounded mb-2"
+                    style="max-height: 400px; object-fit: contain; pointer-events: none;">
+                <input type="file" id="imageInput" accept="image/*" hidden>
+              </label>
+
+              <div class="small text-muted">Click or drag an image here to upload</div>
+              <input type="hidden" id="currentGeotaggedUrl">
+
+              <!-- Action Buttons -->
+              <div class="d-flex justify-content-center gap-2 mt-3 flex-wrap">
+                <a id="viewImageLink" href="#" target="_blank" class="btn btn-outline-primary d-none">
+                  <i class="bi bi-eye me-1"></i> View Full Image
+                </a>
+
+                <button id="uploadGeotaggedBtn" class="btn btn-success d-none">
+                  <i class="bi bi-cloud-arrow-up me-1"></i> Upload Geotagged Photo
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script type="module" src="js/wrus/wrus-init.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/browser-image-compression@latest/dist/browser-image-compression.js"></script>
 </body>
 </html>
