@@ -118,7 +118,7 @@ function createConsumableCell(user) {
   cell.classList.add("text-center");
 
   const btn = document.createElement("button");
-  btn.className = "btn btn-water btn-sm px-2 py-1 fw-semibold rounded";
+  btn.className = "btn btn-3d btn-water btn-sm px-2 py-1 fw-semibold rounded";
   btn.innerHTML = `<i class="bi bi-box-arrow-in-down me-1"></i>Consumable`;
   btn.setAttribute("data-id", user.id);
 
@@ -152,7 +152,7 @@ function createICSCell(user) {
   }
 
   const btn = document.createElement("button");
-  btn.className = "btn btn-water-alt btn-sm px-2 py-1 fw-semibold rounded";
+  btn.className = "btn btn-3d btn-water-alt btn-sm px-2 py-1 fw-semibold rounded";
   btn.innerHTML = `<i class="bi bi-card-list me-1"></i>ICS`;
   btn.setAttribute("data-id", user.id);
 
@@ -257,7 +257,7 @@ async function showPropertyModal(userFullName, userId) {
       <td>${item.remarks}</td>
       <td>
         ${item.attachmentURL
-          ? `<a href="${item.attachmentURL}" target="_blank" class="btn btn-sm btn-outline-primary">View PDF</a>`
+          ? `<a href="${item.attachmentURL}" target="_blank" class="btn btn-3d btn-sm btn-outline-primary">View PDF</a>`
           : '<span class="text-muted">N/A</span>'}
       </td>
     `;

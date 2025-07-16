@@ -5,14 +5,36 @@ import { METRO_MANILA_CITIES } from "../constants/metroManilaCities.js";
 export async function filterPermitsByCity() {
   const allPermits = await Permit.getAll();
 
-  const cityCounts = METRO_MANILA_CITIES.reduce((acc, city) => {
-    const normalizedCity = city.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  // Map of city names to possible abbreviation variants
+  const CITY_ALIASES = {
+    "Manila": ["mla", "manila"],
+    "Makati": ["makati"],
+    "Quezon City": ["quezon city", "qc", "q.c."],
+    "Pasig": ["pasig"],
+    "Pasay": ["pasay"],
+    "Taguig": ["taguig"],
+    "Marikina": ["marikina"],
+    "Mandaluyong": ["mandaluyong"],
+    "San Juan": ["san juan"],
+    "Caloocan": ["caloocan"],
+    "Malabon": ["malabon"],
+    "Navotas": ["navotas"],
+    "Valenzuela": ["valenzuela"],
+    "Parañaque": ["paranaque", "parañaque"],
+    "Las Piñas": ["las pinas", "las piñas"],
+    "Muntinlupa": ["muntinlupa"],
+    "Pateros": ["pateros"],
+  };
 
+  const cityCounts = Object.entries(CITY_ALIASES).reduce((acc, [city, aliases]) => {
     const matches = allPermits.filter(p => {
-      const diversion = p.diversionPoint || "";
-      const normalizedDiversion = diversion.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-      const regex = new RegExp(`(?:^|\\W)${normalizedCity}(?:\\W|$)`, 'i');
-      return regex.test(normalizedDiversion);
+      const diversion = (p.diversionPoint || "").toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+      return aliases.some(alias => {
+        const normalizedAlias = alias.toLowerCase();
+        const regex = new RegExp(`(?:^|\\W)${normalizedAlias}(?:\\W|$)`, 'i');
+        return regex.test(diversion);
+      });
     });
 
     if (matches.length > 0) {
@@ -35,6 +57,7 @@ export async function filterPermitsByCity() {
 
   renderCityPermitTable(cityCounts);
 }
+
 
 function renderCityPermitTable(cityCounts) {
   const container = document.getElementById('cityPermitTable');

@@ -36,7 +36,7 @@
 
         <!-- Add Permit Button (Hide on small screens) -->
         <div class="flex-shrink-0 d-none d-sm-block">
-          <button class="btn btn-primary shadow-sm px-3 py-2 d-flex align-items-center gap-2" id="addPermitBtn">
+          <button class="btn btn-3d btn-primary shadow-sm px-3 py-2 d-flex align-items-center gap-2" id="addPermitBtn">
             <span class="d-inline-flex justify-content-center align-items-center bg-light text-primary rounded-circle" style="width: 24px; height: 24px;">
               <i class="bi bi-plus-lg"></i>
             </span>
@@ -101,7 +101,7 @@
             </nav>
 
             <!-- Refresh Button (Always visible) -->
-            <button id="refreshBtn" class="btn btn-primary shadow-sm px-2 py-2 d-flex align-items-center justify-content-center">
+            <button id="refreshBtn" class="btn btn-3d btn-primary shadow-sm px-2 py-2 d-flex align-items-center justify-content-center">
               <i class="bi bi-arrow-clockwise"></i>
             </button>
           </div>
@@ -109,7 +109,7 @@
 
         <!-- Right Side: Export Button (hidden on small screens) -->
         <div class="d-none d-sm-flex flex-row align-items-center gap-2">
-          <button class="btn btn-success shadow-sm px-3 py-2 d-flex align-items-center gap-2" id="exportPermitsBtn">
+          <button class="btn btn-3d btn-success shadow-sm px-3 py-2 d-flex align-items-center gap-2" id="exportPermitsBtn">
             <span class="d-inline-flex justify-content-center align-items-center bg-light text-success rounded-circle" style="width: 24px; height: 24px;">
               <i class="bi bi-download"></i>
             </span>
@@ -150,7 +150,7 @@
               <h5 class="modal-title" id="addPermitModalLabel">
                 <i class="bi bi-plus-circle-fill me-2 text-primary"></i> Add Water Permit
               </h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              <button type="button" class="btn-close btn-3d" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
             <!-- Modal Body -->
@@ -340,10 +340,10 @@
 
             <!-- Modal Footer -->
             <div class="modal-footer">
-              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+              <button type="button" class="btn btn-3d btn-outline-secondary" data-bs-dismiss="modal">
                 <i class="bi bi-x-circle me-1"></i> Close
               </button>
-              <button type="button" class="btn btn-primary" id="savePermitBtn">
+              <button type="button" class="btn btn-3d btn-primary" id="savePermitBtn">
                 <i class="bi bi-save me-1"></i> Save Permit
               </button>
             </div>
@@ -360,9 +360,9 @@
             <!-- Modal Header -->
             <div class="modal-header">
               <h5 class="modal-title" id="editPermitModalLabel">
-                <i class="bi bi-pencil-square me-2 text-warning"></i> Edit Water Permit
+                <i class="bi bi-pencil-square me-2 text-primary"></i> Edit Water Permit
               </h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              <button type="button" class="btn-close btn-3d" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
             <!-- Modal Body -->
@@ -552,10 +552,10 @@
 
             <!-- Modal Footer -->
             <div class="modal-footer">
-              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+              <button type="button" class="btn btn-3d btn-outline-secondary" data-bs-dismiss="modal">
                 <i class="bi bi-x-circle me-1"></i> Cancel
               </button>
-              <button type="button" class="btn btn-warning" id="updatePermitBtn">
+              <button type="button" class="btn btn-3d btn-warning" id="updatePermitBtn">
                 <i class="bi bi-save me-1"></i> Update Permit
               </button>
             </div>
@@ -574,7 +574,7 @@
               <h5 class="modal-title" id="imageUploadModalLabel">
                 <i class="bi bi-image-fill me-2 text-primary"></i> Upload and Preview Image
               </h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              <button type="button" class="btn-close btn-3d" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
             <!-- Modal Body -->
@@ -596,13 +596,15 @@
 
               <input type="hidden" id="currentGeotaggedUrl">
 
+              <input type="hidden" id="currentPermitNo">
+
               <!-- Action Buttons -->
               <div class="d-flex justify-content-center gap-2 mt-3 flex-wrap">
-                <a id="viewImageLink" href="#" target="_blank" class="btn btn-outline-primary d-none">
+                <a id="viewImageLink" href="#" target="_blank" class="btn btn-3d btn-outline-primary d-none">
                   <i class="bi bi-eye me-1"></i> View Full Image
                 </a>
 
-                <button id="uploadGeotaggedBtn" class="btn btn-success d-none">
+                <button id="uploadGeotaggedBtn" class="btn btn-3d btn-success d-none">
                   <i class="bi bi-cloud-arrow-up me-1"></i> Upload Geotagged Photo
                 </button>
               </div>

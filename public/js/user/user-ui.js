@@ -191,7 +191,7 @@ function renderUsersTable(page = 1, searchQuery = "") {
       <td>${position}</td>
       <td>${type}</td>
       <td>
-        <button class="btn btn-sm btn-outline-primary edit-btn" data-id="${user.id}">
+        <button class="btn btn-3d btn-sm btn-outline-primary edit-btn" data-id="${user.id}">
           <i class="bi bi-pencil-square me-1"></i> Edit
         </button>
       </td>

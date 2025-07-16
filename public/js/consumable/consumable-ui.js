@@ -452,7 +452,7 @@ function renderTablePage() {
       <td>${item.qty}</td>
       <td>${item.unit}</td>
       <td>
-        <button class="btn btn-warning btn-sm edit-btn" 
+        <button class="btn btn-3d btn-warning btn-sm edit-btn" 
           data-id="${item.id}" 
           data-spec="${item.specification}" 
           data-unit="${item.unit}" 
@@ -462,7 +462,7 @@ function renderTablePage() {
         </button>
       </td>
       <td>
-        <button class="btn btn-secondary btn-sm action-btn" 
+        <button class="btn btn-3d btn-secondary btn-sm action-btn" 
           data-id="${item.id}" 
           data-qty="${item.qty}" 
           data-bs-toggle="modal" 

@@ -8,19 +8,30 @@ const CACHE_KEY_ASC = 'cachedWUSAsc';
 const CACHE_KEY_DESC = 'cachedWUSDesc';
 
 export const WUSData = {
-  fetchAll() {
+  async fetchAll() {
     const cached = localStorage.getItem(CACHE_KEY);
-    return cached ? JSON.parse(cached) : [];
+    if (cached) return JSON.parse(cached);
+
+    const data = await this.refreshCache();
+    return data;
   },
 
-  fetchAllAsc() {
+  async fetchAllAsc() {
     const cached = localStorage.getItem(CACHE_KEY_ASC);
-    return cached ? JSON.parse(cached) : [];
+    if (cached) return JSON.parse(cached);
+
+    await this.refreshCache();
+    const newCache = localStorage.getItem(CACHE_KEY_ASC);
+    return newCache ? JSON.parse(newCache) : [];
   },
 
-  fetchAllDesc() {
+  async fetchAllDesc() {
     const cached = localStorage.getItem(CACHE_KEY_DESC);
-    return cached ? JSON.parse(cached) : [];
+    if (cached) return JSON.parse(cached);
+
+    await this.refreshCache();
+    const newCache = localStorage.getItem(CACHE_KEY_DESC);
+    return newCache ? JSON.parse(newCache) : [];
   },
 
   async refreshCache() {

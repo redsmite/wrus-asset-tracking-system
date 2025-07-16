@@ -5,6 +5,7 @@ import { Spinner } from '../components/spinner.js';
 import { NotificationBox } from '../components/notification.js';
 import { METRO_MANILA_CITIES } from '../constants/metroManilaCities.js';
 import { GeotaggedFileService } from '../upload/uploadImg.js';
+import { PortalBubble } from '../components/PortalBubble.js';
 
 export function initializePage(){
   Sidebar.render();
@@ -14,8 +15,8 @@ export function initializePage(){
   setupWaterSourceFilterToggle();
   setupAddModalCities();
   setupEditModalCities();
-  setupPermitAutoComplete('permitNoInput', 'permitSuggestions', 'nameOfWaterUser', 'city');
-  setupPermitAutoComplete('permitNoInputEdit', 'permitSuggestionsEdit', 'editOwner', 'editCity');
+  setupPermitAutoComplete('permitNoInput', 'permitSuggestions', 'nameOfWaterUser', 'city', 'wusGeotagUrl');
+  setupPermitAutoComplete('permitNoInputEdit', 'permitSuggestionsEdit', 'editOwner', 'editCity', 'editWusGeotagUrl');
   handleAddForm();
   handleEditForm();
   handleRefreshButton({
@@ -85,11 +86,12 @@ function setupEditModalCities() {
   });
 }
 
-async function setupPermitAutoComplete(inputId, suggestionsId, ownerInputId = null, citySelectId = null) {
+async function setupPermitAutoComplete(inputId, suggestionsId, ownerInputId = null, citySelectId = null, geotagUrlId = null) {
   const permitInput = document.getElementById(inputId);
   const suggestionsBox = document.getElementById(suggestionsId);
   const ownerInput = ownerInputId ? document.getElementById(ownerInputId) : null;
   const citySelect = citySelectId ? document.getElementById(citySelectId) : null;
+  const geotagUrlInput = geotagUrlId ? document.getElementById(geotagUrlId) : null;
 
   if (!permitInput || !suggestionsBox) {
     console.warn(`Elements with IDs '${inputId}' or '${suggestionsId}' not found.`);
@@ -128,7 +130,8 @@ async function setupPermitAutoComplete(inputId, suggestionsId, ownerInputId = nu
       item.type = 'button';
       item.className = 'list-group-item list-group-item-action';
       item.textContent = `${p.permitNo} — ${p.permittee || 'Unnamed'}`;
-      item.addEventListener('click', () => {
+      item.addEventListener('click', async () => {
+        PortalBubble.trigger();
         permitInput.value = p.permitNo;
 
         if (ownerInput) {
@@ -151,6 +154,17 @@ async function setupPermitAutoComplete(inputId, suggestionsId, ownerInputId = nu
 
           if (!matched) {
             citySelect.selectedIndex = 0; // fallback to default (first) option
+          }
+        }
+
+        // Set geotagged URL if the field exists
+        if (geotagUrlInput) {
+          try {
+            const geotaggedUrl = p.geotaggedUrl || '';
+            geotagUrlInput.value = geotaggedUrl || '';
+          } catch (err) {
+            console.error('Error getting geotagged URL:', err.message);
+            geotagUrlInput.value = '';
           }
         }
 
@@ -184,7 +198,7 @@ function handleAddForm() {
     }
 
     const data = {
-      permitNo: form.permitNoInput.value.trim(), // ✅ New permitNo field
+      permitNo: form.permitNoInput.value.trim(),
       owner: form.nameOfWaterUser.value.trim(),
       city: form.city.value.trim(),
       barangay: form.barangay.value.trim(),
@@ -193,7 +207,8 @@ function handleAddForm() {
       longitude: form.longitude.value.trim(),
       type: form.type.value.trim(),
       remarks: form.remarks.value.trim(),
-      isWaterSource: form.isWaterSource.checked
+      isWaterSource: form.isWaterSource.checked,
+      geotaggedUrl : form.wusGeotagUrl.value.trim()
     };
 
     Spinner.show();
@@ -284,6 +299,7 @@ async function renderWaterUsers(term = '') {
       normalizeText(u.street || '').includes(normalizedSearch) ||
       normalizeText(u.barangay || '').includes(normalizedSearch) ||
       normalizeText(u.city || '').includes(normalizedSearch) ||
+      normalizeText(u.permitNo || '').includes(normalizedSearch) ||
       (u.latitude || '').toString().includes(normalizedSearch) ||
       (u.longitude || '').toString().includes(normalizedSearch)
     );
@@ -305,10 +321,10 @@ async function renderWaterUsers(term = '') {
 
     const badges = [];
     if (user.permitNo) {
-      badges.push('<span class="badge bg-success me-1">Permittee</span>');
+      badges.push(`<span class="badge-3d badge-permittee me-1">Permittee: ${user.permitNo}</span>`);
     }
     if (user.isWaterSource) {
-      badges.push('<span class="badge bg-primary me-1">Water Source</span>');
+      badges.push(`<span class="badge-3d badge-water-source me-1">Water Source</span>`);
     }
 
     const badgesHTML = badges.length > 0 ? `<div class="mt-1">${badges.join(' ')}</div>` : '';
@@ -321,10 +337,10 @@ async function renderWaterUsers(term = '') {
       <td>${highlightMatch(user.latitude?.toString() || '', searchTerm)}</td>
       <td>${highlightMatch(user.longitude?.toString() || '', searchTerm)}</td>
       <td>
-        <button class="btn btn-sm btn-warning edit-btn" data-id="${user.id}">
+        <button class="btn btn-3d btn-sm btn-warning edit-btn" data-id="${user.id}">
           <i class="bi bi-pencil-square"></i>
         </button>
-        <button class="btn btn-sm btn-info geotag-btn" data-id="${user.id}">
+        <button class="btn btn-3d btn-sm btn-info geotag-btn" data-id="${user.id}">
           <i class="bi bi-geo-alt-fill"></i>
         </button>
       </td>
@@ -333,7 +349,9 @@ async function renderWaterUsers(term = '') {
     const geotagBtn = tr.querySelector('.geotag-btn');
     geotagBtn.addEventListener('click', () => {
       const geotaggedUrl = user?.geotaggedUrl || '';
-      setupImageUploadModal(user.id, geotaggedUrl);
+      console.log('GeoTag button clicked:', user);
+
+      setupImageUploadModal(user.id, geotaggedUrl, user.permitNo);
       const modal = new bootstrap.Modal(document.getElementById('imageUploadModal'));
       modal.show();
     });
@@ -442,8 +460,8 @@ function attachEditListeners(filteredUsers) {
       document.getElementById('editRemarks').value = user.remarks || '';
       document.getElementById('editIsWaterSource').checked = !!user.isWaterSource;
 
-      // Reflect permit number changes
       document.getElementById('permitNoInputEdit').value = user.permitNo || '';
+      document.getElementById('editWusGeotagUrl').value = user.geotaggedUrl || '';
 
       const modal = new bootstrap.Modal(document.getElementById('editwusModal'));
       modal.show();
@@ -532,7 +550,8 @@ function handleEditForm() {
       type: document.getElementById('editType').value.trim(),
       remarks: document.getElementById('editRemarks').value.trim(),
       isWaterSource: document.getElementById('editIsWaterSource').checked,
-      permitNo: document.getElementById('permitNoInputEdit').value.trim() // <-- Added this line
+      permitNo: document.getElementById('permitNoInputEdit').value.trim(),
+      geotaggedUrl: document.getElementById('editWusGeotagUrl').value.trim() // ✅ Added this line
     };
 
     try {
@@ -600,7 +619,7 @@ function initializeExportButton() {
   });
 }
 
-function setupImageUploadModal(wusId, geotaggedUrl = '') {
+function setupImageUploadModal(wusId, geotaggedUrl = '', permitNo = '') {
   const imageInput = document.getElementById('imageInput');
   const imagePreview = document.getElementById('imagePreview');
   const modal = document.getElementById('imageUploadModal');
@@ -608,6 +627,7 @@ function setupImageUploadModal(wusId, geotaggedUrl = '') {
   const placeholderURL = './images/placeholder2.png';
   const viewImageLink = document.getElementById('viewImageLink');
   const hiddenInput = document.getElementById('currentGeotaggedUrl');
+  const permitNoInput = document.getElementById('currentPermitNo');
 
   const setImage = (src, isPlaceholder = true) => {
     imagePreview.src = src;
@@ -652,6 +672,12 @@ function setupImageUploadModal(wusId, geotaggedUrl = '') {
     hiddenInput.value = geotaggedUrl || '';
     imageInput.value = '';
 
+    // Set permitNo into hidden input
+    if (permitNoInput) {
+      permitNoInput.value = permitNo || '';
+      console.log('Permit No passed to modal:', permitNo);
+    }
+
     if (geotaggedUrl) {
       viewImageLink.href = geotaggedUrl;
       viewImageLink.classList.remove('d-none');
@@ -664,6 +690,7 @@ function setupImageUploadModal(wusId, geotaggedUrl = '') {
     refreshUploadButton();
   });
 
+
   const refreshUploadButton = () => {
     let uploadBtn = document.getElementById('uploadGeotaggedBtn');
     if (!uploadBtn || !uploadBtn.parentNode) {
@@ -675,7 +702,7 @@ function setupImageUploadModal(wusId, geotaggedUrl = '') {
     uploadBtn.parentNode.replaceChild(newBtn, uploadBtn);
     uploadBtn = newBtn;
     uploadBtn.classList.add('d-none');
-    uploadBtn.addEventListener('click', () => handleGeotaggedUpload(wusId));
+    uploadBtn.addEventListener('click', () => handleGeotaggedUpload(wusId, permitNo));
   };
 
   // Image file input
@@ -708,9 +735,20 @@ function setupImageUploadModal(wusId, geotaggedUrl = '') {
         deleteBtn.disabled = true;
         deleteBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Deleting...';
 
+        // Delete from storage
         await GeotaggedFileService.delete(hiddenInput.value);
-        await WUSData.update(wusId, { geotaggedUrl: '' });
 
+        // Get cached permits and find by permitNo
+        const permits = await Permit.getAll();
+        const targetPermit = permits.find(p => p.permitNo === permitNo);
+
+        if (targetPermit) {
+          await Permit.update(targetPermit.id, { geotaggedUrl: '' });
+        } else {
+          throw new Error(`Permit with Permit No "${permitNo}" not found in cache.`);
+        }
+
+        // UI updates
         setImage(placeholderURL, true);
         hiddenInput.value = '';
         viewImageLink.classList.add('d-none');
@@ -737,7 +775,7 @@ function setupImageUploadModal(wusId, geotaggedUrl = '') {
   }
 }
 
-async function handleGeotaggedUpload(wusId) {
+async function handleGeotaggedUpload(wusId, permitNo) {
   Spinner.show();
 
   try {
@@ -749,36 +787,52 @@ async function handleGeotaggedUpload(wusId) {
       return;
     }
 
-    if (!wusId) {
-      NotificationBox.show("Water user ID is required.");
+    if (!wusId || !permitNo) {
+      NotificationBox.show("Water user ID and Permit No are required.");
       return;
     }
 
-    // Fetch existing geotaggedUrl from Firestore
     const existingUrl = document.getElementById('currentGeotaggedUrl').value;
 
-    // Delete old image if it exists
+    // Delete old image from storage
     if (existingUrl) {
       await GeotaggedFileService.delete(existingUrl);
     }
 
-    // Upload new image to Supabase
+    // Upload new image
     const newImageUrl = await GeotaggedFileService.upload(file);
     if (!newImageUrl) {
       NotificationBox.show("Upload failed.");
       return;
     }
 
-    // Update Firestore with new image URL
+    // 🔍 Get Permit from cache using permitNo
+    const permits = await Permit.getAll(); // cached
+    const targetPermit = permits.find(p => p.permitNo === permitNo);
+
+    if (!targetPermit) {
+      NotificationBox.show(`Permit No "${permitNo}" not found in cache.`, 'danger');
+      return;
+    }
+
+    // ✅ Update Permit with new geotaggedUrl
+    await Permit.update(targetPermit.id, {
+      geotaggedUrl: newImageUrl
+    });
+
+    // ✅ Update WUS record too (if necessary)
     await WUSData.update(wusId, {
       geotaggedUrl: newImageUrl
     });
+
     allUsers = await WUSData.fetchAllDesc();
     await renderWaterUsers();
+
     NotificationBox.show("Geotagged image updated successfully.");
+
     const modalEl = document.getElementById('imageUploadModal');
     const modal = bootstrap.Modal.getInstance(modalEl);
-if (modal) modal.hide();
+    if (modal) modal.hide();
   } catch (error) {
     console.error("Error during upload:", error.message);
     NotificationBox.show("An error occurred: " + error.message);
@@ -786,4 +840,3 @@ if (modal) modal.hide();
     Spinner.hide();
   }
 }
-

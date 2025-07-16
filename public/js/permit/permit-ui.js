@@ -1,6 +1,7 @@
 import { Sidebar } from "../components/sidebar.js";
 import { Spinner } from "../components/spinner.js";
 import { Permit } from "./permit-data.js";
+import { WUSData } from "../wrus/wrus-data.js";
 import { FileService } from "../upload/upload.js";
 import { GeotaggedFileService } from "../upload/uploadImg.js";
 import { CoordinateUtils } from "../utils/coordinates.js";
@@ -213,13 +214,13 @@ async function renderPermitTable() {
           <td>${permit.purpose || ''}</td>
           <td>
             <div class="action-buttons">
-              <button class="btn btn-sm btn-warning edit-btn" data-id="${permit.id}">
+              <button class="btn btn-3d btn-sm btn-warning edit-btn" data-id="${permit.id}">
                 <i class="bi bi-pencil-square"></i>
               </button>
-              <a href="${permit.pdfUrl}" target="_blank" class="btn btn-sm btn-info">
+              <a href="${permit.pdfUrl}" target="_blank" class="btn btn-3d btn-sm btn-info">
                 <i class="bi bi-eye-fill"></i>
               </a>
-              <button class="btn btn-sm ${isVisited ? 'btn-secondary' : 'btn-success'} visit-btn" data-id="${permit.id}">
+              <button class="btn btn-3d btn-sm ${isVisited ? 'btn-secondary' : 'btn-success'} visit-btn" data-id="${permit.id}">
                 <i class="bi ${isVisited ? 'bi-check-circle-fill' : 'bi-geo-alt-fill'}"></i>
               </button>
             </div>
@@ -251,7 +252,7 @@ async function renderPermitTable() {
           let imageUrl = placeholderURL;
 
           try {
-            const doc = await Permit.getById(permitId); // 
+            const doc = await Permit.getById(permitId);
             if (doc?.geotaggedUrl) {
               imageUrl = doc.geotaggedUrl;
             }
@@ -259,11 +260,12 @@ async function renderPermitTable() {
             console.error('Error loading permit or image:', error);
           }
 
-          setupImageUploadModal(permitId, imageUrl);
+          // Fix: Use permit.permitNo
+          setupImageUploadModal(permitId, imageUrl, permit.permitNo);
 
-          // Show the modal
           imageModal.show();
         });
+
 
 
       });
@@ -507,7 +509,7 @@ function initializePermitUpdate() {
         return;
       }
 
-      // 👉 Handle Coordinates
+      // Handle Coordinates
       const latDegrees = parseFloat(document.getElementById('editLatDegrees').value) || 0;
       const latMinutes = parseFloat(document.getElementById('editLatMinutes').value) || 0;
       const latSeconds = parseFloat(document.getElementById('editLatSeconds').value) || 0;
@@ -521,14 +523,14 @@ function initializePermitUpdate() {
       const latitudeDecimal = CoordinateUtils.dmsToDecimal(latDegrees, latMinutes, latSeconds, latDirection);
       const longitudeDecimal = CoordinateUtils.dmsToDecimal(lonDegrees, lonMinutes, lonSeconds, lonDirection);
 
-      // 📄 Handle PDF Upload
+      // Handle PDF Upload
       const fileInput = document.getElementById('editPdfAttachment');
       let permitFileUrl = document.getElementById('editPdfExistingUrl').value || '';
 
       if (fileInput && fileInput.files.length > 0) {
         const file = fileInput.files[0];
 
-        // 🗑️ Delete existing file before uploading a new one
+        // Delete existing file before uploading a new one
         if (permitFileUrl) {
           const deleted = await FileService.deleteFileFromPermitBucket(permitFileUrl);
           if (!deleted) {
@@ -536,7 +538,7 @@ function initializePermitUpdate() {
           }
         }
 
-        // ✅ Upload the new file
+        // Upload the new file
         const uploadedUrl = await FileService.uploadPermitFile(file);
 
         if (uploadedUrl) {
@@ -546,7 +548,7 @@ function initializePermitUpdate() {
         }
       }
 
-      // 🔥 Prepare data for update
+      // Prepare data for update
       const data = {
         permitNo: document.getElementById('editPermitNo').value.trim(),
         permittee: document.getElementById('editPermittee').value.trim(),
@@ -567,7 +569,7 @@ function initializePermitUpdate() {
         pdfUrl: permitFileUrl
       };
 
-      // 🚀 Update Firestore
+      // Update Firestore
       await Permit.update(id, data);
       renderPermitTable();
       NotificationBox.show('Permit updated successfully');
@@ -654,7 +656,7 @@ function setupExportButtonListener() {
   });
 }
 
-function setupImageUploadModal(permitId, geotaggedUrl = '') {
+function setupImageUploadModal(permitId, geotaggedUrl = '', permitNo = '') {
   const imageInput = document.getElementById('imageInput');
   const imagePreview = document.getElementById('imagePreview');
   const modal = document.getElementById('imageUploadModal');
@@ -708,15 +710,15 @@ function setupImageUploadModal(permitId, geotaggedUrl = '') {
   modal.addEventListener('show.bs.modal', () => {
     setImage(placeholderURL, true);
     hiddenInput.value = geotaggedUrl || '';
+    document.getElementById('currentPermitNo').value = permitNo || '';
 
-    // Show or hide the view button
     if (geotaggedUrl) {
       viewImageLink.href = geotaggedUrl;
       viewImageLink.classList.remove('d-none');
-      createDeleteButtonIfNeeded(geotaggedUrl); // 💡 Add delete button if image exists
+      createDeleteButtonIfNeeded(geotaggedUrl);
     } else {
       viewImageLink.classList.add('d-none');
-      removeDeleteButton(); // 💡 Ensure delete button is removed
+      removeDeleteButton();
     }
   }, { once: true });
 
@@ -724,7 +726,10 @@ function setupImageUploadModal(permitId, geotaggedUrl = '') {
   uploadBtn.replaceWith(uploadBtn.cloneNode(true));
   const freshUploadBtn = document.getElementById('uploadGeotaggedBtn');
   freshUploadBtn.classList.add('d-none');
-  freshUploadBtn.addEventListener('click', () => handleGeotaggedUpload(permitId));
+  freshUploadBtn.addEventListener('click', () => {
+    const permitNo = document.getElementById('currentPermitNo').value;
+    handleGeotaggedUpload(permitId, permitNo);
+  });
 
   imageInput.onchange = () => {
     const file = imageInput.files[0];
@@ -763,6 +768,16 @@ function setupImageUploadModal(permitId, geotaggedUrl = '') {
             visited: false
           });
 
+          const wusEntries = await WUSData.fetchAllDesc();
+          const matchingEntry = wusEntries.find(entry => entry.permitNo === permitNo);
+
+          if (matchingEntry) {
+            await WUSData.update(matchingEntry.id, {
+              geotaggedUrl: ''
+            });
+          }
+
+
           setImage(placeholderURL, true);
           hiddenInput.value = '';
           viewImageLink.classList.add('d-none');
@@ -793,7 +808,7 @@ function setupImageUploadModal(permitId, geotaggedUrl = '') {
   }
 }
 
-async function handleGeotaggedUpload(permitId) {
+async function handleGeotaggedUpload(permitId, permitNo) {
   Spinner.show();
 
   try {
@@ -810,41 +825,50 @@ async function handleGeotaggedUpload(permitId) {
       return;
     }
 
-    // Fetch existing geotaggedUrl from Firestore
+    // Fallback to hidden input if permitNo wasn't passed
+    if (!permitNo) {
+      permitNo = document.getElementById('currentPermitNo').value;
+    }
+
     const existingUrl = document.getElementById('currentGeotaggedUrl').value;
 
-    // Delete old image if it exists
     if (existingUrl) {
       await GeotaggedFileService.delete(existingUrl);
     }
 
-    // Upload new image to Supabase
     const newImageUrl = await GeotaggedFileService.upload(file);
     if (!newImageUrl) {
       NotificationBox.show("Upload failed.");
       return;
     }
 
-    // Update Firestore with new image URL
+    // Update Permit document
     await Permit.update(permitId, {
       geotaggedUrl: newImageUrl,
       visited: true
     });
+
+    // Update corresponding WUSData entry using permitNo
+    const wusEntries = await WUSData.fetchAllDesc();
+    const matchingEntry = wusEntries.find(entry => entry.permitNo === permitNo);
+
+    if (matchingEntry) {
+      await WUSData.update(matchingEntry.id, {
+        geotaggedUrl: newImageUrl
+      });
+    }
+
     renderPermitTable();
     NotificationBox.show("Geotagged image updated successfully.");
-    const modalEl = document.getElementById('imageUploadModal'); // Replace with your actual modal ID
+
+    // Close the modal
+    const modalEl = document.getElementById('imageUploadModal');
     const modal = bootstrap.Modal.getInstance(modalEl);
-if (modal) modal.hide();
+    if (modal) modal.hide();
   } catch (error) {
     console.error("Error during upload:", error.message);
-    NotificationBox.show("An error occurred: " + error.message);
+    NotificationBox.show("An error occurred: " + error.message, 'danger');
   } finally {
     Spinner.hide();
   }
 }
-
-
-
-
-
-

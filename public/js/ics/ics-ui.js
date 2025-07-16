@@ -65,7 +65,6 @@ function setupAddBtn() {
   }
 }
 
-// 🔹 Load users into dropdown
 function loadUsers(selectElementId = 'assignedTo', selectedUserId = '') {
   return new Promise((resolve) => {
     const select = document.getElementById(selectElementId);
@@ -74,7 +73,7 @@ function loadUsers(selectElementId = 'assignedTo', selectedUserId = '') {
     const currentUserId = localStorage.getItem('wrusUserId');
 
     Users.fetchAllAsc().then(users => {
-      // 🔓 Admin case: populate full list
+      // Admin case: populate full list
       if (currentUserId === 'admin') {
         users.forEach(user => {
           if (user.status === 'active' && user.type === 'Permanent') {
@@ -90,7 +89,7 @@ function loadUsers(selectElementId = 'assignedTo', selectedUserId = '') {
 
         select.disabled = false; // Make sure admin dropdown is enabled
       } else {
-        // 🔒 Regular user: only load their own option
+        // Regular user: only load their own option
         const currentUser = users.find(user => user.id === currentUserId);
 
         if (currentUser && currentUser.status === 'active' && currentUser.type === 'Permanent') {
@@ -104,12 +103,11 @@ function loadUsers(selectElementId = 'assignedTo', selectedUserId = '') {
         select.disabled = true; // Lock dropdown for regular users
       }
 
-      resolve(); // ✅ Done
+      resolve();
     });
   });
 }
 
-// 🔹 Set up qty & cost listeners to auto-update total
 function setupAddQtyAndCostListeners() {
   const qtyInput = document.getElementById('qty');
   const unitCostInput = document.getElementById('unitCost');
@@ -148,7 +146,6 @@ function updateEditTotalCost() {
     `₱${total.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-// 🔹 File size validation (max 1MB)
 function setupFileValidation() {
   const fileInput = document.getElementById('attachment');
   if (fileInput) {
@@ -162,7 +159,6 @@ function setupFileValidation() {
   }
 }
 
-// 🔹 Submit handler for ICS form
 function setupICSFormSubmit() {
   const addICSForm = document.getElementById('addICSForm');
   if (addICSForm) {
@@ -218,7 +214,6 @@ async function handleICSFormSubmit(e) {
   }
 }
 
-// 🔹 Collect ICS data from form
 function collectICSFormData() {
   return {
     ICSno: document.getElementById('icsNo').value.trim(),
@@ -236,7 +231,6 @@ function collectICSFormData() {
   };
 }
 
-// 🔹 Render ICS Table
 async function renderICSTable(dataSet = null, page = 1, searchTerm = '') {
   Spinner.show();
 
@@ -287,11 +281,11 @@ async function renderICSTable(dataSet = null, page = 1, searchTerm = '') {
           <td>${formattedCost}</td>
           <td>
             <div class="d-flex gap-1">
-              <button class="btn btn-sm btn-primary flex-fill d-flex align-items-center justify-content-center" data-id="${entry.id}">
+              <button class="btn btn-3d btn-sm btn-primary flex-fill d-flex align-items-center justify-content-center" data-id="${entry.id}">
                 <i class="bi bi-pencil-square"></i>
               </button>
               <a href="${attachmentURL || '#'}" target="_blank"
-                class="btn btn-sm btn-secondary flex-fill d-flex align-items-center justify-content-center"
+                class="btn btn-3d btn-sm btn-secondary flex-fill d-flex align-items-center justify-content-center"
                 data-id="${entry.id}">
                 <i class="bi bi-eye"></i>
               </a>

@@ -33,7 +33,7 @@
             placeholder="Search for consumable items..."
           />
         </div>
-          <button id="showAddFormBtn" class="btn btn-primary" style="white-space: nowrap;">
+          <button id="showAddFormBtn" class="btn btn-3d btn-primary" style="white-space: nowrap;">
             <i class="bi bi-plus-circle me-1"></i> Add
           </button>
         </div>
@@ -54,14 +54,14 @@
 
         <!-- Right: Buttons side-by-side -->
         <div class="d-flex align-items-center gap-2">
-          <button class="btn btn-success shadow-sm px-3 py-2 d-flex align-items-center gap-2" id="exportBtn">
+          <button class="btn btn-3d btn-success shadow-sm px-3 py-2 d-flex align-items-center gap-2" id="exportBtn">
             <span class="d-inline-flex justify-content-center align-items-center bg-light text-success rounded-circle" style="width: 24px; height: 24px;">
               <i class="bi bi-download"></i>
             </span>
             Export
           </button>
 
-          <button id="refreshBtn" class="btn btn-primary shadow-sm px-3 py-2 d-flex align-items-center gap-2">
+          <button id="refreshBtn" class="btn btn-3d btn-primary shadow-sm px-3 py-2 d-flex align-items-center gap-2">
             <i class="bi bi-arrow-clockwise me-1"></i> Refresh 
           </button>
         </div>
@@ -95,7 +95,7 @@
             
             <div class="modal-header text-white rounded-top-4">
               <h5 class="modal-title fw-semibold" id="addItemModalLabel">Add New Item</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              <button type="button" class="btn-3d btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
             <div class="modal-body">
@@ -127,10 +127,10 @@
             </div>
 
             <div class="modal-footer bg-light rounded-bottom-4">
-              <button type="button" class="btn btn-primary" id="addItemBtn">
+              <button type="button" class="btn btn-3d btn-primary" id="addItemBtn">
                 <i class="bi bi-plus-lg me-1"></i> Add Item
               </button>
-              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+              <button type="button" class="btn btn-3d btn-outline-secondary" data-bs-dismiss="modal">
                 <i class="bi bi-x-lg me-1"></i> Cancel
               </button>
             </div>
@@ -146,7 +146,7 @@
             
             <div class="modal-header text-dark rounded-top-4">
               <h5 class="modal-title fw-semibold">Edit Item</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              <button type="button" class="btn-3d btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
             <div class="modal-body">
@@ -164,10 +164,10 @@
             </div>
 
             <div class="modal-footer bg-light rounded-bottom-4">
-              <button type="button" class="btn btn-primary" id="saveEditBtn">
+              <button type="button" class="btn btn-3d btn-primary" id="saveEditBtn">
                 <i class="bi bi-save me-1"></i> Save Changes
               </button>
-              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+              <button type="button" class="btn btn-3d btn-outline-secondary" data-bs-dismiss="modal">
                 <i class="bi bi-x-lg me-1"></i> Cancel
               </button>
             </div>
@@ -185,23 +185,23 @@
               <h5 class="modal-title d-flex align-items-center gap-2" id="actionModalLabel">
                 <i class="bi bi-tools"></i> Item Actions
               </h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              <button type="button" class="btn-close btn-3d" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             
             <div class="modal-body d-grid gap-2 px-3 py-3">
 
               <!-- Add Stock -->
-              <button id="addStockBtn" class="btn d-flex align-items-center justify-content-center gap-2 text-white bg-success border border-success rounded-2">
+              <button id="addStockBtn" class="btn btn-3d d-flex align-items-center justify-content-center gap-2 text-white bg-success border border-success rounded-2">
                 <i class="bi bi-box-arrow-in-down"></i> Add Stock
               </button>
 
               <!-- Assign Item -->
-              <button id="assignItemBtn" class="btn d-flex align-items-center justify-content-center gap-2 text-white bg-primary border border-primary rounded-2">
+              <button id="assignItemBtn" class="btn btn-3d d-flex align-items-center justify-content-center gap-2 text-white bg-primary border border-primary rounded-2">
                 <i class="bi bi-box-arrow-up"></i> Assign Item
               </button>
 
               <!-- View Ledger -->
-              <button id="viewLedgerBtn" class="btn d-flex align-items-center justify-content-center gap-2 text-white bg-info border border-info rounded-2">
+              <button id="viewLedgerBtn" class="btn btn-3d d-flex align-items-center justify-content-center gap-2 text-white bg-info border border-info rounded-2">
                 <i class="bi bi-journal-text"></i> View Ledger
               </button>
 
@@ -220,7 +220,7 @@
               <h5 class="modal-title fw-semibold" id="addStockModalLabel">
                 <i class="bi bi-box-arrow-in-down me-2"></i>Add Stock
               </h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              <button type="button" class="btn-close btn-3d" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             
             <div class="modal-body">
@@ -236,7 +236,7 @@
             </div>
             
             <div class="modal-footer border-top border-secondary-subtle">
-              <button id="confirmAddStockBtn" class="btn btn-success w-100">
+              <button id="confirmAddStockBtn" class="btn btn-3d btn-success w-100">
                 <i class="bi bi-check-circle me-1"></i>Confirm
               </button>
             </div>
@@ -254,7 +254,7 @@
               <h5 class="modal-title fw-semibold" id="assignModalLabel">
                 <i class="bi bi-box-arrow-up me-2"></i>Assign Item
               </h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              <button type="button" class="btn-close btn-3d" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             
             <div class="modal-body py-2">
@@ -279,7 +279,7 @@
             </div>
             
             <div class="modal-footer py-2 border-top border-secondary-subtle">
-              <button type="button" id="confirmAssignBtn" class="btn btn-primary w-100">
+              <button type="button" id="confirmAssignBtn" class="btn btn-3d btn-primary w-100">
                 <i class="bi bi-send-check me-1"></i>Assign
               </button>
             </div>
@@ -294,7 +294,7 @@
           <div class="modal-content rounded-3">
             <div class="modal-header">
               <h5 class="modal-title" id="ledgerModalLabel">Ledger Entries</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              <button type="button" class="btn-close btn-3d" data-bs-dismiss="modal" aria-label="Close"></button>
               <div class="px-3 pt-2">
                 <p class="text-muted mb-0">Stocks Left: <strong id="totalQtyDisplay">Loading...</strong></p>
               </div>
