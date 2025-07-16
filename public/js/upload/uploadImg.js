@@ -38,8 +38,6 @@ export const GeotaggedFileService = {
         .storage
         .from('geotagged')
         .getPublicUrl(data.path).data.publicUrl;
-
-      console.log("Upload succeeded:", publicURL);
       return publicURL;
     } catch (err) {
       console.error("Compression error:", err.message);
@@ -71,7 +69,7 @@ export const GeotaggedFileService = {
         console.error("Delete failed:", error.message);
         NotificationBox.show("Failed to delete old image.");
       } else {
-        console.log("Old image deleted:", filePath);
+
       }
     } catch (err) {
       console.error("Error parsing URL for deletion:", err.message);

@@ -1,4 +1,5 @@
 import { WUSData } from './wrus-data.js';
+import { Permit } from '../permit/permit-data.js';
 import { Sidebar } from "../components/sidebar.js";
 import { Spinner } from '../components/spinner.js';
 import { NotificationBox } from '../components/notification.js';
@@ -13,6 +14,8 @@ export function initializePage(){
   setupWaterSourceFilterToggle();
   setupAddModalCities();
   setupEditModalCities();
+  setupPermitAutoComplete('permitNoInput', 'permitSuggestions', 'nameOfWaterUser', 'city');
+  setupPermitAutoComplete('permitNoInputEdit', 'permitSuggestionsEdit', 'editOwner', 'editCity');
   handleAddForm();
   handleEditForm();
   handleRefreshButton({
@@ -82,6 +85,92 @@ function setupEditModalCities() {
   });
 }
 
+async function setupPermitAutoComplete(inputId, suggestionsId, ownerInputId = null, citySelectId = null) {
+  const permitInput = document.getElementById(inputId);
+  const suggestionsBox = document.getElementById(suggestionsId);
+  const ownerInput = ownerInputId ? document.getElementById(ownerInputId) : null;
+  const citySelect = citySelectId ? document.getElementById(citySelectId) : null;
+
+  if (!permitInput || !suggestionsBox) {
+    console.warn(`Elements with IDs '${inputId}' or '${suggestionsId}' not found.`);
+    return;
+  }
+
+  let allPermits = [];
+
+  try {
+    allPermits = await Permit.getAll();
+  } catch (err) {
+    console.error('Error loading permits:', err.message);
+    return;
+  }
+
+  permitInput.addEventListener('input', () => {
+    const query = permitInput.value.trim().toLowerCase();
+    suggestionsBox.innerHTML = '';
+
+    if (!query) {
+      suggestionsBox.style.display = 'none';
+      return;
+    }
+
+    const matches = allPermits
+      .filter(p => p.permitNo?.toLowerCase().includes(query))
+      .slice(0, 5);
+
+    if (matches.length === 0) {
+      suggestionsBox.style.display = 'none';
+      return;
+    }
+
+    matches.forEach(p => {
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.className = 'list-group-item list-group-item-action';
+      item.textContent = `${p.permitNo} — ${p.permittee || 'Unnamed'}`;
+      item.addEventListener('click', () => {
+        permitInput.value = p.permitNo;
+
+        if (ownerInput) {
+          ownerInput.value = p.permittee || '';
+        }
+
+        if (citySelect && p.diversionPoint) {
+          const diversionLower = p.diversionPoint.toLowerCase();
+          let matched = false;
+
+          // Loop through all options and try to match the city name in diversionPoint
+          for (const option of citySelect.options) {
+            const optionText = option.textContent.toLowerCase();
+            if (diversionLower.includes(optionText)) {
+              option.selected = true;
+              matched = true;
+              break;
+            }
+          }
+
+          if (!matched) {
+            citySelect.selectedIndex = 0; // fallback to default (first) option
+          }
+        }
+
+        suggestionsBox.innerHTML = '';
+        suggestionsBox.style.display = 'none';
+      });
+      suggestionsBox.appendChild(item);
+    });
+
+    suggestionsBox.style.display = 'block';
+  });
+
+  // Hide suggestions when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!permitInput.contains(e.target) && !suggestionsBox.contains(e.target)) {
+      suggestionsBox.style.display = 'none';
+    }
+  });
+}
+
 function handleAddForm() {
   const form = document.getElementById('addWusForm');
 
@@ -95,6 +184,7 @@ function handleAddForm() {
     }
 
     const data = {
+      permitNo: form.permitNoInput.value.trim(), // ✅ New permitNo field
       owner: form.nameOfWaterUser.value.trim(),
       city: form.city.value.trim(),
       barangay: form.barangay.value.trim(),
@@ -210,10 +300,21 @@ async function renderWaterUsers(term = '') {
 
   usersToDisplay.forEach(user => {
     const tr = document.createElement('tr');
-    if (user.isWaterSource) tr.classList.add('table-info');
+
+    const ownerName = highlightMatch(user.owner || '', searchTerm);
+
+    const badges = [];
+    if (user.permitNo) {
+      badges.push('<span class="badge bg-success me-1">Permittee</span>');
+    }
+    if (user.isWaterSource) {
+      badges.push('<span class="badge bg-primary me-1">Water Source</span>');
+    }
+
+    const badgesHTML = badges.length > 0 ? `<div class="mt-1">${badges.join(' ')}</div>` : '';
 
     tr.innerHTML = `
-      <td>${highlightMatch(user.owner || '', searchTerm)}</td>
+      <td>${ownerName}${badgesHTML}</td>
       <td>${highlightMatch(user.street || '', searchTerm)}</td>
       <td>${highlightMatch(user.barangay || '', searchTerm)}</td>
       <td>${highlightMatch(user.city || '', searchTerm)}</td>
@@ -329,7 +430,7 @@ function attachEditListeners(filteredUsers) {
       const user = filteredUsers.find(u => u.id === id);
       if (!user) return;
 
-      // Update form field IDs to match your new structure
+      // Populate form fields
       document.getElementById('editWusId').value = user.id || '';
       document.getElementById('editOwner').value = user.owner || '';
       document.getElementById('editStreet').value = user.street || '';
@@ -340,6 +441,9 @@ function attachEditListeners(filteredUsers) {
       document.getElementById('editType').value = user.type || '';
       document.getElementById('editRemarks').value = user.remarks || '';
       document.getElementById('editIsWaterSource').checked = !!user.isWaterSource;
+
+      // Reflect permit number changes
+      document.getElementById('permitNoInputEdit').value = user.permitNo || '';
 
       const modal = new bootstrap.Modal(document.getElementById('editwusModal'));
       modal.show();
@@ -427,7 +531,8 @@ function handleEditForm() {
       longitude: document.getElementById('editLongitude').value.trim(),
       type: document.getElementById('editType').value.trim(),
       remarks: document.getElementById('editRemarks').value.trim(),
-      isWaterSource: document.getElementById('editIsWaterSource').checked
+      isWaterSource: document.getElementById('editIsWaterSource').checked,
+      permitNo: document.getElementById('permitNoInputEdit').value.trim() // <-- Added this line
     };
 
     try {
@@ -652,7 +757,6 @@ async function handleGeotaggedUpload(wusId) {
     // Fetch existing geotaggedUrl from Firestore
     const existingUrl = document.getElementById('currentGeotaggedUrl').value;
 
-    console.log(existingUrl);
     // Delete old image if it exists
     if (existingUrl) {
       await GeotaggedFileService.delete(existingUrl);

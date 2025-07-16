@@ -54,12 +54,6 @@
 
       <!-- Water Source Filter Section (Hidden by Default via CSS) -->
       <div class="mb-3 water-source-filter-section d-none" id="waterSourceFilterSection">
-        <!-- Legend -->
-        <div class="d-flex align-items-center mb-1">
-          <span class="badge bg-info me-2" style="width: 20px; height: 20px;">&nbsp;</span>
-          <span>Rows highlighted in <strong>blue</strong> indicate the entry is a <strong>Water Source</strong>.</span>
-        </div>
-
         <!-- Checkbox Filter: Show Only Water Sources -->
         <div class="form-check">
           <input class="form-check-input" type="checkbox" id="waterSourceOnlyFilter">
@@ -117,99 +111,111 @@
               <div class="modal-body px-4 py-3">
                 <div class="row g-3">
 
-              <div class="col-md-6">
-                <label for="nameOfWaterUser" class="form-label">Owner <span class="text-danger">*</span></label>
-                <div class="input-group">
-                  <span class="input-group-text"><i class="bi bi-person-fill"></i></span>
-                  <input type="text" class="form-control" id="nameOfWaterUser" required>
-                  <div class="invalid-feedback">Please enter the water user’s name.</div>
-                </div>
-              </div>
-
-              <div class="col-md-6">
-                <label for="city" class="form-label">City <span class="text-danger">*</span></label>
-                <div class="input-group">
-                  <span class="input-group-text"><i class="bi bi-building"></i></span>
-                  <select class="form-select" id="city" required>
-                    <option selected disabled value="">Select City</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="col-md-6">
-                <label for="barangay" class="form-label">Barangay <span class="text-danger">*</span></label>
-                <div class="input-group">
-                  <span class="input-group-text"><i class="bi bi-geo-alt-fill"></i></span>
-                  <input type="text" class="form-control" id="barangay" required placeholder="Enter Barangay">
-                  <div class="invalid-feedback">Please enter the barangay.</div>
-                </div>
-              </div>
-
-              <div class="col-md-6">
-                <label for="street" class="form-label">Street / Bldg Name <span class="text-danger">*</span></label>
-                <div class="input-group">
-                  <span class="input-group-text"><i class="bi bi-signpost-split-fill"></i></span>
-                  <input type="text" class="form-control" id="street" required>
-                  <div class="invalid-feedback">Please enter the street or building name.</div>
-                </div>
-              </div>
-
-              <div class="col-md-6">
-                <label for="latitude" class="form-label">Latitude <span class="text-danger">*</span></label>
-                <div class="input-group">
-                  <span class="input-group-text"><i class="bi bi-compass-fill"></i></span>
-                  <input type="text" class="form-control" id="latitude" 
-                    pattern="^-?([1-8]?[0-9](\.\d+)?|90(\.0+)?)$" required>
-                  <select class="form-select" disabled style="max-width: 70px;">
-                    <option value="N" selected>N</option>
-                  </select>
-                  <div class="form-text"></div>
-                  <div class="invalid-feedback">Please enter a valid latitude.</div>
-                </div>
-              </div>
-
-              <div class="col-md-6">
-                <label for="longitude" class="form-label">Longitude <span class="text-danger">*</span></label>
-                <div class="input-group">
-                  <span class="input-group-text"><i class="bi bi-compass"></i></span>
-                  <input type="text" class="form-control" id="longitude" 
-                    pattern="^-?(((1[0-7][0-9])|([1-9]?[0-9]))(\.\d+)?|180(\.0+)?)$" required>
-                    <select class="form-select" disabled style="max-width: 70px;">
-                    <option value="W" selected>W</option>
-                  </select>
-                  <div class="form-text"></div>
-                  <div class="invalid-feedback">Please enter a valid longitude.</div>
-                </div>
-              </div>
-
-              <div class="col-md-6">
-                <label for="type" class="form-label">Type of Water Source <span class="text-danger">*</span></label>
-                <div class="input-group">
-                  <span class="input-group-text"><i class="bi bi-toggles2"></i></span>
-                  <input type="text" class="form-control" id="type" required>
-                  <div class="invalid-feedback">Please specify the water user type.</div>
-                </div>
-              </div>
-
-              <div class="col-md-6">
-                <label for="remarks" class="form-label">Remarks</label>
-                <div class="input-group">
-                  <span class="input-group-text"><i class="bi bi-chat-left-text"></i></span>
-                  <textarea class="form-control" id="remarks" rows="2"></textarea>
-                </div>
-              </div>
-
-                  <!-- Is Water Source -->
-                  <div class="col-12">
-                    <div class="form-check">
-                      <input class="form-check-input" type="checkbox" id="isWaterSource">
-                      <label class="form-check-label" for="isWaterSource">
-                        Is Water Source?
-                      </label>
-                    </div>
+                <div class="col-md-6">
+                  <label for="permitNoInput" class="form-label">
+                    Permit No.
+                  </label><small class="text-muted fst-italic">(if permittee)</small>
+                  <div class="input-group mt-1">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text" class="form-control" id="permitNoInput" placeholder="Enter Permit No.">
                   </div>
-
+                  <div id="permitSuggestions" class="list-group mt-1" style="z-index: 1055; position: absolute;"></div>
                 </div>
+
+                <div class="col-md-6">
+                  <label for="nameOfWaterUser" class="form-label">Owner <span class="text-danger">*</span></label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-person-fill"></i></span>
+                    <input type="text" class="form-control" id="nameOfWaterUser" required>
+                    <div class="invalid-feedback">Please enter the water user’s name.</div>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <label for="city" class="form-label">City <span class="text-danger">*</span></label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-building"></i></span>
+                    <select class="form-select" id="city" required>
+                      <option selected disabled value="">Select City</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <label for="barangay" class="form-label">Barangay <span class="text-danger">*</span></label>
+                  <small class="text-muted fst-italic">(Exclude prefixes like "Brgy.")</small>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-geo-alt-fill"></i></span>
+                    <input type="text" class="form-control" id="barangay" required placeholder="Enter Barangay">
+                    <div class="invalid-feedback">Please enter the barangay.</div>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <label for="street" class="form-label">Street / Bldg Name <span class="text-danger">*</span></label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-signpost-split-fill"></i></span>
+                    <input type="text" class="form-control" id="street" required>
+                    <div class="invalid-feedback">Please enter the street or building name.</div>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <label for="latitude" class="form-label">Latitude <span class="text-danger">*</span></label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-compass-fill"></i></span>
+                    <input type="text" class="form-control" id="latitude" 
+                      pattern="^-?([1-8]?[0-9](\.\d+)?|90(\.0+)?)$" required>
+                    <select class="form-select" disabled style="max-width: 70px;">
+                      <option value="N" selected>N</option>
+                    </select>
+                    <div class="form-text"></div>
+                    <div class="invalid-feedback">Please enter a valid latitude.</div>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <label for="longitude" class="form-label">Longitude <span class="text-danger">*</span></label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-compass"></i></span>
+                    <input type="text" class="form-control" id="longitude" 
+                      pattern="^-?(((1[0-7][0-9])|([1-9]?[0-9]))(\.\d+)?|180(\.0+)?)$" required>
+                      <select class="form-select" disabled style="max-width: 70px;">
+                      <option value="W" selected>W</option>
+                    </select>
+                    <div class="form-text"></div>
+                    <div class="invalid-feedback">Please enter a valid longitude.</div>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <label for="type" class="form-label">Type of Water Source <span class="text-danger">*</span></label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-toggles2"></i></span>
+                    <input type="text" class="form-control" id="type" required>
+                    <div class="invalid-feedback">Please specify the water user type.</div>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <label for="remarks" class="form-label">Remarks</label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-chat-left-text"></i></span>
+                    <textarea class="form-control" id="remarks" rows="2"></textarea>
+                  </div>
+                </div>
+
+                <!-- Is Water Source -->
+                <div class="col-12">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="isWaterSource">
+                    <label class="form-check-label" for="isWaterSource">
+                      Is Water Source?
+                    </label>
+                  </div>
+                </div>
+
+              </div>
               </div>
 
               <div class="modal-footer">
@@ -240,6 +246,18 @@
                 <div class="row g-3">
 
                   <div class="col-md-6">
+                    <label for="permitNoInputEdit" class="form-label">
+                      Permit No.
+                    </label>
+                    <small class="text-muted fst-italic">(if permittee)</small>
+                    <div class="input-group mt-1">
+                      <span class="input-group-text"><i class="bi bi-search"></i></span>
+                      <input type="text" class="form-control" id="permitNoInputEdit" placeholder="Enter Permit No.">
+                    </div>
+                    <div id="permitSuggestionsEdit" class="list-group mt-1" style="z-index: 1055; position: absolute;"></div>
+                  </div>
+
+                  <div class="col-md-6">
                     <label for="editOwner" class="form-label">Owner <span class="text-danger">*</span></label>
                     <div class="input-group">
                       <span class="input-group-text"><i class="bi bi-person-fill"></i></span>
@@ -260,6 +278,7 @@
 
                   <div class="col-md-6">
                     <label for="editBarangay" class="form-label">Barangay <span class="text-danger">*</span></label>
+                    <small class="text-muted fst-italic">(Exclude prefixes like "Brgy.")</small>
                     <div class="input-group">
                       <span class="input-group-text"><i class="bi bi-geo-alt-fill"></i></span>
                       <input type="text" class="form-control" id="editBarangay" required placeholder="Enter Barangay">
