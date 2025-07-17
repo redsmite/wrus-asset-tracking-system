@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
   Sidebar.render();
   Spinner.render();
   displayWelcomeText();
-  showAnnouncementModal('No Announcement...');
+  showAnnouncementModal('"Please continue encoding the Water Permits. The OLPDD and our Team Leader is currently requesting for the consolidation of Water Permit Data (see Summary Report)"');
   renderEncodedPermitsSummary();
   handleEncodedRefreshButton();
   filterPermitsByCity();

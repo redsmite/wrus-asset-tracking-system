@@ -314,8 +314,9 @@ function initActionButtonHandler() {
 
       selectedCID = cid;
 
-      const viewLedgerBtn = document.getElementById("viewLedgerBtn");
-      viewLedgerBtn.setAttribute("data-id", cid);
+      // Assign data-id to all related buttons
+      document.getElementById("viewLedgerBtn")?.setAttribute("data-id", cid);
+      document.getElementById("reassignItemBtn")?.setAttribute("data-id", cid); // Add this line
     }
   });
 }

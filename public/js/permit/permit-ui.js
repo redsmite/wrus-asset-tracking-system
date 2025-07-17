@@ -750,7 +750,7 @@ function setupImageUploadModal(permitId, geotaggedUrl = '', permitNo = '') {
 
     const deleteBtn = document.createElement('button');
     deleteBtn.id = 'deleteGeotaggedBtn';
-    deleteBtn.className = 'btn btn-outline-danger';
+    deleteBtn.className = 'btn btn-3d btn-outline-danger';
     deleteBtn.innerHTML = '<i class="bi bi-trash me-1"></i> Delete Image';
 
     deleteBtn.addEventListener('click', async () => {

@@ -171,14 +171,19 @@ nav.navbar {
   height: 100%;
 }
 
-/* Water themed table */
-
 .table-responsive {
+  position: relative;
   background: linear-gradient(to bottom right, #e0f7fa, #b2ebf2);
   border-radius: 12px;
   padding: 12px;
-  box-shadow: 0 8px 16px rgba(0, 188, 212, 0.25);
+  box-shadow: 0 8px 16px rgba(0, 188, 212, 0.15);
   overflow-x: auto;
+  animation: subtleFloat 6s ease-in-out infinite;
+}
+
+.table-responsive::before,
+.table-responsive::after {
+  content: none; /* Ripple sides removed */
 }
 
 .table-responsive table {
@@ -188,7 +193,10 @@ nav.navbar {
   width: 100%;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 188, 212, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 188, 212, 0.08);
+  position: relative;
+  z-index: 1;
+  animation: subtleFloat 6s ease-in-out infinite;
 }
 
 .table-responsive thead th {
@@ -223,8 +231,6 @@ nav.navbar {
   pointer-events: none;
   z-index: 0;
 }
-
-
 
 .table-responsive th {
   padding: 14px;

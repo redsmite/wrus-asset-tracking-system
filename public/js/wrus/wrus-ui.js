@@ -334,8 +334,8 @@ async function renderWaterUsers(term = '') {
       <td>${highlightMatch(user.street || '', searchTerm)}</td>
       <td>${highlightMatch(user.barangay || '', searchTerm)}</td>
       <td>${highlightMatch(user.city || '', searchTerm)}</td>
-      <td>${highlightMatch(user.latitude?.toString() || '', searchTerm)}</td>
-      <td>${highlightMatch(user.longitude?.toString() || '', searchTerm)}</td>
+      <td>${highlightMatch(user.latitude ? Number(user.latitude).toFixed(5) : '', searchTerm)}</td>
+      <td>${highlightMatch(user.longitude ? Number(user.longitude).toFixed(5) : '', searchTerm)}</td>
       <td>
         <button class="btn btn-3d btn-sm btn-warning edit-btn" data-id="${user.id}">
           <i class="bi bi-pencil-square"></i>
@@ -427,7 +427,7 @@ function handleRefreshButton({
       refreshBtn.innerText = "Refreshing...";
       await refreshFn();
       await WUSData.refreshCache();
-      renderWaterUsers();
+      await renderWaterUsers();
       renderFn();
       NotificationBox.show("Refreshed successfully.");
       startCooldown();
@@ -726,7 +726,7 @@ function setupImageUploadModal(wusId, geotaggedUrl = '', permitNo = '') {
 
     const deleteBtn = document.createElement('button');
     deleteBtn.id = 'deleteGeotaggedBtn';
-    deleteBtn.className = 'btn btn-outline-danger';
+    deleteBtn.className = 'btn btn-3d btn-outline-danger';
     deleteBtn.innerHTML = '<i class="bi bi-trash me-1"></i> Delete Image';
 
     deleteBtn.addEventListener('click', async () => {
