@@ -196,15 +196,23 @@ async function renderPermitTable() {
         const latitude = permit.latitude ? Number(permit.latitude).toFixed(5) : '';
         const longitude = permit.longitude ? Number(permit.longitude).toFixed(5) : '';
         const isVisited = permit.visited === true;
-        let rowClass = '';
-        if (permit.cancelled === true) rowClass += ' table-water-cancelled';
-        if (permit.visited === true) rowClass += ' table-water-highlight';
+        const isCancelled = permit.cancelled === true;
+
+        let badges = '';
+        if (isCancelled) {
+          badges += `<span class="badge-3d badge-danger me-1">Cancelled</span>`;
+        }
+        if (isVisited) {
+          badges += `<span class="badge-3d badge-success">Visited</span>`;
+        }
 
         const row = document.createElement('tr');
-        row.className = rowClass;
 
         row.innerHTML = `
-          <td>${highlightMatch(permit.permitNo || '', searchTerm)}</td>
+          <td>
+            ${highlightMatch(permit.permitNo || '', searchTerm)}
+            ${badges ? `<div class="mt-1">${badges}</div>` : ''}
+          </td>
           <td>${highlightMatch(permit.permittee || '', searchTerm)}</td>
           <td>${highlightMatch(permit.mailingAddress || '')}</td>
           <td>${highlightMatch(permit.diversionPoint || '', searchTerm)}</td>
@@ -260,14 +268,9 @@ async function renderPermitTable() {
             console.error('Error loading permit or image:', error);
           }
 
-          // Fix: Use permit.permitNo
           setupImageUploadModal(permitId, imageUrl, permit.permitNo);
-
           imageModal.show();
         });
-
-
-
       });
     }
 

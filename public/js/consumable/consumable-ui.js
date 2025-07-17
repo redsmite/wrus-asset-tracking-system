@@ -128,7 +128,8 @@ function initEditItemHandler() {
       await Consumable.update(cid, { specification: spec, unit });
       NotificationBox.show("Items description updated succesfully.");
       editModal.hide();
-      renderConsumableTable();
+      const searchTerm = document.getElementById("searchInput").value.trim();
+      renderConsumableTable(searchTerm);
     } catch (error) {
       console.error("Error updating item:", error);
       NotificationBox.show("An error occurred while updating the item.");
@@ -179,8 +180,9 @@ function initAddStockHandler() {
           addStockModalInstance?.hide();
           actionModalInstance?.hide();
 
-          NotificationBox.show("Items added successfully");
-          renderConsumableTable();
+          NotificationBox.show("Items added successfully");      
+          const searchTerm = document.getElementById("searchInput").value.trim();
+          renderConsumableTable(searchTerm);
         } catch (err) {
           console.error("Error adding stock:", err.message);
           NotificationBox.show("Something went wrong. Please try again.");
@@ -265,7 +267,8 @@ function initAssignHandler() {
 
           NotificationBox.show('Items assigned successfully');
 
-          renderConsumableTable();
+          const searchTerm = document.getElementById("searchInput").value.trim();
+          renderConsumableTable(searchTerm);
           assignModal.hide();
           actionModal.hide();
           document.getElementById("assignForm").reset();
@@ -330,7 +333,8 @@ function initSearchHandler() {
     const normalizedTerm = normalizeText(rawTerm);
 
     filteredItems = currentItems.filter(item =>
-      normalizeText(item.specification || '').includes(normalizedTerm)
+      normalizeText(item.specification || '').includes(normalizedTerm) ||
+      normalizeText(item.id || '').includes(normalizedTerm)
     );
 
     localStorage.setItem("filteredConsumables", JSON.stringify(filteredItems));
@@ -402,7 +406,9 @@ function handleRefreshButton({
       await refreshFn();
       renderFn();
       Consumable.refreshCache();
-      renderConsumableTable();
+      const currentSearch = document.getElementById("searchInput").value.trim();
+      const searchTerm = document.getElementById("searchInput").value.trim();
+      renderConsumableTable(searchTerm);
       NotificationBox.show("Refreshed successfully.");
       startCooldown();
     } catch (err) {
@@ -413,12 +419,22 @@ function handleRefreshButton({
 }
 
 // ---------- Table Rendering ----------
-async function renderConsumableTable() {
+async function renderConsumableTable(searchTerm = '') {
   Spinner.show();
 
   try {
     currentItems = await Consumable.fetchAll();
-    filteredItems = [...currentItems];
+
+    currentSearchTerm = searchTerm;
+    const normalizedTerm = normalizeText(searchTerm);
+
+    filteredItems = searchTerm
+      ? currentItems.filter(item =>
+          normalizeText(item.specification || '').includes(normalizedTerm) ||
+          normalizeText(item.id || '').includes(normalizedTerm)
+        )
+      : [...currentItems];
+
     localStorage.setItem("filteredConsumables", JSON.stringify(filteredItems));
     currentPage = 1;
     renderTablePage();
@@ -446,9 +462,10 @@ function renderTablePage() {
   pageItems.forEach(item => {
     const row = document.createElement("tr");
     const highlightedSpec = highlightMatch(item.specification || '', currentSearchTerm);
+    const highlightedId = highlightMatch(item.id || '', currentSearchTerm);
 
     row.innerHTML = `
-      <td>${item.id}</td>
+      <td>${highlightedId}</td>
       <td>${highlightedSpec}</td>
       <td>${item.qty}</td>
       <td>${item.unit}</td>

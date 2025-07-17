@@ -239,6 +239,7 @@ async function renderICSTable(dataSet = null, page = 1, searchTerm = '') {
   tableBody.innerHTML = "";
 
   try {
+    // Fetch new data if not passed in
     if (!dataSet) {
       const [usersMap, icsSnapshot] = await Promise.all([
         Users.getUsersMap(),
@@ -251,8 +252,24 @@ async function renderICSTable(dataSet = null, page = 1, searchTerm = '') {
     let dataToUse = dataSet || currentData;
     const usersMap = usersMapGlobal;
 
+    // Filter by assigned user if not admin
     if (userId !== "admin") {
       dataToUse = dataToUse.filter(entry => entry.data.assignedTo === userId);
+    }
+
+    // Reapply search filter if term is provided
+    const query = normalizeText(searchTerm.trim());
+    if (query) {
+      dataToUse = dataToUse.filter(entry => {
+        const { ICSno, assignedTo, dateIssued, description } = entry.data;
+        const assignedName = usersMap[assignedTo] || "Unknown User";
+        return (
+          normalizeText(ICSno || '').includes(query) ||
+          normalizeText(assignedName).includes(query) ||
+          normalizeText(dateIssued || '').includes(query) ||
+          normalizeText(description || '').includes(query)
+        );
+      });
     }
 
     if (dataToUse.length === 0) {
@@ -260,10 +277,12 @@ async function renderICSTable(dataSet = null, page = 1, searchTerm = '') {
       return;
     }
 
+    // Pagination
     currentPage = page;
     const startIndex = (page - 1) * rowsPerPage;
     const paginatedItems = dataToUse.slice(startIndex, startIndex + rowsPerPage);
 
+    // Build table rows
     const rowsHtml = paginatedItems.map(entry => {
       const { ICSno, description, dateIssued, assignedTo, attachmentURL, totalCost } = entry.data;
       const assignedName = usersMap[assignedTo] || "Unknown User";
@@ -296,6 +315,7 @@ async function renderICSTable(dataSet = null, page = 1, searchTerm = '') {
 
     tableBody.innerHTML = rowsHtml;
 
+    // Edit button handlers
     document.querySelectorAll(".btn-primary[data-id]").forEach(button => {
       button.addEventListener("click", () => {
         const docId = button.getAttribute("data-id");
@@ -378,7 +398,8 @@ function handleRefreshButton({
       await refreshFn();
       renderFn();
       ICS.refreshCache();
-      renderICSTable();
+      const searchTerm = document.getElementById("searchBar").value.trim();
+      renderICSTable(null, 1, searchTerm);
       NotificationBox.show("Refreshed successfully.");
       startCooldown();
     } catch (err) {
@@ -442,21 +463,7 @@ function renderPaginationControls(dataSet, page) {
 
 function applySearchFilter() {
   const rawQuery = document.getElementById("searchBar").value.trim();
-  const query = normalizeText(rawQuery);
-
-  filteredData = currentData.filter(entry => {
-    const { ICSno, assignedTo, dateIssued, description } = entry.data;
-    const assignedName = usersMapGlobal[assignedTo] || "Unknown User";
-
-    return (
-      normalizeText(ICSno || '').includes(query) ||
-      normalizeText(assignedName).includes(query) ||
-      normalizeText(dateIssued || '').includes(query) ||
-      normalizeText(description || '').includes(query)
-    );
-  });
-
-  renderICSTable(filteredData, 1, rawQuery);
+  renderICSTable(null, 1, rawQuery);
 }
 
 async function populateEditModal(icsItem) {
@@ -550,7 +557,8 @@ async function handleEditICSSubmit(e) {
     bootstrap.Modal.getOrCreateInstance(document.getElementById('editICSModal')).hide();
     document.getElementById('editAttachment').value = '';
     document.getElementById('attachment').value = '';
-    renderICSTable(null, currentPage);
+    const searchTerm = document.getElementById('searchBar').value.trim();
+    renderICSTable(null, currentPage, searchTerm);
   } catch (err) {
     console.error("❌ Failed to update ICS entry:", err);
     NotificationBox.show("Update failed. Check console for details.");

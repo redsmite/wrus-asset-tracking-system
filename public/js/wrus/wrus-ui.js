@@ -32,6 +32,7 @@ let currentPage = 1;
 const rowsPerPage = 10;
 let allUsers = [];
 let searchTerm = '';
+let currentSearchTerm = '';
 
 function setupWaterSourceFilterToggle() {
   const section = document.getElementById('waterSourceFilterSection');
@@ -427,7 +428,7 @@ function handleRefreshButton({
       refreshBtn.innerText = "Refreshing...";
       await refreshFn();
       await WUSData.refreshCache();
-      await renderWaterUsers();
+      await renderWaterUsers(currentSearchTerm);
       renderFn();
       NotificationBox.show("Refreshed successfully.");
       startCooldown();
@@ -551,7 +552,7 @@ function handleEditForm() {
       remarks: document.getElementById('editRemarks').value.trim(),
       isWaterSource: document.getElementById('editIsWaterSource').checked,
       permitNo: document.getElementById('permitNoInputEdit').value.trim(),
-      geotaggedUrl: document.getElementById('editWusGeotagUrl').value.trim() // ✅ Added this line
+      geotaggedUrl: document.getElementById('editWusGeotagUrl').value.trim()
     };
 
     try {
@@ -563,7 +564,9 @@ function handleEditForm() {
       form.reset();
       form.classList.remove('was-validated');
 
-      await loadWaterUser();
+      allUsers = await WUSData.fetchAllDesc();
+      await renderWaterUsers(currentSearchTerm);
+
       NotificationBox.show('Water User updated successfully!');
     } catch (err) {
       console.error('Error updating Water User:', err);
@@ -578,8 +581,8 @@ function handleEditForm() {
 function initializeSearchBar() {
   const searchInput = document.getElementById('searchInput');
   searchInput.addEventListener('input', () => {
-    const term = searchInput.value;
-    renderWaterUsers(term);
+    currentSearchTerm = searchInput.value;
+    renderWaterUsers(currentSearchTerm);
   });
 }
 
@@ -735,17 +738,23 @@ function setupImageUploadModal(wusId, geotaggedUrl = '', permitNo = '') {
         deleteBtn.disabled = true;
         deleteBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Deleting...';
 
-        // Delete from storage
+        // Delete image from storage
         await GeotaggedFileService.delete(hiddenInput.value);
 
-        // Get cached permits and find by permitNo
-        const permits = await Permit.getAll();
-        const targetPermit = permits.find(p => p.permitNo === permitNo);
+        // Attempt to update Permit if permitNo exists
+        if (permitNo) {
+          try {
+            const permits = await Permit.getAll(); // cached
+            const targetPermit = permits.find(p => p.permitNo === permitNo);
 
-        if (targetPermit) {
-          await Permit.update(targetPermit.id, { geotaggedUrl: '' });
-        } else {
-          throw new Error(`Permit with Permit No "${permitNo}" not found in cache.`);
+            if (targetPermit) {
+              await Permit.update(targetPermit.id, { geotaggedUrl: '' });
+            } else {
+              console.warn(`Permit with Permit No "${permitNo}" not found. Skipping Permit update.`);
+            }
+          } catch (permitErr) {
+            console.warn("Error updating permit record:", permitErr);
+          }
         }
 
         // UI updates
@@ -753,8 +762,9 @@ function setupImageUploadModal(wusId, geotaggedUrl = '', permitNo = '') {
         hiddenInput.value = '';
         viewImageLink.classList.add('d-none');
         removeDeleteButton();
+
         allUsers = await WUSData.fetchAllDesc();
-        await renderWaterUsers();
+        await renderWaterUsers(currentSearchTerm);
 
         NotificationBox.show('Image deleted and water user updated.');
       } catch (err) {
@@ -787,11 +797,6 @@ async function handleGeotaggedUpload(wusId, permitNo) {
       return;
     }
 
-    if (!wusId || !permitNo) {
-      NotificationBox.show("Water user ID and Permit No are required.");
-      return;
-    }
-
     const existingUrl = document.getElementById('currentGeotaggedUrl').value;
 
     // Delete old image from storage
@@ -806,30 +811,42 @@ async function handleGeotaggedUpload(wusId, permitNo) {
       return;
     }
 
-    // 🔍 Get Permit from cache using permitNo
-    const permits = await Permit.getAll(); // cached
-    const targetPermit = permits.find(p => p.permitNo === permitNo);
+    let permitUpdated = false;
 
-    if (!targetPermit) {
-      NotificationBox.show(`Permit No "${permitNo}" not found in cache.`, 'danger');
-      return;
+    // ✅ Try updating the Permit if permitNo exists
+    if (permitNo) {
+      try {
+        const permits = await Permit.getAll(); // cached
+        const targetPermit = permits.find(p => p.permitNo === permitNo);
+
+        if (targetPermit) {
+          await Permit.update(targetPermit.id, {
+            geotaggedUrl: newImageUrl
+          });
+          permitUpdated = true;
+        } else {
+          console.warn(`Permit No "${permitNo}" not found in cache. Skipping permit update.`);
+        }
+      } catch (permitErr) {
+        console.error("Error updating permit record:", permitErr);
+      }
     }
 
-    // ✅ Update Permit with new geotaggedUrl
-    await Permit.update(targetPermit.id, {
-      geotaggedUrl: newImageUrl
-    });
-
-    // ✅ Update WUS record too (if necessary)
+    // ✅ Always update WUS record
     await WUSData.update(wusId, {
       geotaggedUrl: newImageUrl
     });
 
     allUsers = await WUSData.fetchAllDesc();
-    await renderWaterUsers();
+    await renderWaterUsers(currentSearchTerm);
 
-    NotificationBox.show("Geotagged image updated successfully.");
+    NotificationBox.show(
+      permitUpdated
+        ? "Geotagged image updated for both Water User and Permit."
+        : "Geotagged image updated for Water User only."
+    );
 
+    // Close modal
     const modalEl = document.getElementById('imageUploadModal');
     const modal = bootstrap.Modal.getInstance(modalEl);
     if (modal) modal.hide();
