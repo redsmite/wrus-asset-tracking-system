@@ -137,6 +137,7 @@ nav.navbar {
   z-index: 1045;
 }
 
+
 /* Main Content */
 #page-content {
   flex: 1;
@@ -176,9 +177,21 @@ nav.navbar {
   background: linear-gradient(to bottom right, #e0f7fa, #b2ebf2);
   border-radius: 12px;
   padding: 12px;
-  box-shadow: 0 8px 16px rgba(0, 188, 212, 0.15);
+  box-shadow: 0 12px 24px rgba(0, 188, 212, 0.25), 0 4px 6px rgba(0, 0, 0, 0.1);
   overflow-x: auto;
-  animation: subtleFloat 6s ease-in-out infinite;
+  perspective: 1000px; /* Adds 3D context */
+}
+
+.table-responsive table {
+  background: linear-gradient(145deg, #ffffff, #e0f7fa);
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 6px 10px rgba(0, 188, 212, 0.3),
+              inset 0 2px 3px rgba(255, 255, 255, 0.6),
+              inset 0 -2px 3px rgba(0, 0, 0, 0.05);
 }
 
 .table-responsive::before,
@@ -196,7 +209,6 @@ nav.navbar {
   box-shadow: 0 2px 8px rgba(0, 188, 212, 0.08);
   position: relative;
   z-index: 1;
-  animation: subtleFloat 6s ease-in-out infinite;
 }
 
 .table-responsive thead th {

@@ -2,6 +2,7 @@ import { Sidebar } from "../components/sidebar.js";
 import { Spinner } from "../components/spinner.js";
 import { Users } from '../user/user-data.js';
 import { Consumable } from '../consumable/consumable-data.js';
+import { Ledger } from "../ledger/ledger-data.js";
 import { ICS } from '../ics/ics-data.js';
 import { Permit } from "../permit/permit-data.js";
 import { WUSData } from "../wrus/wrus-data.js";
@@ -43,9 +44,10 @@ export async function refreshAllDailyCaches() {
     Consumable.autoRefreshDaily?.(),
     ICS.autoRefreshDaily?.(),
     Permit.autoRefreshDaily?.(),
-    WUSData.autoRefreshDaily?.(),
+    WUSData.autoRefreshDaily?.()
   ]);
 }
+
 
 export async function refreshAllCachesEvery8Hours() {
   await Promise.all([
@@ -54,5 +56,6 @@ export async function refreshAllCachesEvery8Hours() {
     ICS.autoRefreshEvery8Hours?.(),
     Permit.autoRefreshEvery8Hours?.(),
     WUSData.autoRefreshEvery8Hours?.(),
+    Ledger.autoRefreshEvery8Hours?.()
   ]);
 }

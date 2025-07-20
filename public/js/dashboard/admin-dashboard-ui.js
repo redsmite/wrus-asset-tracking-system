@@ -5,6 +5,7 @@ import { ICS } from '../ics/ics-data.js';
 import { WUSData } from '../wrus/wrus-data.js';
 import { PortalBubble } from "../components/PortalBubble.js";
 import { NotificationBox } from '../components/notification.js';
+import { Ledger } from "../ledger/ledger-data.js";
 
 // 🔐 Authentication Check
 export function checkAuthentication() {
@@ -20,6 +21,7 @@ export async function refreshAllCachesEvery8Hours() {
     ICS.autoRefreshEvery8Hours?.(),
     Permit.autoRefreshEvery8Hours?.(),
     WUSData.autoRefreshEvery8Hours?.(),
+    Ledger.autoRefreshEvery8Hours?.()
   ]);
 }
 

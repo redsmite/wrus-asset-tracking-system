@@ -24,6 +24,7 @@ export function initializePage() {
   initAddStockHandler();
   initAssignHandler();
   initViewLedgerHandler();
+  initReassignItemModal();
   initSearchHandler();
   initActionButtonHandler();
   pageSizeSelectHandler();
@@ -308,21 +309,142 @@ function initViewLedgerHandler() {
   });
 }
 
+function initReassignItemModal() {
+  const reassignBtn = document.getElementById("reassignItemBtn");
+  const reassignModal = document.getElementById("reassignModal");
+
+  if (!reassignBtn || !reassignModal) {
+    console.warn("Reassign button or modal not found in DOM.");
+    return;
+  }
+
+  const modalInstance = new bootstrap.Modal(reassignModal);
+
+  reassignBtn.addEventListener("click", async () => {
+    const cid = reassignBtn.getAttribute("data-id");
+    if (!cid) {
+      console.warn("No CID found in data-id attribute.");
+      return;
+    }
+
+    const tableBody = document.getElementById("reassignTableBody");
+    tableBody.innerHTML = "<tr><td colspan='5'>Loading...</td></tr>";
+
+    try {
+      Spinner.show();
+      const { ledgerEntries } = await Ledger.fetchLedgerDataByCID(cid);
+      const assignEntries = ledgerEntries.filter(entry => entry.action === "Assign Item");
+
+      if (assignEntries.length === 0) {
+        tableBody.innerHTML = "<tr><td colspan='5'>No assigned entries found.</td></tr>";
+        modalInstance.show();
+        return;
+      }
+
+      const rowsHtml = assignEntries.map(entry => {
+        const formattedDate = entry.dateModified?.toDate
+          ? entry.dateModified.toDate().toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })
+          : "Unknown date";
+
+        return `
+          <tr>
+            <td>${formattedDate}</td>
+            <td>${entry.amount}</td>
+            <td>${entry.assignedTo}</td>
+            <td>${entry.remarks || "—"}</td>
+            <td>
+              <button class="btn btn-3d btn-sm btn-outline-danger reassign-btn" data-entry-id="${entry.id}">
+                Reassign Item
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join("");
+
+      tableBody.innerHTML = rowsHtml;
+      modalInstance.show();
+    } catch (err) {
+      console.error("Error loading assign items:", err);
+      NotificationBox.show("Failed to load data.", "danger");
+      tableBody.innerHTML = "<tr><td colspan='5'>Failed to load data.</td></tr>";
+      modalInstance.show();
+    } finally {
+      Spinner.hide();
+    }
+  });
+
+  // Handle dynamic "Reassign Item" button clicks
+  document.getElementById("reassignTableBody").addEventListener("click", async (e) => {
+    if (!e.target.classList.contains("reassign-btn")) return;
+
+    const button = e.target;
+    const entryId = button.getAttribute("data-entry-id");
+    const cid = reassignBtn.getAttribute("data-id");
+
+    try {
+      Spinner.show();
+      const { ledgerEntries } = await Ledger.fetchLedgerDataByCID(cid);
+      const entry = ledgerEntries.find(e => e.id === entryId);
+
+      if (!entry) {
+        NotificationBox.show("Ledger entry not found.", "danger");
+        return;
+      }
+
+      Confirmation.show(
+        `Reassigning this item will restore ${entry.amount} to stock. Continue?`,
+        async (confirmed) => {
+          if (!confirmed) return;
+
+          try {
+            Spinner.show();
+            await Consumable.addStock(cid, entry.amount, `Reassigned from ${entry.assignedTo}`);
+            const searchTerm = document.getElementById("searchInput").value.trim();
+            renderConsumableTable(searchTerm);
+            
+            button.closest("tr").remove();
+
+            const tableBody = document.getElementById("reassignTableBody");
+            if (tableBody.children.length === 0) {
+              tableBody.innerHTML = "<tr><td colspan='5'>No assigned entries found.</td></tr>";
+            }
+
+            NotificationBox.show("Item reassigned successfully.", "success");
+          } catch (err) {
+            console.error("Error during reassignment:", err);
+            NotificationBox.show("An error occurred while reassigning the item.", "danger");
+          } finally {
+            Spinner.hide();
+          }
+        }
+      );
+    } catch (err) {
+      console.error("Failed to process reassignment:", err);
+      NotificationBox.show("Failed to process reassignment.", "danger");
+      Spinner.hide();
+    }
+  });
+}
+
 function initActionButtonHandler() {
-  document.addEventListener("click", (e) => {
+  document.addEventListener("click", async (e) => {
     const actionBtn = e.target.closest(".action-btn");
     if (actionBtn) {
       const cid = actionBtn.getAttribute("data-id");
       const qty = actionBtn.getAttribute("data-qty");
-
       selectedCID = cid;
 
-      // Assign data-id to all related buttons
+      // Assign data-id to buttons
       document.getElementById("viewLedgerBtn")?.setAttribute("data-id", cid);
-      document.getElementById("reassignItemBtn")?.setAttribute("data-id", cid); // Add this line
+      document.getElementById("reassignItemBtn")?.setAttribute("data-id", cid);
     }
   });
 }
+
 
 // ---------- Search ----------
 function initSearchHandler() {
@@ -406,6 +528,7 @@ function handleRefreshButton({
       await refreshFn();
       renderFn();
       Consumable.refreshCache();
+      Ledger.refreshCache();
       const currentSearch = document.getElementById("searchInput").value.trim();
       const searchTerm = document.getElementById("searchInput").value.trim();
       renderConsumableTable(searchTerm);

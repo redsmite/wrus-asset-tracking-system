@@ -9,11 +9,45 @@ import {
   serverTimestamp,
   query,
   where,
-  orderBy
+  orderBy,
+  deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
 
 export const Ledger = {
   collectionRef: collection(db, "ledger"),
+  localCacheKey: "ledgerCache",
+
+  async fetchAll() {
+    const cached = localStorage.getItem(this.localCacheKey);
+    if (cached) {
+      try {
+        return JSON.parse(cached);
+      } catch (e) {
+        console.warn("Failed to parse cached ledger data:", e);
+        localStorage.removeItem(this.localCacheKey);
+      }
+    }
+
+    try {
+      const snapshot = await getDocs(query(this.collectionRef, orderBy("dateModified", "desc")));
+      const entries = [];
+
+      snapshot.forEach(docSnap => {
+        entries.push({ id: docSnap.id, ...docSnap.data() });
+      });
+
+      localStorage.setItem(this.localCacheKey, JSON.stringify(entries));
+
+      return entries;
+    } catch (error) {
+      console.error("Error fetching all ledger entries:", error);
+      return [];
+    }
+  },
+
+  clearCache() {
+    localStorage.removeItem(this.localCacheKey);
+  },
 
   async addEntry({ cid, modifiedBy, amount, remarks, action, assignedTo = "" }) {
     const entry = {
@@ -115,5 +149,41 @@ export const Ledger = {
       });
     });
     return entries;
+  },
+
+  async deleteEntry(entryId) {
+    const docRef = doc(collection(db, "ledger"), entryId);
+    await deleteDoc(docRef);
+  },
+
+  async refreshCache() {
+    try {
+      const snapshot = await getDocs(query(this.collectionRef, orderBy("dateModified", "desc")));
+      const entries = [];
+
+      snapshot.forEach(docSnap => {
+        entries.push({ id: docSnap.id, ...docSnap.data() });
+      });
+
+      localStorage.setItem(this.localCacheKey, JSON.stringify(entries));
+      console.log("Ledger cache refreshed.");
+      return entries;
+    } catch (error) {
+      console.error("Failed to refresh ledger cache:", error);
+      return [];
+    }
+  },
+
+  async autoRefreshEvery8Hours() {
+    const key = "cachedLedger_lastRefresh";
+    const now = Date.now();
+    const last = localStorage.getItem(key);
+
+    if (!last || now - parseInt(last, 10) > 8 * 60 * 60 * 1000) {
+      await this.refreshCache();
+      localStorage.setItem(key, now.toString());
+      console.log("[Ledger] Cache refreshed (8-hour interval).");
+    }
   }
+
 };

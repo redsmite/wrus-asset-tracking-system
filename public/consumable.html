@@ -86,8 +86,8 @@
           </tbody>
         </table>
         <div class="d-flex justify-content-center my-3" id="paginationContainer"></div>
-
-
+  </div>
+  
       <!-- Add Item Modal -->
       <div class="modal fade" id="addItemModal" tabindex="-1" aria-labelledby="addItemModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
@@ -312,7 +312,41 @@
         </div>
       </div>
     </div>
-  </div>
+
+    <!-- Reassign Item Modal -->
+
+    <div class="modal fade" id="reassignModal" tabindex="-1" aria-labelledby="tableModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg"> <!-- Use modal-lg for wider table -->
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="tableModalLabel">Reassign Item</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+
+            <!-- Table inside modal -->
+            <div class="table-responsive">
+              <table class="table table-bordered table-hover">
+                <thead class="table-light">
+                  <tr>
+                    <th>Date</th>
+                    <th>Qty</th>
+                    <th>Assigned To</th>
+                    <th>Remarks</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="reassignTableBody"></tbody>
+              </table>
+            </div>
+
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
   <!-- Firebase + Bootstrap -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <!-- jsPDF and AutoTable -->
