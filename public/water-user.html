@@ -208,6 +208,15 @@
                   </div>
                 </div>
 
+                <div class="col-md-6">
+                  <label for="yearConducted" class="form-label">Year Conducted <span class="text-danger">*</span></label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
+                    <input type="number" class="form-control" id="yearConducted" required min="1900" max="2099" placeholder="e.g., 2025">
+                    <div class="invalid-feedback">Please enter a valid year.</div>
+                  </div>
+                </div>
+
                 <!-- Is Water Source -->
                 <div class="col-12">
                   <div class="form-check">
@@ -340,6 +349,16 @@
                     <div class="input-group">
                       <span class="input-group-text"><i class="bi bi-chat-left-text"></i></span>
                       <textarea class="form-control" id="editRemarks" rows="2"></textarea>
+                    </div>
+                  </div>
+
+                  <!-- Year Conducted -->
+                  <div class="col-md-6">
+                    <label for="editYearConducted" class="form-label">Year Conducted <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                      <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
+                      <input type="number" class="form-control" id="editYearConducted" required min="1900" max="2099" placeholder="e.g., 2025">
+                      <div class="invalid-feedback">Please enter a valid year.</div>
                     </div>
                   </div>
 

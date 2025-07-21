@@ -208,6 +208,7 @@ function handleAddForm() {
       longitude: form.longitude.value.trim(),
       type: form.type.value.trim(),
       remarks: form.remarks.value.trim(),
+      year_conducted: form.yearConducted.value.trim(),
       isWaterSource: form.isWaterSource.checked,
       geotaggedUrl : form.wusGeotagUrl.value.trim()
     };
@@ -459,6 +460,7 @@ function attachEditListeners(filteredUsers) {
       document.getElementById('editLongitude').value = user.longitude || '';
       document.getElementById('editType').value = user.type || '';
       document.getElementById('editRemarks').value = user.remarks || '';
+      document.getElementById('editYearConducted').value = user.year_conducted || '';
       document.getElementById('editIsWaterSource').checked = !!user.isWaterSource;
 
       document.getElementById('permitNoInputEdit').value = user.permitNo || '';
@@ -549,7 +551,8 @@ function handleEditForm() {
       latitude: document.getElementById('editLatitude').value.trim(),
       longitude: document.getElementById('editLongitude').value.trim(),
       type: document.getElementById('editType').value.trim(),
-      remarks: document.getElementById('editRemarks').value.trim(),
+      remarks: document.getElementById('editRemarks').value.trim(),      
+      year_conducted: document.getElementById('editYearConducted').value.trim(),
       isWaterSource: document.getElementById('editIsWaterSource').checked,
       permitNo: document.getElementById('permitNoInputEdit').value.trim(),
       geotaggedUrl: document.getElementById('editWusGeotagUrl').value.trim()
