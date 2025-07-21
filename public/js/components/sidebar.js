@@ -13,7 +13,7 @@ export const Sidebar = {
       <!-- Mobile Navbar -->
       <nav class="navbar bg-light d-md-none">
         <div class="container-fluid">
-          <button class="btn water-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar">
+          <button class="btn btn-3d water-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar">
             <i class="bi bi-list"></i> Menu
           </button>
         </div>
@@ -26,14 +26,20 @@ export const Sidebar = {
           aria-labelledby="sidebarLabel">
 
         <div class="offcanvas-header d-md-none">
-          <h5 class="offcanvas-title" id="sidebarLabel">WRUS Portal</h5>
+          <div class="logo-container">
+            <i class="bi bi-droplet-fill droplet-icon"></i>
+            <h4 class="wrus-water-title m-0">WRUS Portal</h4>
+          </div>
         </div>
 
         <div class="offcanvas-body d-flex flex-column">
           <div class="d-flex justify-content-between align-items-center mb-3">
-            <h4 class="d-none d-md-block m-0">WRUS Portal</h4>
-            <!-- Desktop Toggle Button -->
-            <button id="sidebarToggle" class="btn water-btn-outline d-none d-md-block">
+            <div class="logo-container d-none d-md-flex align-items-center gap-2">
+              <i class="bi bi-droplet-fill droplet-icon"></i>
+
+              <h4 class="wrus-water-title m-0">WRUS Portal</h4>
+            </div>
+            <button id="sidebarToggle" class="btn btn-3d water-btn-outline d-none d-md-block">
               <i class="bi bi-chevron-left"></i>
             </button>
           </div>
@@ -81,7 +87,7 @@ export const Sidebar = {
             </li>
           </ul>
 
-          <button id="logoutBtn" class="btn water-btn-outline mt-auto">
+          <button id="logoutBtn" class="btn btn-3d water-btn-outline mt-auto">
             <i class="bi bi-box-arrow-right me-2"></i> Logout
           </button>
         </div>
@@ -114,6 +120,15 @@ export const Sidebar = {
       sidebarToggle.addEventListener('click', () => {
         const wrapper = document.getElementById('wrapper');
         wrapper.classList.toggle('sidebar-collapsed');
+
+        const icon = sidebarToggle.querySelector('i');
+        if (icon.classList.contains('bi-chevron-left')) {
+          icon.classList.remove('bi-chevron-left');
+          icon.classList.add('bi-chevron-right');
+        } else {
+          icon.classList.remove('bi-chevron-right');
+          icon.classList.add('bi-chevron-left');
+        }
       });
     }
   },

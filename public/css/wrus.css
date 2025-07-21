@@ -55,15 +55,17 @@ tr.table-info:hover > th {
   margin-bottom: 0.75rem;
 }
 
-/* Toggle Button Styling */
 #toggleWaterSourceFilterBtn {
-  font-weight: 600;
-  transition: background-color 0.3s ease;
+  transition: all 0.3s ease-in-out;
+  border-color: #00bcd4;
+  color: #00acc1;
+  background-color: transparent;
 }
 
 #toggleWaterSourceFilterBtn:hover {
-  color: #fafafa;
-  background-color: #00bcd4;
+  background-color: rgba(0, 172, 193, 0.15);
+  color: #005f73;
+  border-color: #00acc1;
 }
 
 .geotag-btn {

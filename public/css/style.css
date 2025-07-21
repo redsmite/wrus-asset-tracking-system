@@ -25,11 +25,22 @@ body {
   position: relative;
   z-index: auto;
   flex-grow: 1;
-  background: linear-gradient(to bottom right, #e0f7fa, #ffffff);
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   overflow-y: auto;
+  background-color: #b2ebf2;
+  background-image:
+    linear-gradient(to bottom right, #b2ebf2, #ffffff),
+    linear-gradient(to right, rgba(0, 0, 0, 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.07) 1px, transparent 1px);
+
+  background-size:
+    100% 100%,
+    40px 40px,
+    40px 40px;
+
+  background-repeat: no-repeat, repeat, repeat;
 }
 
 #page-content h1,
@@ -47,14 +58,13 @@ body {
   color: #0077b6;
   font-size: 2.5rem;
   border-bottom: 2px solid #0096c7;
-  padding-bottom: 8px;
+  padding-bottom: 1px;
 }
 
 #page-content h2 {
   color: #0096c7;
   font-size: 2rem;
-  border-bottom: 1px dashed #90e0ef;
-  padding-bottom: 6px;
+  padding-bottom: 1px;
 }
 
 #page-content h3 {
@@ -137,11 +147,46 @@ nav.navbar {
   z-index: 1045;
 }
 
+/* Dripping Water Droplet Animation */
+@keyframes drip {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  70% {
+    transform: translateY(10px) scale(0.9);
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(20px) scale(0.8);
+    opacity: 0;
+  }
+}
+
+.droplet-icon {
+  font-size: 1.75rem;
+  color: #00bfff; /* Light blue for water */
+  animation: drip 1.5s ease-in-out infinite;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+
+/* WRUS Portal Title – Large & White */
+.text-3d {
+  font-weight: 800;
+  font-size: 1.75rem; /* Adjust size as needed */
+  color: #fff;
+}
+
 
 /* Main Content */
 #page-content {
   flex: 1;
-  padding: 20px;
   transition: margin-left 0.3s;
 }
 
@@ -176,7 +221,7 @@ nav.navbar {
   position: relative;
   background: linear-gradient(to bottom right, #e0f7fa, #b2ebf2);
   border-radius: 12px;
-  padding: 12px;
+  padding: 5px;
   box-shadow: 0 12px 24px rgba(0, 188, 212, 0.25), 0 4px 6px rgba(0, 0, 0, 0.1);
   overflow-x: auto;
   perspective: 1000px; /* Adds 3D context */
@@ -406,7 +451,6 @@ nav.navbar {
     inset 0 -1px 0 rgba(0, 0, 0, 0.1),
     0 2px 4px rgba(0, 0, 0, 0.15);
   overflow: hidden;
-  border-radius: 0.375rem;
 }
 
 /* Shine effect */
