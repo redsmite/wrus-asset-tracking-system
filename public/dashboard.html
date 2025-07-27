@@ -67,14 +67,62 @@
       <!-- Summary Report Tab -->
       <div class="tab-pane fade" id="summaryTab" role="tabpanel" aria-labelledby="summary-tab">
         <div class="profile-banner d-flex flex-column align-items-start p-4 rounded shadow-sm mb-1">
-          <h3>Summary Report</h3>
-          <!-- Permit City Summary -->
-          <div class="city-table-wrapper text-center my-4">
-            <div class="table-responsive d-flex justify-content-center">
-              <div class="table-container">
-                <div id="cityPermitTable" class="mb-4"></div>
+
+          <!-- Inner Tabs -->
+          <ul class="nav nav-tabs mb-3" id="summaryInnerTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active" id="permit-summary-tab" data-bs-toggle="tab" data-bs-target="#permitSummary" type="button" role="tab" aria-controls="permitSummary" aria-selected="true">
+                Permittee
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="wus-summary-tab" data-bs-toggle="tab" data-bs-target="#wusSummary" type="button" role="tab" aria-controls="wusSummary" aria-selected="false">
+                Yearly Accomplishment
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="city-accom-tab" data-bs-toggle="tab" data-bs-target="#cityAccomplishment" type="button" role="tab" aria-controls="cityAccomplishment" aria-selected="false">
+                Accomplishment Per City
+              </button>
+            </li>
+          </ul>
+
+          <!-- Inner Tab Content -->
+          <div class="tab-content w-100" id="summaryInnerTabsContent">
+
+            <!-- Permit Summary Tab Pane -->
+            <div class="tab-pane fade show active" id="permitSummary" role="tabpanel" aria-labelledby="permit-summary-tab">
+              <div class="city-table-wrapper text-center my-4">
+                <div class="table-responsive d-flex justify-content-center">
+                  <div class="table-container">
+                    <div id="cityPermitTable" class="mb-4"></div>
+                  </div>
+                </div>
               </div>
             </div>
+
+            <!-- Water User and Sources Summary Tab Pane -->
+            <div class="tab-pane fade" id="wusSummary" role="tabpanel" aria-labelledby="wus-summary-tab">
+              <div class="city-table-wrapper text-center my-4">
+                <div class="table-responsive d-flex justify-content-center">
+                  <div class="table-container">
+                    <div id="yearlyWaterUserSummary" class="my-4 w-100"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Accomplishment Per City Tab Pane -->
+            <div class="tab-pane fade" id="cityAccomplishment" role="tabpanel" aria-labelledby="city-accom-tab">
+              <div class="city-table-wrapper text-center my-4">
+                <div class="table-responsive d-flex justify-content-center">
+                  <div class="table-container">
+                    <div id="cityAccomplishmentTable" class="my-4 w-100"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
@@ -120,6 +168,23 @@
       </div>
     </div>
 
+    <!-- Barangay Modal -->
+    <div class="modal fade" id="barangayModal" tabindex="-1" aria-labelledby="barangayModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title text-white" id="barangayModalLabel">Barangay Breakdown</h5>
+            <button type="button" class="btn-close btn-3d btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <!-- Dynamic content here -->
+            <div class="table-responsive">
+              <div id="barangayModalBody"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   </div>

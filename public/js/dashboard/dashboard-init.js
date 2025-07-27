@@ -16,6 +16,8 @@ import {
 } from './dashboard-ui.js';
 
 import { filterPermitsByCity } from "./permit-city-summary.js";
+import { initYearlyWaterUserSummary } from "./yearly-summary.js";
+import { initCityAccomplishmentSummary } from "./city-accomplishment-summary.js";
 import { initializePasswordChange } from "./change-password.js";
 import { PortalBubble } from "../components/PortalBubble.js";
 
@@ -29,6 +31,8 @@ document.addEventListener('DOMContentLoaded', () => {
   renderEncodedPermitsSummary();
   handleEncodedRefreshButton();
   filterPermitsByCity();
+  initYearlyWaterUserSummary();
+  initCityAccomplishmentSummary();
   checkForAppUpdate();
   initializePasswordChange();
 });

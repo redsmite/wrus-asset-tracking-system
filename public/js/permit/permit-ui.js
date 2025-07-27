@@ -216,8 +216,8 @@ async function renderPermitTable() {
           <td>${highlightMatch(permit.permittee || '', searchTerm)}</td>
           <td>${highlightMatch(permit.mailingAddress || '')}</td>
           <td>${highlightMatch(permit.diversionPoint || '', searchTerm)}</td>
-          <td>${latitude}</td>
-          <td>${longitude}</td>
+          <td>${highlightMatch(latitude, searchTerm)}</td>
+          <td>${highlightMatch(longitude, searchTerm)}</td>
           <td>${permit.waterSource || ''}</td>
           <td>${permit.purpose || ''}</td>
           <td>
@@ -319,10 +319,13 @@ async function renderPermitTable() {
       const isShowVisitedChecked = showVisitedFilter.checked;
 
       filteredPermits = permits.filter((permit) => {
-        const matchesSearch =
-          (permit.permitNo && normalizeText(permit.permitNo).includes(searchTerm)) ||
-          (permit.permittee && normalizeText(permit.permittee).includes(searchTerm)) ||
-          (permit.diversionPoint && normalizeText(permit.diversionPoint).includes(searchTerm));
+      const matchesSearch =
+        (permit.permitNo && normalizeText(permit.permitNo).includes(searchTerm)) ||
+        (permit.permittee && normalizeText(permit.permittee).includes(searchTerm)) ||
+        (permit.diversionPoint && normalizeText(permit.diversionPoint).includes(searchTerm)) ||
+        (permit.latitude && normalizeText(String(permit.latitude)).includes(searchTerm)) ||
+        (permit.longitude && normalizeText(String(permit.longitude)).includes(searchTerm));
+
 
         let matchesVisited = true;
         if (isVisitedChecked && !isShowVisitedChecked) {

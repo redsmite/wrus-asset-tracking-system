@@ -283,24 +283,38 @@
   width: 100%;
 }
 
-/* Water-themed table enhancements */
-#cityPermitTable table {
+/* === General Table Styling for All Summary Tables === */
+#cityPermitTable table,
+#yearlyWaterUserSummary table,
+#cityAccomplishmentTable table {
   border-radius: 10px;
   overflow: hidden;
   border: 1px solid #81d4fa;
   box-shadow: 0 2px 8px rgba(0, 191, 255, 0.1);
 }
 
-/* Table headers */
-#cityPermitTable thead.table-primary {
+/* Table Headers */
+#cityPermitTable thead th,
+#yearlyWaterUserSummary thead th,
+#cityAccomplishmentTable thead th {
   background: linear-gradient(to right, #00bcd4, #4dd0e1);
   color: white;
   font-size: 0.95rem;
+  font-weight: 600;
   text-align: center;
+  vertical-align: middle;
+  border: none;
+  position: relative;
+  z-index: 10;
 }
 
-#cityPermitTable td, 
-#cityPermitTable th {
+/* Table Cells */
+#cityPermitTable td,
+#cityPermitTable th,
+#yearlyWaterUserSummary td,
+#yearlyWaterUserSummary th,
+#cityAccomplishmentTable td,
+#cityAccomplishmentTable th {
   vertical-align: middle;
   padding: 10px;
   text-align: center;
@@ -308,32 +322,41 @@
   color: #004d40;
 }
 
-#cityPermitTable thead th {
-  background: linear-gradient(to right, #4dd0e1, #00bcd4);
-  color: white;
-  font-size: 0.95rem;
-  font-weight: 600;
-  text-align: center;
-  position: relative;
-  z-index: 10;
-  border: none;
-}
-
-#cityPermitTable tbody tr:nth-child(even) {
+/* Alternating Row Colors */
+#cityPermitTable tbody tr:nth-child(even),
+#yearlyWaterUserSummary tbody tr:nth-child(even),
+#cityAccomplishmentTable tbody tr:nth-child(even) {
   background-color: #e0f7fa;
 }
 
-#cityPermitTable tbody tr:hover {
+/* Hover Effects */
+#cityPermitTable tbody tr:hover,
+#yearlyWaterUserSummary tbody tr:hover,
+#cityAccomplishmentTable tbody tr:hover {
   background-color: #b2ebf2;
   transition: background-color 0.2s ease-in-out;
 }
 
-#cityPermitTable td:first-child {
+/* First Column Style (City Column) */
+#cityPermitTable td:first-child,
+#yearlyWaterUserSummary td:first-child,
+#cityAccomplishmentTable td:first-child {
   font-weight: bold;
   text-align: left;
   padding-left: 16px;
   color: #006064;
 }
+
+/* Total Row Highlight */
+#cityPermitTable tbody tr:last-child,
+#yearlyWaterUserSummary tbody tr:last-child,
+#cityAccomplishmentTable tbody tr:last-child {
+  background-color: #c8e6c9 !important; /* light green */
+  font-weight: bold;
+  color: #1b5e20;
+  border-top: 2px solid #66bb6a;
+}
+
 
 .city-progress-container {
   display: flex;
@@ -358,6 +381,13 @@
   min-width: 40px;
   text-align: right;
   font-size: 0.85rem;
+}
+
+#yearlyWaterUserSummary table thead th, #cityAccomplishmentTable table thead th,
+#barangayModalBody table thead th {
+  text-align: center;
+  vertical-align: middle;
+  border-radius: 0 !important;
 }
 
 #settingsTab form .form-label {
@@ -414,4 +444,14 @@
 @keyframes rotateGear {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1050;
+}
+.modal-backdrop {
+  z-index: 1040;
 }
