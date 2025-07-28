@@ -210,7 +210,7 @@ function handleAddForm() {
       remarks: form.remarks.value.trim(),
       year_conducted: form.yearConducted.value.trim(),
       isWaterSource: form.isWaterSource.checked,
-      geotaggedUrl : form.wusGeotagUrl.value.trim()
+      geotaggedUrl: form.wusGeotagUrl.value.trim()
     };
 
     Spinner.show();
@@ -219,7 +219,16 @@ function handleAddForm() {
 
     try {
       await WUSData.add(data);
-      allUsers = []; // Clear local cache to force reload
+      allUsers = []; 
+      const cachedPermits = await Permit.getAll();
+      const matchingPermit = cachedPermits.find(p => p.permitNo === data.permitNo);
+
+      if (matchingPermit) {
+        await Permit.update(matchingPermit.id, { visited: true });
+        console.log(`✅ Permit ${matchingPermit.id} updated with visited=true`);
+      } else {
+        console.warn(`⚠️ No matching permit found for Permit No: ${data.permitNo}`);
+      }
 
       form.reset();
       form.classList.remove('was-validated');
@@ -543,6 +552,8 @@ function handleEditForm() {
     submitBtn.disabled = true;
 
     const id = document.getElementById('editWusId').value;
+    const permitNo = document.getElementById('permitNoInputEdit').value.trim();
+
     const payload = {
       owner: document.getElementById('editOwner').value.trim(),
       street: document.getElementById('editStreet').value.trim(),
@@ -551,16 +562,29 @@ function handleEditForm() {
       latitude: document.getElementById('editLatitude').value.trim(),
       longitude: document.getElementById('editLongitude').value.trim(),
       type: document.getElementById('editType').value.trim(),
-      remarks: document.getElementById('editRemarks').value.trim(),      
+      remarks: document.getElementById('editRemarks').value.trim(),
       year_conducted: document.getElementById('editYearConducted').value.trim(),
       isWaterSource: document.getElementById('editIsWaterSource').checked,
-      permitNo: document.getElementById('permitNoInputEdit').value.trim(),
+      permitNo,
       geotaggedUrl: document.getElementById('editWusGeotagUrl').value.trim()
     };
 
     try {
+      // ✅ Update the WUS entry first
       await WUSData.update(id, payload);
 
+      // ✅ Find the matching permit by permitNo and mark visited = true
+      const permits = await Permit.getAll();
+      const matchingPermit = permits.find(p => p.permitNo === permitNo);
+
+      if (matchingPermit) {
+        await Permit.update(matchingPermit.id, { visited: true });
+        console.log(`✅ Permit ${matchingPermit.id} marked as visited`);
+      } else {
+        console.warn(`⚠️ No matching permit found for permitNo: ${permitNo}`);
+      }
+
+      // ✅ UI handling after success
       const modal = bootstrap.Modal.getInstance(document.getElementById('editwusModal'));
       modal.hide();
 

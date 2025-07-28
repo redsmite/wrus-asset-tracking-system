@@ -125,12 +125,9 @@
             <tr>
               <th>Permit No</th>
               <th>Permittee</th>
-              <th>Mailing Address</th>
               <th>Diversion Point</th>
               <th>Latitude</th>
               <th>Longitude</th>
-              <th>Water Source</th>
-              <th>Purpose</th>
               <th>Action</th>
             </tr>
           </thead>
@@ -172,12 +169,13 @@
 
                   <!-- Tab 1: Basic Info -->
                   <div class="tab-pane fade show active" id="basic" role="tabpanel">
-
                     <div class="row g-3">
 
                       <!-- Permit No -->
                       <div class="col-md-6">
-                        <label class="form-label"><i class="bi bi-hash me-1"></i> Permit No.</label>
+                        <label class="form-label">
+                          <i class="bi bi-hash me-1"></i> Permit No. <span class="text-danger">*</span>
+                        </label>
                         <input type="text" class="form-control" id="permitNo" required>
                         <div class="invalid-feedback">Permit No. is required.</div>
                       </div>
@@ -185,33 +183,34 @@
                       <!-- Permittee -->
                       <div class="col-md-6">
                         <label class="form-label">
-                          <i class="bi bi-person-badge me-1"></i> Permittee
+                          <i class="bi bi-person-badge me-1"></i> Permittee <span class="text-danger">*</span>
                         </label>
                         <textarea class="form-control" id="permittee" rows="2" required></textarea>
                         <div class="invalid-feedback">Permittee is required.</div>
                       </div>
 
-                      <!-- Mailing Address -->
+                      <!-- Mailing Address (not required) -->
                       <div class="col-md-6">
                         <label class="form-label">
-                          <i class="bi bi-geo-alt me-1"></i> Mailing Address
+                          <i class="bi bi-geo-alt me-1"></i> Mailing Address <i>(not required)</i>
                         </label>
-                        <textarea class="form-control" id="mailingAddress" rows="2" required></textarea>
-                        <div class="invalid-feedback">Mailing Address is required.</div>
+                        <textarea class="form-control" id="mailingAddress" disabled rows="2"></textarea>
                       </div>
 
                       <!-- Diversion Point -->
                       <div class="col-md-6">
                         <label class="form-label">
-                          <i class="bi bi-geo-fill me-1"></i> Diversion Point
+                          <i class="bi bi-geo-fill me-1"></i> Diversion Point <span class="text-danger">*</span>
                         </label>
-                        <textarea class="form-control" id="diversionPoint" rows="2" required></textarea>
+                        <select class="form-select" id="diversionPoint" required>
+                          <option value="">-- Select City --</option>
+                        </select>
                         <div class="invalid-feedback">Diversion Point is required.</div>
                       </div>
 
                       <!-- Latitude -->
                       <div class="col-md-6">
-                        <label class="form-label"><i class="bi bi-compass me-1"></i> Latitude</label>
+                        <label class="form-label"><i class="bi bi-compass me-1"></i> Latitude <span class="text-danger">*</span></label>
                         <div class="row g-2">
                           <div class="col-3">
                             <input type="number" class="form-control" id="latDegrees" placeholder="°" required>
@@ -234,7 +233,7 @@
 
                       <!-- Longitude -->
                       <div class="col-md-6">
-                        <label class="form-label"><i class="bi bi-compass me-1"></i> Longitude</label>
+                        <label class="form-label"><i class="bi bi-compass me-1"></i> Longitude <span class="text-danger">*</span></label>
                         <div class="row g-2">
                           <div class="col-3">
                             <input type="number" class="form-control" id="lonDegrees" placeholder="°" required>
@@ -260,46 +259,40 @@
 
                   <!-- Tab 2: Technical Info -->
                   <div class="tab-pane fade" id="technical" role="tabpanel">
-
                     <div class="row g-3">
 
-                      <!-- Water Source -->
+                      <!-- Water Source (optional) -->
                       <div class="col-md-6">
-                        <label class="form-label"><i class="bi bi-droplet-half me-1"></i> Water Source</label>
-                        <input type="text" class="form-control" id="waterSource" required>
-                        <div class="invalid-feedback">Water Source is required.</div>
+                        <label class="form-label"><i class="bi bi-droplet-half me-1"></i> Water Source <i>(not required)</i></label>
+                        <input type="text" class="form-control" id="waterSource" disabled>
                       </div>
 
-                      <!-- Water Diversion -->
+                      <!-- Water Diversion (optional) -->
                       <div class="col-md-6">
-                        <label class="form-label"><i class="bi bi-arrow-repeat me-1"></i> Water Diversion</label>
-                        <input type="text" class="form-control" id="waterDiversion" required>
-                        <div class="invalid-feedback">Water Diversion is required.</div>
+                        <label class="form-label"><i class="bi bi-arrow-repeat me-1"></i> Water Diversion  <i>(not required)</i></label>
+                        <input type="text" class="form-control" id="waterDiversion" disabled>
                       </div>
 
-                      <!-- Flow Rate -->
+                      <!-- Flow Rate (optional) -->
                       <div class="col-md-6">
                         <label class="form-label">
-                          <i class="bi bi-speedometer me-1"></i> Flow Rate (L/s)
+                          <i class="bi bi-speedometer me-1"></i> Flow Rate (L/s)  <i>(not required)</i>
                         </label>
-                        <input type="number" class="form-control" id="flowRate" required min="0" step="any">
-                        <div class="invalid-feedback">Flow Rate is required.</div>
+                        <input type="number" class="form-control" id="flowRate" min="0" step="any" disabled>
                       </div>
 
-                      <!-- Period of Use -->
+                      <!-- Period of Use (optional) -->
                       <div class="col-md-6">
-                        <label class="form-label"><i class="bi bi-calendar-event me-1"></i> During the Month of</label>
-                        <input type="text" class="form-control" id="periodOfUse" value="January to December" required>
-                        <div class="invalid-feedback">Period of Use is required.</div>
+                        <label class="form-label"><i class="bi bi-calendar-event me-1"></i> During the Month of  <i>(not required)</i></label>
+                        <input type="text" class="form-control" id="periodOfUse" disabled>
                       </div>
 
-                      <!-- Purpose -->
+                      <!-- Purpose (optional) -->
                       <div class="col-md-6">
                         <label class="form-label">
                           <i class="bi bi-clipboard-check me-1"></i> Purpose (e.g. Domestic)
                         </label>
-                        <input type="text" class="form-control" id="purpose" required>
-                        <div class="invalid-feedback">Purpose is required.</div>
+                        <input type="text" class="form-control" id="purpose" disabled>
                       </div>
 
                       <!-- Visited Checkbox -->
@@ -315,10 +308,11 @@
                       <!-- PDF Attachment -->
                       <div class="col-md-6">
                         <label class="form-label">
-                          <i class="bi bi-paperclip me-1"></i> Attach PDF (Optional)
+                          <i class="bi bi-paperclip me-1"></i> Attach PDF <span class="text-danger">*</span>
                         </label>
-                        <input class="form-control" type="file" id="pdfAttachment" accept=".pdf">
+                        <input class="form-control" type="file" id="pdfAttachment" accept=".pdf" required>
                         <div class="form-text">Upload a PDF document related to this permit.</div>
+                        <div class="invalid-feedback">PDF attachment is required.</div>
                       </div>
 
                       <!-- Is Cancelled Checkbox -->
@@ -386,14 +380,14 @@
                   <div class="tab-pane fade show active" id="edit-basic" role="tabpanel">
                     <div class="row g-3">
 
-                      <!-- Permit No -->
+                      <!-- Permit No (REQUIRED) -->
                       <div class="col-md-6">
                         <label class="form-label"><i class="bi bi-hash me-1"></i> Permit No.</label>
                         <input type="text" class="form-control" id="editPermitNo" required>
                         <div class="invalid-feedback">Permit No. is required.</div>
                       </div>
 
-                      <!-- Permittee -->
+                      <!-- Permittee (REQUIRED) -->
                       <div class="col-md-6">
                         <label class="form-label">
                           <i class="bi bi-person-badge me-1"></i> Permittee
@@ -402,25 +396,26 @@
                         <div class="invalid-feedback">Permittee is required.</div>
                       </div>
 
-                      <!-- Mailing Address -->
+                      <!-- Mailing Address (OPTIONAL) -->
                       <div class="col-md-6">
                         <label class="form-label">
                           <i class="bi bi-geo-alt me-1"></i> Mailing Address
                         </label>
-                        <textarea class="form-control" id="editMailingAddress" rows="2" required></textarea>
-                        <div class="invalid-feedback">Mailing Address is required.</div>
+                        <textarea class="form-control" id="editMailingAddress" rows="2"></textarea>
                       </div>
 
-                      <!-- Diversion Point -->
+                      <!-- Diversion Point (REQUIRED) -->
                       <div class="col-md-6">
                         <label class="form-label">
                           <i class="bi bi-geo-fill me-1"></i> Diversion Point
                         </label>
-                        <textarea class="form-control" id="editDiversionPoint" rows="2" required></textarea>
+                        <select class="form-select" id="editDiversionPoint" required>
+                          <option value="">-- Select Diversion Point --</option>
+                        </select>
                         <div class="invalid-feedback">Diversion Point is required.</div>
                       </div>
 
-                      <!-- Latitude -->
+                      <!-- Latitude (REQUIRED) -->
                       <div class="col-md-6">
                         <label class="form-label"><i class="bi bi-compass me-1"></i> Latitude</label>
                         <div class="row g-2">
@@ -443,7 +438,7 @@
                         <div class="invalid-feedback">Complete Latitude is required.</div>
                       </div>
 
-                      <!-- Longitude -->
+                      <!-- Longitude (REQUIRED) -->
                       <div class="col-md-6">
                         <label class="form-label"><i class="bi bi-compass me-1"></i> Longitude</label>
                         <div class="row g-2">
@@ -473,43 +468,38 @@
                   <div class="tab-pane fade" id="edit-technical" role="tabpanel">
                     <div class="row g-3">
 
-                      <!-- Water Source -->
+                      <!-- Water Source (OPTIONAL) -->
                       <div class="col-md-6">
                         <label class="form-label"><i class="bi bi-droplet-half me-1"></i> Water Source</label>
-                        <input type="text" class="form-control" id="editWaterSource" required>
-                        <div class="invalid-feedback">Water Source is required.</div>
+                        <input type="text" class="form-control" id="editWaterSource">
                       </div>
 
-                      <!-- Water Diversion -->
+                      <!-- Water Diversion (OPTIONAL) -->
                       <div class="col-md-6">
                         <label class="form-label"><i class="bi bi-arrow-repeat me-1"></i> Water Diversion</label>
-                        <input type="text" class="form-control" id="editWaterDiversion" required>
-                        <div class="invalid-feedback">Water Diversion is required.</div>
+                        <input type="text" class="form-control" id="editWaterDiversion">
                       </div>
 
-                      <!-- Flow Rate -->
+                      <!-- Flow Rate (OPTIONAL) -->
                       <div class="col-md-6">
                         <label class="form-label">
                           <i class="bi bi-speedometer me-1"></i> Flow Rate (L/s)
                         </label>
-                        <input type="number" class="form-control" id="editFlowRate" required min="0" step="any">
-                        <div class="invalid-feedback">Flow Rate is required.</div>
+                        <input type="number" class="form-control" id="editFlowRate" min="0" step="any">
                       </div>
 
-                      <!-- Period of Use -->
+                      <!-- Period of Use (OPTIONAL) -->
                       <div class="col-md-6">
                         <label class="form-label"><i class="bi bi-calendar-event me-1"></i> During the Month of</label>
-                        <input type="text" class="form-control" id="editPeriodOfUse" required>
-                        <div class="invalid-feedback">Period of Use is required.</div>
+                        <input type="text" class="form-control" id="editPeriodOfUse">
                       </div>
 
-                      <!-- Purpose -->
+                      <!-- Purpose (OPTIONAL) -->
                       <div class="col-md-6">
                         <label class="form-label">
                           <i class="bi bi-clipboard-check me-1"></i> Purpose (e.g. Domestic)
                         </label>
-                        <input type="text" class="form-control" id="editPurpose" required>
-                        <div class="invalid-feedback">Purpose is required.</div>
+                        <input type="text" class="form-control" id="editPurpose" disabled>
                       </div>
 
                       <!-- Visited Checkbox -->
@@ -533,14 +523,14 @@
                       </div>
 
                       <!-- Is Cancelled Checkbox -->
-                    <div class="col-md-6">
-                      <div class="form-check mt-4">
-                        <input class="form-check-input" type="checkbox" id="editIsCancelled">
-                        <label class="form-check-label" for="editIsCancelled">
-                          <i class="bi bi-check2-circle me-1"></i> Is Cancelled?
-                        </label>
+                      <div class="col-md-6">
+                        <div class="form-check mt-4">
+                          <input class="form-check-input" type="checkbox" id="editIsCancelled">
+                          <label class="form-check-label" for="editIsCancelled">
+                            <i class="bi bi-check2-circle me-1"></i> Is Cancelled?
+                          </label>
+                        </div>
                       </div>
-                    </div>
 
                     </div>
                   </div>

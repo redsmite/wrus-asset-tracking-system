@@ -165,6 +165,7 @@ export async function initCityAccomplishmentSummary() {
             <th rowspan="2" class="align-middle">Barangay</th>
             <th colspan="3" class="align-middle">Water Users</th>
             <th rowspan="2" class="align-middle">Water Sources</th>
+            <th rowspan="2" class="align-middle">Action</th>
           </tr>
           <tr>
             <th>Permittees</th>
@@ -190,6 +191,13 @@ export async function initCityAccomplishmentSummary() {
           <td>${nonPermittees}</td>
           <td>${total}</td>
           <td>${waterSources}</td>
+          <td>
+          <button class="btn btn-3d btn-sm btn-outline-primary view-users-btn"
+            data-city="${city}"
+            data-barangay="${brgy}">
+            View Users
+          </button>
+          </td>
         </tr>
       `;
     });
@@ -210,4 +218,82 @@ export async function initCityAccomplishmentSummary() {
 
     modalBody.innerHTML = barangayHtml;
   });
+
+  document.addEventListener('click', async function (e) {
+    const btn = e.target.closest('.view-users-btn');
+    if (!btn) return;
+
+    const city = btn.getAttribute('data-city');
+    const barangay = btn.getAttribute('data-barangay');
+
+    const modalLabel = document.getElementById('waterUsersModalLabel');
+    const modalBody = document.getElementById('waterUsersModalBody');
+
+    modalLabel.textContent = `Water Users in ${barangay}, ${city}`;
+    modalBody.innerHTML = `<p class="text-muted">Loading...</p>`; // temporary loading text
+
+    try {
+      const allUsers = await WUSData.fetchAll();
+      const filteredUsers = allUsers.filter(user =>
+        normalizeCity(user.city) === city &&
+        normalizeBarangay(user.barangay) === barangay
+      );
+
+      if (filteredUsers.length === 0) {
+        modalBody.innerHTML = `<p class="text-muted">No water users found for ${barangay}.</p>`;
+      } else {
+        let usersHtml = `
+          <table class="table table-bordered table-striped align-middle text-center">
+            <thead class="table-success">
+              <tr>
+                <th>Owner</th>
+                <th>Street</th>
+                <th>Latitude</th>
+                <th>Longitude</th>
+                <th>Permit No.</th>
+                <th>Type</th>
+                <th>Year Conducted</th>
+                <th>Is Water Source?</th>
+                <th>Geotagged Image</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+
+        filteredUsers.forEach(user => {
+          usersHtml += `
+            <tr>
+              <td>${user.owner || '-'}</td>
+              <td>${user.street || '-'}</td>
+              <td>${user.latitude !== undefined && user.latitude !== null ? Number(user.latitude).toFixed(5) : '-'}</td>
+              <td>${user.longitude !== undefined && user.longitude !== null ? Number(user.longitude).toFixed(5) : '-'}</td>
+              <td>${user.permitNo || '-'}</td>
+              <td>${user.type || '-'}</td>
+              <td>${user.year_conducted || '-'}</td>
+              <td>${user.isWaterSource ? 'Yes' : 'No'}</td>
+              <td>
+                ${user.geotaggedUrl 
+                  ? `<a href="${user.geotaggedUrl}" target="_blank" class="btn btn-sm btn-outline-secondary">View</a>` 
+                  : '-'}
+              </td>
+            </tr>
+          `;
+        });
+
+        usersHtml += `</tbody></table>`;
+        modalBody.innerHTML = usersHtml;
+      }
+
+      // ✅ Manually open the water users modal without closing barangay modal
+      const waterUsersModal = new bootstrap.Modal(document.getElementById('waterUsersModal'), {
+        backdrop: false // ✅ prevents modal from dismissing the other
+      });
+      waterUsersModal.show();
+
+    } catch (err) {
+      console.error(err);
+      modalBody.innerHTML = `<p class="text-danger">Error loading water users.</p>`;
+    }
+  });
+
 }

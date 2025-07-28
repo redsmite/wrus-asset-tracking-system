@@ -72,7 +72,7 @@
 }
 
 .profile-banner {
-  background: linear-gradient(to bottom, #e0f7fa, #caf0f8, #ade8f4);
+  background: #fff;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -80,7 +80,6 @@
   padding: 2rem;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
-  width: 100%;
   box-sizing: border-box;
   min-height: 85vh;
 }

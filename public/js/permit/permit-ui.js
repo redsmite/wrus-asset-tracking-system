@@ -2,6 +2,7 @@ import { Sidebar } from "../components/sidebar.js";
 import { Spinner } from "../components/spinner.js";
 import { Permit } from "./permit-data.js";
 import { WUSData } from "../wrus/wrus-data.js";
+import { METRO_MANILA_CITIES } from '../constants/metroManilaCities.js';
 import { FileService } from "../upload/upload.js";
 import { GeotaggedFileService } from "../upload/uploadImg.js";
 import { CoordinateUtils } from "../utils/coordinates.js";
@@ -10,6 +11,9 @@ import { NotificationBox } from "../components/notification.js";
 export function initializePage(){
   Sidebar.render();
   Spinner.render();
+  populateSelect("#editDiversionPoint", METRO_MANILA_CITIES, "-- Select City --");
+  populateSelect("#diversionPoint", METRO_MANILA_CITIES, "-- Select City --");
+
   handleAddButton();
   handleAddFormSubmit();
   loadPermit();
@@ -18,6 +22,32 @@ export function initializePage(){
   handleRefreshButton();
   setupExportButtonListener();
   setupImageUploadModal();
+
+}
+//Global Variable
+let currentPage = 1;
+
+function populateSelect(selectId, itemsArray, placeholder = "-- Select an option --") {
+  const selectElement = document.querySelector(selectId);
+  if (!selectElement) return;
+
+  selectElement.innerHTML = "";
+
+  if (placeholder) {
+    const placeholderOption = document.createElement("option");
+    placeholderOption.value = "";
+    placeholderOption.textContent = placeholder;
+    placeholderOption.disabled = true;
+    placeholderOption.selected = true;
+    selectElement.appendChild(placeholderOption);
+  }
+
+  itemsArray.forEach(item => {
+    const option = document.createElement("option");
+    option.value = item;
+    option.textContent = item;
+    selectElement.appendChild(option);
+  });
 }
 
 function handleAddButton(){
@@ -92,7 +122,7 @@ function handleAddFormSubmit() {
 
     try {
       await Permit.add(data);
-      renderPermitTable();
+      renderPermitTable(currentPage); 
       NotificationBox.show('Permit successfully added');
 
       // Reset form
@@ -214,12 +244,10 @@ async function renderPermitTable() {
             ${badges ? `<div class="mt-1">${badges}</div>` : ''}
           </td>
           <td>${highlightMatch(permit.permittee || '', searchTerm)}</td>
-          <td>${highlightMatch(permit.mailingAddress || '')}</td>
+
           <td>${highlightMatch(permit.diversionPoint || '', searchTerm)}</td>
           <td>${highlightMatch(latitude, searchTerm)}</td>
           <td>${highlightMatch(longitude, searchTerm)}</td>
-          <td>${permit.waterSource || ''}</td>
-          <td>${permit.purpose || ''}</td>
           <td>
             <div class="action-buttons">
               <button class="btn btn-3d btn-sm btn-warning edit-btn" data-id="${permit.id}">
@@ -339,7 +367,6 @@ async function renderPermitTable() {
         return matchesSearch && matchesVisited;
       });
 
-      currentPage = 1;
       renderRows(filteredPermits);
       renderPagination(filteredPermits.length);
 
@@ -430,7 +457,7 @@ function handleRefreshButton() {
       refreshBtn.disabled = true;
       refreshBtn.innerText = "Refreshing...";
       await Permit.refreshCache();
-      renderPermitTable();
+      renderPermitTable(currentPage); 
       NotificationBox.show("Refreshed successfully.");
       startCooldown();
     } catch (err) {
@@ -445,7 +472,7 @@ function handleRefreshButton() {
 async function loadPermit(){
   Spinner.show();
   try{
-    await renderPermitTable();
+    await renderPermitTable(currentPage); 
   } finally {
     Spinner.hide();
   }
@@ -577,7 +604,7 @@ function initializePermitUpdate() {
 
       // Update Firestore
       await Permit.update(id, data);
-      renderPermitTable();
+      renderPermitTable(currentPage);
       NotificationBox.show('Permit updated successfully');
 
       const editModal = bootstrap.Modal.getInstance(document.getElementById('editPermitModal'));
@@ -788,7 +815,7 @@ function setupImageUploadModal(permitId, geotaggedUrl = '', permitNo = '') {
           hiddenInput.value = '';
           viewImageLink.classList.add('d-none');
           removeDeleteButton();
-          renderPermitTable();
+          renderPermitTable(currentPage); 
 
           NotificationBox.show('Image deleted and permit updated.');
           
@@ -864,7 +891,7 @@ async function handleGeotaggedUpload(permitId, permitNo) {
       });
     }
 
-    renderPermitTable();
+    renderPermitTable(currentPage); 
     NotificationBox.show("Geotagged image updated successfully.");
 
     // Close the modal
