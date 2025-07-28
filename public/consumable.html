@@ -91,8 +91,8 @@
         <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
           <div class="modal-content shadow-lg rounded-4">
             
-            <div class="modal-header text-white rounded-top-4">
-              <h5 class="modal-title fw-semibold" id="addItemModalLabel">Add New Item</h5>
+            <div class="modal-header bg-info rounded-top-4">
+              <h5 class="modal-title fw-semibold text-white" id="addItemModalLabel">Add New Item</h5>
               <button type="button" class="btn-3d btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
@@ -142,8 +142,8 @@
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
           <div class="modal-content shadow-lg rounded-4">
             
-            <div class="modal-header text-dark rounded-top-4">
-              <h5 class="modal-title fw-semibold">Edit Item</h5>
+            <div class="modal-header bg-warning rounded-top-4">
+              <h5 class="modal-title text-muted fw-semibold">Edit Item</h5>
               <button type="button" class="btn-3d btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
@@ -177,7 +177,7 @@
       <!-- Action Modal -->
       <div class="modal fade" id="actionModal" tabindex="-1" aria-labelledby="actionModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-sm modal-dialog-centered">
-          <div class="modal-content bg-light text-dark border border-secondary-subtle rounded-3 shadow">
+          <div class="modal-content bg-light text-dark border rounded-3 shadow">
             
             <div class="modal-header border-bottom border-secondary-subtle">
               <h5 class="modal-title d-flex align-items-center gap-2" id="actionModalLabel">
@@ -218,10 +218,10 @@
       <!-- Add Stock Modal -->
       <div class="modal fade" id="addStockModal" tabindex="-1" aria-labelledby="addStockModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-sm">
-          <div class="modal-content border border-secondary-subtle rounded-3 shadow-sm">
+          <div class="modal-content rounded-3 shadow-sm">
             
-            <div class="modal-header border-bottom border-secondary-subtle">
-              <h5 class="modal-title fw-semibold" id="addStockModalLabel">
+            <div class="modal-header bg-info border-secondary-subtle">
+              <h5 class="modal-title text-white fw-semibold" id="addStockModalLabel">
                 <i class="bi bi-box-arrow-in-down me-2"></i>Add Stock
               </h5>
               <button type="button" class="btn-close btn-3d" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -252,10 +252,10 @@
       <!-- Assign Item Modal -->
       <div class="modal fade" id="assignModal" tabindex="-1" aria-labelledby="assignModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content border border-secondary-subtle rounded-3 shadow-sm" style="max-width: 500px; margin: auto;">
+          <div class="modal-content rounded-3 shadow-sm" style="max-width: 500px; margin: auto;">
             
-            <div class="modal-header py-2 border-bottom border-secondary-subtle">
-              <h5 class="modal-title fw-semibold" id="assignModalLabel">
+            <div class="modal-header bg-primary border-bottom border-secondary-subtle">
+              <h5 class="modal-title text-white fw-semibold" id="assignModalLabel">
                 <i class="bi bi-box-arrow-up me-2"></i>Assign Item
               </h5>
               <button type="button" class="btn-close btn-3d" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -296,11 +296,11 @@
       <div class="modal fade" id="ledgerModal" tabindex="-1" aria-labelledby="ledgerModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-scrollable">
           <div class="modal-content rounded-3">
-            <div class="modal-header">
-              <h5 class="modal-title" id="ledgerModalLabel">Ledger Entries</h5>
+            <div class="modal-header bg-info">
+              <h5 class="modal-title text-white" id="ledgerModalLabel">Ledger Entries</h5>
               <button type="button" class="btn-close btn-3d" data-bs-dismiss="modal" aria-label="Close"></button>
               <div class="px-3 pt-2">
-                <p class="text-muted mb-0">Stocks Left: <strong id="totalQtyDisplay">Loading...</strong></p>
+                <p class="text-white mb-0">Stocks Left: <strong id="totalQtyDisplay">Loading...</strong></p>
               </div>
             </div>
             <div class="modal-body">
@@ -316,8 +316,8 @@
     <div class="modal fade" id="reassignModal" tabindex="-1" aria-labelledby="tableModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-lg"> <!-- Use modal-lg for wider table -->
         <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="tableModalLabel">Reassign Item</h5>
+          <div class="modal-header bg-danger">
+            <h5 class="modal-title text-white" id="tableModalLabel">Reassign Item</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
