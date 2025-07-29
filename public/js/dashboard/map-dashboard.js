@@ -17,6 +17,9 @@ export function initMap(mapDivId = "leafletMap") {
 
   legend.addTo(map);
 
+  loadBarangayBoundaries("js/dashboard/data/Barangays_NCR.geojson");
+
+
   mapInitialized = true;
 }
 
@@ -122,3 +125,74 @@ export function clearExtraMarkers() {
   extraMarkers.forEach(m => map.removeLayer(m));
   extraMarkers = [];
 }
+
+export function loadBarangayBoundaries(geoJsonUrl = "Barangays_NCR.geojson") {
+  if (!map) return;
+
+  fetch(geoJsonUrl)
+    .then(response => response.json())
+    .then(data => {
+      // 🔲 Create a giant world polygon (the mask)
+      const world = turf.polygon([[
+        [-180, -90], [180, -90],
+        [180, 90], [-180, 90],
+        [-180, -90]
+      ]]);
+
+      // ⬜ Merge all barangay boundaries into one multipolygon
+      const barangays = turf.union(...data.features);
+
+      // 🕳 Subtract barangays from the world to create the “blackout” mask
+      const mask = turf.difference(world, barangays);
+
+      // 🌑 Add blackout layer (outside the barangays)
+      L.geoJSON(mask, {
+        style: {
+          color: "#000000",
+          weight: 0,
+          fillColor: "#000000",
+          fillOpacity: 0.7
+        }
+      }).addTo(map);
+
+      // 🎨 Define a color palette
+      const colors = [
+        "#e6194b", "#3cb44b", "#ffe119", "#4363d8",
+        "#f58231", "#911eb4", "#46f0f0", "#f032e6",
+        "#bcf60c", "#fabebe", "#008080", "#e6beff",
+        "#9a6324", "#fffac8", "#800000", "#aaffc3"
+      ];
+
+      // 📌 Map each city to a unique color
+      const cityColors = {};
+      let colorIndex = 0;
+
+      data.features.forEach(feature => {
+        const city = feature.properties.ADM2_EN;
+        if (!cityColors[city]) {
+          cityColors[city] = colors[colorIndex % colors.length];
+          colorIndex++;
+        }
+      });
+
+      // 🏘 Add barangay boundaries with city-based colors
+      L.geoJSON(data, {
+        style: feature => ({
+          color: cityColors[feature.properties.ADM2_EN], // outline color per city
+          weight: 2,
+          opacity: 0.9,
+          fillColor: "#FFD580",
+          fillOpacity: 0.2
+        }),
+        onEachFeature: (feature, layer) => {
+          if (feature.properties) {
+            const brgy = feature.properties.BRGY_NAME || "Unknown Barangay";
+            const city = feature.properties.ADM2_EN || "Unknown City";
+            layer.bindPopup(`<strong>${brgy}</strong><br><em>${city}</em>`);
+          }
+        }
+      }).addTo(map);
+    })
+    .catch(err => console.error("Error loading GeoJSON:", err));
+}
+

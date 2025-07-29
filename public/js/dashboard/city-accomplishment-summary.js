@@ -77,7 +77,7 @@ export async function initCityAccomplishmentSummary() {
         <td>${total}</td>
         <td>${waterSources}</td>
         <td>
-          <button class="btn btn-3d btn-sm btn-outline-info view-barangay-btn" 
+          <button class="btn btn-3d btn-sm btn-outline-primary view-barangay-btn" 
             data-city="${city}" data-bs-toggle="modal" data-bs-target="#barangayModal">
             View Barangays
           </button>
@@ -432,7 +432,6 @@ async function handleViewUserMapClick(event) {
   if (!event.target.classList.contains('view-map-btn')) return;
 
   const entryId = event.target.getAttribute('data-id');
-  console.log(`📍 Viewing map for entry ID: ${entryId}`);
 
   const allData = await WUSData.fetchAll();
   const selectedEntry = allData.find(entry => entry.id === entryId);
