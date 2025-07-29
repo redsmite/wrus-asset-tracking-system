@@ -18,8 +18,8 @@ import {
 import { filterPermitsByCity } from "./permit-city-summary.js";
 import { initYearlyWaterUserSummary } from "./yearly-summary.js";
 import { initCityAccomplishmentSummary } from "./city-accomplishment-summary.js";
+import { setupMapModal, initMap } from "./map-dashboard.js";
 import { initializePasswordChange } from "./change-password.js";
-import { PortalBubble } from "../components/PortalBubble.js";
 
 document.addEventListener('DOMContentLoaded', () => {
   checkAuthentication();
@@ -33,6 +33,8 @@ document.addEventListener('DOMContentLoaded', () => {
   filterPermitsByCity();
   initYearlyWaterUserSummary();
   initCityAccomplishmentSummary();
+  initMap();
+  setupMapModal("mapModal", "leafletMap");
   checkForAppUpdate();
   initializePasswordChange();
 });

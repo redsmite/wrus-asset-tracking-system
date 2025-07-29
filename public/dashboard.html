@@ -9,8 +9,12 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="css/dashboard-map.css">
   <link rel="stylesheet" href="css/component/bubble.css">
 </head>
 <body>
@@ -28,7 +32,7 @@
       </li>
       <li class="nav-item" role="presentation">
         <button class="nav-link .btn-3d" id="summary-tab" data-bs-toggle="tab" data-bs-target="#summaryTab" type="button" role="tab" aria-controls="summaryTab" aria-selected="false">
-          Summary Report
+          Database
         </button>
       </li>
       <li class="nav-item" role="presentation">
@@ -64,7 +68,7 @@
         </div>
       </div>
 
-      <!-- Summary Report Tab -->
+      <!-- Database Tab -->
       <div class="tab-pane fade" id="summaryTab" role="tabpanel" aria-labelledby="summary-tab">
         <div class="profile-banner d-flex flex-column align-items-start p-2 rounded shadow-sm mb-1">
 
@@ -72,7 +76,7 @@
           <ul class="nav nav-tabs mb-3" id="summaryInnerTabs" role="tablist">
             <li class="nav-item" role="presentation">
               <button class="nav-link active" id="permit-summary-tab" data-bs-toggle="tab" data-bs-target="#permitSummary" type="button" role="tab" aria-controls="permitSummary" aria-selected="true">
-                Permittee
+                Water Permit
               </button>
             </li>
             <li class="nav-item" role="presentation">
@@ -82,7 +86,7 @@
             </li>
             <li class="nav-item" role="presentation">
               <button class="nav-link" id="city-accom-tab" data-bs-toggle="tab" data-bs-target="#cityAccomplishment" type="button" role="tab" aria-controls="cityAccomplishment" aria-selected="false">
-                Accomplishment Per City
+                Water Users and Sources
               </button>
             </li>
           </ul>
@@ -153,6 +157,7 @@
         </div>
       </div>
     </div>
+    
     <!-- Announcement Modal -->
     <div class="modal fade water-modal" id="announcementModal" tabindex="-1" aria-labelledby="announcementModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
@@ -202,13 +207,27 @@
         </div>
       </div>
     </div>
-
+  </div>
 
   </div>
 
+  <!-- Map Modal -->
+  <div class="modal fade" id="mapModal" tabindex="-1" aria-labelledby="mapModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-success">
+          <h5 class="modal-title text-white" id="mapModalLabel">National Capital Region Map</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-0">
+          <div id="leafletMap"></div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script type="module" src="./js/dashboard/dashboard-init.js"></script>
 </body>
 </html>
