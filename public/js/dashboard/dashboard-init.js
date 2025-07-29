@@ -19,6 +19,7 @@ import { filterPermitsByCity } from "./permit-city-summary.js";
 import { initYearlyWaterUserSummary } from "./yearly-summary.js";
 import { initCityAccomplishmentSummary } from "./city-accomplishment-summary.js";
 import { setupMapModal, initMap } from "./map-dashboard.js";
+import { initMapPrint } from './mapPrint.js';
 import { initializePasswordChange } from "./change-password.js";
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -35,6 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initCityAccomplishmentSummary();
   initMap();
   setupMapModal("mapModal", "leafletMap");
+  initMapPrint("printMapBtn", "leafletMap");
   checkForAppUpdate();
   initializePasswordChange();
 });

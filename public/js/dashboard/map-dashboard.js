@@ -7,8 +7,11 @@ export function initMap(mapDivId = "leafletMap") {
   if (mapInitialized) return;
 
   map = L.map(mapDivId).setView([14.6091, 121.0223], 12);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://www.carto.com/">CARTO</a>',
+    subdomains: "abcd",
+    maxZoom: 19
   }).addTo(map);
 
   marker = L.marker([14.6091, 121.0223]).addTo(map)
@@ -132,30 +135,7 @@ export function loadBarangayBoundaries(geoJsonUrl = "Barangays_NCR.geojson") {
   fetch(geoJsonUrl)
     .then(response => response.json())
     .then(data => {
-      // 🔲 Create a giant world polygon (the mask)
-      const world = turf.polygon([[
-        [-180, -90], [180, -90],
-        [180, 90], [-180, 90],
-        [-180, -90]
-      ]]);
-
-      // ⬜ Merge all barangay boundaries into one multipolygon
-      const barangays = turf.union(...data.features);
-
-      // 🕳 Subtract barangays from the world to create the “blackout” mask
-      const mask = turf.difference(world, barangays);
-
-      // 🌑 Add blackout layer (outside the barangays)
-      L.geoJSON(mask, {
-        style: {
-          color: "#000000",
-          weight: 0,
-          fillColor: "#000000",
-          fillOpacity: 0.7
-        }
-      }).addTo(map);
-
-      // 🎨 Define a color palette
+      //  Define a color palette
       const colors = [
         "#e6194b", "#3cb44b", "#ffe119", "#4363d8",
         "#f58231", "#911eb4", "#46f0f0", "#f032e6",
@@ -163,7 +143,7 @@ export function loadBarangayBoundaries(geoJsonUrl = "Barangays_NCR.geojson") {
         "#9a6324", "#fffac8", "#800000", "#aaffc3"
       ];
 
-      // 📌 Map each city to a unique color
+      //  Map each city to a unique color
       const cityColors = {};
       let colorIndex = 0;
 
@@ -178,7 +158,7 @@ export function loadBarangayBoundaries(geoJsonUrl = "Barangays_NCR.geojson") {
       // 🏘 Add barangay boundaries with city-based colors
       L.geoJSON(data, {
         style: feature => ({
-          color: cityColors[feature.properties.ADM2_EN], // outline color per city
+          color: cityColors[feature.properties.ADM2_EN],
           weight: 2,
           opacity: 0.9,
           fillColor: "#FFD580",
@@ -190,9 +170,74 @@ export function loadBarangayBoundaries(geoJsonUrl = "Barangays_NCR.geojson") {
             const city = feature.properties.ADM2_EN || "Unknown City";
             layer.bindPopup(`<strong>${brgy}</strong><br><em>${city}</em>`);
           }
+
+          //  Add label markers for ADM4_EN but keep them hidden initially
+          if (feature.properties.ADM4_EN) {
+            const labelText = feature.properties.ADM4_EN;
+
+            // Calculate centroid manually
+            const coords = feature.geometry.coordinates;
+            let latlng;
+
+            if (feature.geometry.type === "Polygon") {
+              latlng = getPolygonCentroid(coords[0]);
+            } else if (feature.geometry.type === "MultiPolygon") {
+              latlng = getPolygonCentroid(coords[0][0]); // take first polygon
+            }
+
+            if (latlng) {
+              const label = L.divIcon({
+                className: "barangay-label",
+                html: labelText,
+                iconSize: null
+              });
+
+              const marker = L.marker(latlng, { icon: label, interactive: false });
+
+              // Add marker but hide it if zoom < 14
+              if (map.getZoom() >= 14) {
+                marker.addTo(map);
+              }
+
+              // Store marker for later show/hide
+              if (!map._barangayLabels) map._barangayLabels = [];
+              map._barangayLabels.push(marker);
+            }
+          }
         }
       }).addTo(map);
+
+      //  Show/hide labels based on zoom level
+      map.on("zoomend", () => {
+        if (!map._barangayLabels) return;
+        const showLabels = map.getZoom() >= 14;
+
+        map._barangayLabels.forEach(marker => {
+          if (showLabels) {
+            if (!map.hasLayer(marker)) marker.addTo(map);
+          } else {
+            if (map.hasLayer(marker)) map.removeLayer(marker);
+          }
+        });
+      });
     })
     .catch(err => console.error("Error loading GeoJSON:", err));
 }
+
+function getPolygonCentroid(coords) {
+  let area = 0, x = 0, y = 0;
+  for (let i = 0, j = coords.length - 1; i < coords.length; j = i++) {
+    const [x0, y0] = coords[j];
+    const [x1, y1] = coords[i];
+    const f = x0 * y1 - x1 * y0;
+    area += f;
+    x += (x0 + x1) * f;
+    y += (y0 + y1) * f;
+  }
+  area *= 0.5;
+  return [y / (6 * area), x / (6 * area)];
+}
+
+
+
 

@@ -215,9 +215,14 @@
   <div class="modal fade" id="mapModal" tabindex="-1" aria-labelledby="mapModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
       <div class="modal-content">
-        <div class="modal-header bg-success">
+        <div class="modal-header bg-success d-flex justify-content-between align-items-center">
           <h5 class="modal-title text-white" id="mapModalLabel">National Capital Region Map</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          <div>
+            <button class="btn btn-3d btn-light btn-sm me-2" id="printMapBtn">
+              <i class="bi bi-printer"></i> Print
+            </button>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
         </div>
         <div class="modal-body p-0">
           <div id="leafletMap"></div>
@@ -225,6 +230,7 @@
       </div>
     </div>
   </div>
+
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
