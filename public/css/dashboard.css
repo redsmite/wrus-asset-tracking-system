@@ -22,12 +22,12 @@
   font-size: 1.2em;
 }
 
-#page-content h1, .simple-water-jumbotron h5{
+#page-content h1, .simple-water-jumbotron h5 {
   color: #fff;
   padding: 5px;
   background: rgba(30, 42, 56, 0.3);
   border-radius: 16px;
-  margin-bottom: 5px;
+  box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.5);
 }
 
 .simple-water-jumbotron {
@@ -69,6 +69,15 @@
   opacity: 0.2;
   z-index: 2;
 }
+
+.denr-logo {
+  max-width: 120px;
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  padding: 5px;
+  background: #fff;
+}
+
 
 .simple-water-jumbotron h1 {
   font-weight: 700;
@@ -156,19 +165,15 @@
   background: rgba(255, 255, 255, 0.05) !important;
   border: 1px solid rgba(255, 255, 255, 0.15);
   color: #f8f9fa;
-  transition: background 0.3s ease;
-}
-
-.activities-section .list-group-item:hover {
-  background: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.4);
+  margin: 5px 0;
 }
 
 .activities-section .badge {
   font-size: 1rem;
   padding: 8px 14px;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
 }
-
 
 .badge-3d {
   position: relative;
