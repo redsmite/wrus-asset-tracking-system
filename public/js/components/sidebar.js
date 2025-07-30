@@ -1,5 +1,7 @@
+import { Users } from '../user/user-data.js'
+
 export const Sidebar = {
-  render(containerId = 'sidebarContainer') {
+  async render(containerId = 'sidebarContainer') { 
     const container = document.getElementById(containerId);
     if (!container) {
       console.warn(`Sidebar container with ID "${containerId}" not found.`);
@@ -8,6 +10,11 @@ export const Sidebar = {
 
     const userRole = localStorage.getItem('userRole');
     const isAdmin = userRole === 'admin';
+
+    const currentUserId = localStorage.getItem('wrusUserId');
+
+    const usersMap = await Users.getUsersMap();
+    const currentUserName = usersMap[currentUserId] || "Unknown User";
 
     container.innerHTML = `
       <!-- Mobile Navbar -->
@@ -36,12 +43,15 @@ export const Sidebar = {
           <div class="d-flex justify-content-between align-items-center mb-3">
             <div class="logo-container d-none d-md-flex align-items-center gap-2">
               <i class="bi bi-droplet-fill droplet-icon"></i>
-
               <h4 class="wrus-water-title m-0">WRUS Portal</h4>
             </div>
             <button id="sidebarToggle" class="btn btn-3d water-btn-outline d-none d-md-block">
               <i class="bi bi-chevron-left"></i>
             </button>
+          </div>
+
+          <div class="mb-3 text-white fw-bold">
+            <i class="bi bi-person-circle me-2"></i> ${currentUserName}
           </div>
 
           <ul class="nav flex-column mb-auto">

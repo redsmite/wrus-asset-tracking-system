@@ -1,3 +1,4 @@
+import { AuthHandler } from "./auth/auth.js";
 import { db } from "./firebaseConfig.js";
 import {
   collection,
@@ -13,6 +14,7 @@ import { LoginSuccess } from './components/loginSuccess.js';
 import { PortalLight } from './components/PortalLight.js';
 
 document.addEventListener('DOMContentLoaded', () => {
+  AuthHandler.checkLoginStatus();
   PortalLoader.render();
   LoginSuccess.render();
   PortalLight.render();

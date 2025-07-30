@@ -1,4 +1,4 @@
-import { adminVerification } from '../admin/admin-verification.js';
+import { AdminGuard } from "../auth/auth.js";
 import { Sidebar } from "../components/sidebar.js";
 import {
   checkAuthentication,
@@ -8,7 +8,7 @@ import {
 } from './admin-dashboard-ui.js';
 
 function init() {
-  adminVerification();
+  AdminGuard.verify();
   checkAuthentication();
   refreshAllCachesEvery8Hours();
   showEncodedPermitsByUserPerMonth();

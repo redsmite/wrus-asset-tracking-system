@@ -1,3 +1,4 @@
+import { SessionGuard } from '../auth/auth.js';
 import {
   initDOMElements,
   initUI,
@@ -6,6 +7,7 @@ import {
 } from './summary-ui.js';
 
 document.addEventListener("DOMContentLoaded", async () => {
+  SessionGuard.ensureLoggedIn();
   initDOMElements();
   initUI();
   await loadData();

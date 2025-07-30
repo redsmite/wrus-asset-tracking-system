@@ -1,6 +1,8 @@
+import { SessionGuard } from '../auth/auth.js';
 import { initializePage } from './ics-ui.js'
 
 document.addEventListener('DOMContentLoaded', () => {
+  SessionGuard.ensureLoggedIn();
   const userRole = localStorage.getItem('userRole');
   const userType = localStorage.getItem("userType");
   checkAccessAndInitialize(userType, userRole);
