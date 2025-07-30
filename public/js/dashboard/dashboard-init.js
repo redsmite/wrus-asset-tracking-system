@@ -8,24 +8,18 @@ import { ICS } from '../data/cache/ics-data.js';
 import { Permit } from "../data/cache/permit-data.js";
 import { WUSData } from "../data/cache/wrus-data.js";
 import { checkForAppUpdate } from "./version-control.js";
-
-import { showAnnouncementModal } from './dashboard-ui.js';
-
 import { filterPermitsByCity } from "./permit-city-summary.js";
 import { initYearlyWaterUserSummary } from "./yearly-summary.js";
 import { initCityAccomplishmentSummary } from "./city-accomplishment-summary.js";
 import { setupMapModal, initMap } from "../map/map-init.js";
 import { initMapPrint } from '../map/mapPrint.js';
 import { initializePasswordChange } from "./change-password.js";
-import { PortalBubble } from '../components/PortalBubble.js'
 
 document.addEventListener('DOMContentLoaded', () => {
   SessionGuard.ensureLoggedIn();
   refreshAllCachesEvery8Hours();
   Sidebar.render();
   Spinner.render();
-  showAnnouncementModal("");
-  PortalBubble.trigger();
   filterPermitsByCity();
   initYearlyWaterUserSummary();
   initCityAccomplishmentSummary();

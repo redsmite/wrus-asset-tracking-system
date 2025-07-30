@@ -1,5 +1,5 @@
 import { Permit } from "../data/cache/permit-data.js";
-import { METRO_MANILA_CITIES } from "../constants/metroManilaCities.js";
+import { METRO_MANILA_CITIES } from "../data/constants/metroManilaCities.js";
 
 
 export async function filterPermitsByCity() {

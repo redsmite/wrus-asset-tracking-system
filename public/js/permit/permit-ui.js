@@ -2,7 +2,7 @@ import { Sidebar } from "../components/sidebar.js";
 import { Spinner } from "../components/spinner.js";
 import { Permit } from "../data/cache/permit-data.js"
 import { WUSData } from "../data/cache/wrus-data.js";
-import { METRO_MANILA_CITIES } from '../constants/metroManilaCities.js';
+import { METRO_MANILA_CITIES } from '../data/constants/metroManilaCities.js';
 import { FileService } from "../upload/upload.js";
 import { GeotaggedFileService } from "../upload/uploadImg.js";
 import { CoordinateUtils } from "../utils/coordinates.js";

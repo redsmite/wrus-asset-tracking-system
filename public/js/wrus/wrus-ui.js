@@ -3,7 +3,7 @@ import { Permit } from '../data/cache/permit-data.js';
 import { Sidebar } from "../components/sidebar.js";
 import { Spinner } from '../components/spinner.js';
 import { NotificationBox } from '../components/notification.js';
-import { METRO_MANILA_CITIES } from '../constants/metroManilaCities.js';
+import { METRO_MANILA_CITIES } from '../data/constants/metroManilaCities.js';
 import { GeotaggedFileService } from '../upload/uploadImg.js';
 import { PortalBubble } from '../components/PortalBubble.js';
 
