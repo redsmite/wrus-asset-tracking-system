@@ -11,8 +11,8 @@ import {
   deleteDoc,
   where
 } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
-import { db } from "../firebaseConfig.js";
-import { NotificationBox } from "../components/notification.js";
+import { db } from "../../firebaseConfig.js";
+import { NotificationBox } from "../../components/notification.js";
 
 export const ICS = {
   collectionRef: collection(db, "ICS"),

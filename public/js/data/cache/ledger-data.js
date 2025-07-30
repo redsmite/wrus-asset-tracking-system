@@ -1,5 +1,5 @@
-import { db } from "../firebaseConfig.js";
-import { Consumable } from "../consumable/consumable-data.js";
+import { db } from "../../firebaseConfig.js";
+import { Consumable } from "./consumable-data.js";
 import {
   collection,
   getDocs,

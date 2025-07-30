@@ -1,6 +1,6 @@
 import { FileService } from '../upload/upload.js';
-import { ICS } from './ics-data.js';
-import { Users } from '../user/user-data.js';
+import { ICS } from '../data/cache/ics-data.js';
+import { Users } from '../data/cache/user-data.js'
 import { Sidebar } from '../components/sidebar.js'
 import { Spinner } from '../components/spinner.js';
 import { NotificationBox, Confirmation } from '../components/notification.js';

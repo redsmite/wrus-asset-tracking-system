@@ -1,5 +1,5 @@
 import bcrypt from "https://esm.sh/bcryptjs@2.4.3";
-import { Users } from './user-data.js';
+import { Users } from '../data/cache/user-data.js'
 import { Spinner } from '../components/spinner.js';
 import { Sidebar } from '../components/sidebar.js';
 import { AdminGuard } from "../auth/auth.js";

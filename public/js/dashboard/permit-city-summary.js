@@ -1,4 +1,4 @@
-import { Permit } from "../permit/permit-data.js";
+import { Permit } from "../data/cache/permit-data.js";
 import { METRO_MANILA_CITIES } from "../constants/metroManilaCities.js";
 
 

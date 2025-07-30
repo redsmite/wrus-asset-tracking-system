@@ -1,5 +1,5 @@
-import { db } from "../firebaseConfig.js";
-import { Ledger } from "../ledger/ledger-data.js";
+import { db } from "../../firebaseConfig.js";
+import { Ledger } from "./ledger-data.js";
 import {
   collection,
   query,

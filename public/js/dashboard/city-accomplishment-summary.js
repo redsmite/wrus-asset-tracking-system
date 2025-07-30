@@ -1,6 +1,6 @@
-import { WUSData } from "../wrus/wrus-data.js";
+import { WUSData } from "../data/cache/wrus-data.js";
 import { normalizeBarangay, normalizeCity } from "../utils/normalize.js"
-import { updateMapLocation, addMapMarker, clearExtraMarkers } from './map-dashboard.js';
+import { updateMapLocation, addMapMarker, clearExtraMarkers } from '../map/map-init.js';
 
 export async function initCityAccomplishmentSummary() {
   const data = await WUSData.fetchAll();
@@ -46,7 +46,7 @@ export async function initCityAccomplishmentSummary() {
 
   const cities = Object.keys(grouped).sort();
   let html = `
-    <h3 class="mb-3">Accomplishment Per City — Water Users and Sources
+    <h3 class="mb-3">Water Users and Sources Database
       <span class="fs-6 fw-normal"> — As of ${dateStr}</span>
     </h3>
     <table class="table table-bordered table-striped align-middle text-center rounded-0">

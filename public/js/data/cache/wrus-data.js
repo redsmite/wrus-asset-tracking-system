@@ -1,4 +1,4 @@
-import { db } from '../firebaseConfig.js';
+import { db } from '../../firebaseConfig.js';
 import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, serverTimestamp, query, orderBy, limit, setDoc } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
 
 const WUSCollection = collection(db, 'water_users');

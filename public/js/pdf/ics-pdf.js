@@ -1,5 +1,5 @@
-import { ICS } from "../ics/ics-data.js";
-import { Users } from "../user/user-data.js";
+import { ICS } from "../data/cache/ics-data.js";
+import { Users } from "../data/cache/user-data.js"
 import { NotificationBox, Confirmation } from "../components/notification.js";
 
 export async function generatePdfICS(userId) {

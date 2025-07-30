@@ -25,9 +25,9 @@
 #page-content h1, .simple-water-jumbotron h5 {
   color: #fff;
   padding: 5px;
-  background: rgba(30, 42, 56, 0.3);
-  border-radius: 16px;
-  box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.5);
+  background: rgba(30, 42, 56, 0.15);
+  border-radius: 18px;
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 .simple-water-jumbotron {
@@ -37,177 +37,69 @@
   justify-content: center;
   text-align: center;
   position: relative;
-  background: linear-gradient(145deg, #0077be, #00bcd4);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-  border-bottom: 5px solid rgba(255,255,255,0.3);
+  background: linear-gradient(145deg, rgba(0,119,190,0.7), rgba(0,188,212,0.6));
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
+  border-bottom: 3px solid rgba(255,255,255,0.2);
   overflow: hidden;
-  border-radius: 20px;
+  border-radius: 25px;
   padding: 2rem 1rem;
-}
-
-.simple-water-jumbotron::before {
-  content: "";
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.25) 0%, transparent 70%);
-  animation: shineMove 8s infinite linear;
-  z-index: 1;
-}
-
-.simple-water-jumbotron::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 80px;
-  background: rgba(255, 255, 255, 0.15);
-  filter: blur(8px);
-  opacity: 0.2;
-  z-index: 2;
+  backdrop-filter: blur(6px);
 }
 
 .denr-logo {
   max-width: 120px;
   border-radius: 50%;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   padding: 5px;
-  background: #fff;
+  background: rgba(255,255,255);
 }
 
-
 .simple-water-jumbotron h1 {
-  font-weight: 700;
+  font-weight: 600;
   color: #fff;
-  text-shadow: 3px 3px 12px rgba(0, 0, 0, 0.5);
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
   position: relative;
   z-index: 3;
-  font-size: 2.5rem;
+  font-size: 2.3rem;
 }
 
 .simple-water-jumbotron p {
   font-size: 1.2rem;
   margin-top: 10px;
-  text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.4);
+  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.25);
   position: relative;
   z-index: 3;
 }
 
-@media (max-width: 768px) {
-  .simple-water-jumbotron {
-    min-height: 280px;
-    padding: 1.5rem 1rem;
-  }
-
-  .simple-water-jumbotron h1 {
-    font-size: 1.6rem;
-    line-height: 1.3;
-  }
-
-  .simple-water-jumbotron p {
-    font-size: 1rem;
-  }
-
-  .list-group-item {
-    font-size: 0.9rem;
-    padding: 0.5rem;
-  }
-
-  .list-group .badge {
-    font-size: 0.8rem;
-    padding: 0.4em 0.6em;
-    text-align: center;
-  }
-}
-
-@keyframes shineMove {
-  0% { transform: translate(-20%, -20%) rotate(0deg); }
-  100% { transform: translate(20%, 20%) rotate(360deg); }
-}
-
 .activities-section {
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(10px);
-  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  border-radius: 18px;
   padding: 1.5rem;
   margin-top: 2rem;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.activities-section:hover {
-  transform: scale(1.02);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
-}
-
-.activities-section h5 {
-  font-size: 1.6rem;
-  text-align: center;
-  color: #fff;
-  position: relative;
-  margin-bottom: 1.5rem;
-}
-
-.activities-section h5::after {
-  content: "";
-  display: block;
-  width: 60px;
-  height: 3px;
-  margin: 8px auto 0;
-  border-radius: 2px;
 }
 
 .activities-section .list-group-item {
   font-size: 1.1rem;
-  background: rgba(255, 255, 255, 0.05) !important;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   color: #f8f9fa;
-  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.4);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.25);
+  border-radius: 14px;
   margin: 5px 0;
 }
 
-.activities-section .badge {
-  font-size: 1rem;
-  padding: 8px 14px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
-}
-
 .badge-3d {
-  position: relative;
-  display: inline-block;
   padding: 0.35em 0.7em;
   font-size: 0.75rem;
-  font-weight: 600;
-  line-height: 1;
+  font-weight: 500;
   color: white;
   border-radius: 0.5rem;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.2),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.1),
-    0 2px 4px rgba(0, 0, 0, 0.15);
-  overflow: hidden;
-}
-
-.badge-3d::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -50%;
-  width: 30%;
-  height: 100%;
-  background: linear-gradient(
-    120deg,
-    rgba(255, 255, 255, 0.05) 0%,
-    rgba(255, 255, 255, 0.15) 50%,
-    rgba(255, 255, 255, 0.05) 100%
-  );
-  transform: skewX(-20deg);
-  animation: shine 10s ease-in-out infinite;
-  pointer-events: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  background: rgba(0,0,0,0.5);
 }
 
 .card {
@@ -233,7 +125,7 @@
 }
 
 .row.text-center > .col-md-6:nth-child(3) .card {
-  background: linear-gradient(135deg, #0dcaf0, #4bd4f5);
+  background: linear-gradient(135deg, #0aa0c0, #2eafc7);
 }
 
 .row.text-center > .col-md-6:nth-child(4) .card {
@@ -279,9 +171,14 @@
   box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
-.card-body a{
+.card-body a {
   width: 100px;
+  min-height: 60px;
   margin: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 
 .water-modal .modal-dialog {

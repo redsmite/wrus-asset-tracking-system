@@ -1,4 +1,4 @@
-import { Users } from '../user/user-data.js'
+import { Users } from '../data/cache/user-data.js'
 
 export const Sidebar = {
   async render(containerId = 'sidebarContainer') { 

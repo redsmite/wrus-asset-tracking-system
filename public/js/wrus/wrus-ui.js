@@ -1,5 +1,5 @@
-import { WUSData } from './wrus-data.js';
-import { Permit } from '../permit/permit-data.js';
+import { WUSData } from '../data/cache/wrus-data.js';
+import { Permit } from '../data/cache/permit-data.js';
 import { Sidebar } from "../components/sidebar.js";
 import { Spinner } from '../components/spinner.js';
 import { NotificationBox } from '../components/notification.js';

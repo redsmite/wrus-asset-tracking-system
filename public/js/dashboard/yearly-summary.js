@@ -1,4 +1,4 @@
-import { WUSData } from "../wrus/wrus-data.js";
+import { WUSData } from "../data/cache/wrus-data.js";
 
 export async function initYearlyWaterUserSummary() {
   const data = await WUSData.fetchAll();
@@ -45,7 +45,7 @@ export async function initYearlyWaterUserSummary() {
   const years = Object.keys(grouped).sort((a, b) => a - b);
 
   let html = `
-    <h3 class="mb-3">Yearly Accomplishment — Water Users and Sources 
+    <h3 class="mb-3">WRUS Accomplishment — Water Users and Sources 
       <span class="fs-6 fw-normal"> — As of ${dateStr}</span>
     </h3>
     <table class="table table-bordered table-striped align-middle text-center rounded-0">
