@@ -116,8 +116,7 @@ function handleAddFormSubmit() {
       visited: visited,
       cancelled: cancelled,
       pdfUrl: pdfUrl || '',
-      encodedBy: localStorage.getItem("wrusUserId") || null,
-      timestamp: new Date()
+      encodedBy: localStorage.getItem("wrusUserId") || null
     };
 
     try {

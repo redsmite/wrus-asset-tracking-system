@@ -14,14 +14,34 @@ export function initMap(mapDivId = "leafletMap") {
     maxZoom: 19
   }).addTo(map);
 
-  marker = L.marker([14.6091, 121.0223]).addTo(map)
-    .bindPopup("National Capital Region")
-    .openPopup();
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const userLat = position.coords.latitude;
+        const userLng = position.coords.longitude;
+
+        map.setView([userLat, userLng], 14);
+
+        marker = L.marker([userLat, userLng]).addTo(map)
+          .bindPopup("📍 You are here")
+          .openPopup();
+      },
+      () => {
+        console.warn("Geolocation failed. Using default location.");
+        marker = L.marker([14.6091, 121.0223]).addTo(map)
+          .bindPopup("National Capital Region")
+          .openPopup();
+      }
+    );
+  } else {
+    console.warn("Geolocation is not supported by this browser.");
+    marker = L.marker([14.6091, 121.0223]).addTo(map)
+      .bindPopup("National Capital Region")
+      .openPopup();
+  }
 
   legend.addTo(map);
-
   loadBarangayBoundaries("js/data/geojson/Barangays_NCR.geojson");
-
 
   mapInitialized = true;
 }

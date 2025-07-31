@@ -9,20 +9,52 @@
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/leaflet-routing-machine.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/map.css">
   <link rel="stylesheet" href="css/map-page.css">
+  <link rel="stylesheet" href="css/component/bubble.css">
 </head>
 <body>
   <div class="d-flex flex-column flex-md-row" id="wrapper">
     <div id="sidebarContainer"></div>
     <div class="container-fluid p-2" id="page-content">
-      <div id="leafletMap"></div>
+      <h2 class="mb-0 h5 h2-sm"><i class="bi bi-geo-alt"></i> Routing Map</h2>
+      
+      <div class="map-container">
+        <!-- Map -->
+        <div id="routingMap"></div>
+
+        <!-- Floating Form -->
+        <form id="routingForm" class="routing-form">
+          <input type="hidden" id="endLat">
+          <input type="hidden" id="endLng">
+          <div class="mb-2">
+            <label for="startLocation" class="form-label small mb-1">Starting Location</label>
+            <input type="text" class="form-control form-control-sm" id="startLocation" placeholder="Enter start point">
+          </div>
+          <div class="mb-2 position-relative">
+            <label for="endLocation" class="form-label small mb-1">End Location <small><i>(i.e., Permit No.)</i></small></label>
+            <input type="text" class="form-control form-control-sm" id="endLocation" placeholder="Enter destination">
+            <ul id="endLocationList" class="list-group position-absolute w-100" style="z-index: 1000; max-height: 200px; overflow-y: auto; display:none;"></ul>
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm w-100">
+            <i class="bi bi-arrow-right-circle"></i> Get Route
+          </button>
+        </form>
+      </div>
+
     </div>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+  <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+
   <script type="module" src="./js/map/routing-page-init.js"></script>
 </body>
 </html>

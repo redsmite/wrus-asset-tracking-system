@@ -24,6 +24,7 @@ export const Permit = {
     try {
       const permitNoToCheck = data.permitNo.trim();
 
+      // 🔍 Check for duplicate permitNo
       const duplicateQuery = query(
         permitCollection,
         where('permitNo', '==', permitNoToCheck)
@@ -34,31 +35,15 @@ export const Permit = {
         throw new Error(`Permit No "${permitNoToCheck}" already exists.`);
       }
 
-      const latestQuery = query(
-        permitCollection,
-        orderBy('createdAt', 'desc'),
-        limit(1)
-      );
-      const latestSnapshot = await getDocs(latestQuery);
-
-      let newIdNumber = '0001';
-      if (!latestSnapshot.empty) {
-        const lastDoc = latestSnapshot.docs[0];
-        const lastId = lastDoc.id;
-        const lastNumber = parseInt(lastId.split('-')[1]);
-        const nextNumber = lastNumber + 1;
-        newIdNumber = nextNumber.toString().padStart(4, '0');
-      }
-
-      const newDocId = `2025-${newIdNumber}`;
-      const docRef = doc(db, 'permits', newDocId);
+      // ✅ Use Firestore to create a new doc with a random ID
+      const docRef = doc(permitCollection);  // <-- this creates a ref with a random ID
 
       await setDoc(docRef, {
         ...data,
         createdAt: serverTimestamp(),
       });
 
-      // ✅ Re-fetch saved document to get server timestamp and all accurate fields
+      // ✅ Fetch saved document to get Firestore timestamp
       const savedDoc = await getDoc(docRef);
       if (!savedDoc.exists()) {
         throw new Error("Failed to fetch the newly added permit");
@@ -66,15 +51,22 @@ export const Permit = {
 
       const savedData = { id: savedDoc.id, ...savedDoc.data() };
 
-      // ✅ Update cache
+      // ✅ Update local cache
       const cached = localStorage.getItem(this.localStorageKey);
       const parsed = cached ? JSON.parse(cached) : [];
 
-      // Remove any existing entry with same ID to avoid duplicates
+      // Remove any duplicate ID before adding the new one
       const updatedCache = parsed.filter(item => item.id !== savedData.id);
 
-      // Add new item at the beginning for descending order
+      // Add new permit at the beginning for descending order
       updatedCache.unshift(savedData);
+
+      // Sort by Firestore timestamp
+      updatedCache.sort((a, b) => {
+        const aDate = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
+        const bDate = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt);
+        return bDate - aDate;
+      });
 
       // Save updated cache
       localStorage.setItem(this.localStorageKey, JSON.stringify(updatedCache));
@@ -85,25 +77,25 @@ export const Permit = {
     }
   },
 
-
   // 🔸 Get all permits (from localStorage first)
   async getAll() {
-    const cached = localStorage.getItem(this.localStorageKey);
-    if (cached) {
-      const parsed = JSON.parse(cached);
-      return parsed.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    }
-
     try {
-      const querySnapshot = await getDocs(
-        query(permitCollection, orderBy('createdAt', 'desc'))
-      );
-      const permits = [];
-      querySnapshot.forEach((doc) => {
-        permits.push({ id: doc.id, ...doc.data() });
+      const snapshot = await getDocs(permitCollection);
+      let permits = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      // ✅ Sort safely (handles Firestore timestamps & plain dates)
+      permits.sort((a, b) => {
+        const aDate = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
+        const bDate = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt);
+        return bDate - aDate; // newest first
       });
 
+      // ✅ Update cache
       localStorage.setItem(this.localStorageKey, JSON.stringify(permits));
+
       return permits;
     } catch (error) {
       console.error('Error fetching permits:', error.message);
@@ -114,18 +106,25 @@ export const Permit = {
   // 🔸 Force refresh cache
   async refreshCache() {
     try {
-      const querySnapshot = await getDocs(
-        query(permitCollection, orderBy('createdAt', 'desc'))
-      );
-      const permits = [];
-      querySnapshot.forEach((doc) => {
-        permits.push({ id: doc.id, ...doc.data() });
+      const snapshot = await getDocs(permitCollection);
+      let permits = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      // ✅ Safe sorting
+      permits.sort((a, b) => {
+        const aDate = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
+        const bDate = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt);
+        return bDate - aDate;
       });
 
+      // ✅ Save back to cache
       localStorage.setItem(this.localStorageKey, JSON.stringify(permits));
-      return permits;
+
+      console.log('✅ Local cache refreshed successfully');
     } catch (error) {
-      console.error("Error refreshing permit cache:", error.message);
+      console.error('❌ Error refreshing cache:', error.message);
       throw error;
     }
   },

@@ -1,9 +1,7 @@
 import { SessionGuard } from "../auth/auth.js";
-import { Sidebar } from "../components/sidebar.js";
-import { initMap } from "./map-init.js";
+import { initializePage } from "./routing-page-ui.js";
 
 document.addEventListener('DOMContentLoaded',()=>{
   SessionGuard.ensureLoggedIn();
-  Sidebar.render();
-  initMap("leafletMap");
+  initializePage();
 })
