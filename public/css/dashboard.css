@@ -10,8 +10,20 @@
   min-height: 85vh;
 }
 
-.profile-banner:hover {
-  box-shadow: 0 6px 20px rgba(0, 150, 255, 0.2);
+.logo-container {
+  display: inline-block;   /* keeps the container only as big as the logo */
+  position: relative;      /* allows adding effects/overlays later */
+  cursor: pointer;         /* shows pointer cursor */
+  padding: 5px;            /* optional spacing */
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spin-once {
+  animation: spin 3s linear;
 }
 
 #page-content h1{

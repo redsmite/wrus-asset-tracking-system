@@ -31,14 +31,23 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 export async function refreshAllDailyCaches() {
-  await Promise.all([
-    Users.autoRefreshDaily?.(),
-    Consumable.autoRefreshDaily?.(),
-    ICS.autoRefreshDaily?.(),
-    Permit.autoRefreshDaily?.(),
-    WUSData.autoRefreshDaily?.()
-  ]);
+  try {
+    Spinner.show();
+
+    await Promise.all([
+      Users.autoRefreshDaily?.(),
+      Consumable.autoRefreshDaily?.(),
+      ICS.autoRefreshDaily?.(),
+      Permit.autoRefreshDaily?.(),
+      WUSData.autoRefreshDaily?.()
+    ]);
+  } catch (error) {
+    console.error("Error refreshing daily caches:", error);
+  } finally {
+    Spinner.hide();
+  }
 }
+
 
 export async function refreshAllCachesEvery8Hours() {
   await Promise.all([
