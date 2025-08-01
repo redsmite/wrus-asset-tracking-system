@@ -11,10 +11,10 @@
 }
 
 .logo-container {
-  display: inline-block;   /* keeps the container only as big as the logo */
-  position: relative;      /* allows adding effects/overlays later */
-  cursor: pointer;         /* shows pointer cursor */
-  padding: 5px;            /* optional spacing */
+  display: inline-block;
+  position: relative;
+  cursor: pointer;
+  padding: 5px;
 }
 
 @keyframes spin {

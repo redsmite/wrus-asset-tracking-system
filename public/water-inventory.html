@@ -50,7 +50,7 @@
         <!-- File buttons container -->
         <div class="item-container bg-secondary" id="itemContainer">
           <div>
-            <button class="btn btn-primary big-plus-btn" data-bs-toggle="modal" data-bs-target="#exampleModal">
+            <button class="btn btn-primary big-plus-btn" data-bs-toggle="modal" data-bs-target="#addModal">
               <i class="bi bi-file-earmark-plus"></i>
             </button>
           </div>
@@ -64,14 +64,14 @@
 
       </div>
     </div>
-
-    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <!-- Add Modal -->
+    <div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
           <form id="modalForm">
             <!-- Modal Header -->
             <div class="modal-header bg-primary text-white">
-              <h5 class="modal-title text-white" id="exampleModalLabel">Add Water Inventory</h5>
+              <h5 class="modal-title text-white" id="addModalLabel">Add Water Inventory</h5>
               <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
@@ -111,7 +111,7 @@
                 <!-- Source of Water -->
                 <div class="col-12">
                   <label for="modalSourceWater" class="form-label fw-bold small">Source of Water</label>
-                  <!-- ✅ Select dropdown -->
+                  <!-- Select dropdown -->
                   <select class="form-select form-select-lg" id="modalSourceWaterSelect">
                     <option value="" selected disabled>Choose source...</option>
                     <option value="Deepwell">Deepwell</option>
@@ -142,7 +142,7 @@
                   <div class="form-check mt-2">
                     <input class="form-check-input" type="checkbox" id="modalIsWaterSource">
                     <label class="form-check-label" for="modalIsWaterSource">
-                      ✅ Is Water Source?
+                      Is Water Source?
                     </label>
                   </div>
                 </div>
@@ -151,7 +151,7 @@
                   <label for="modalPurpose" class="form-label fw-bold small">Purpose</label>
                   
                   <div class="input-group">
-                    <!-- ✅ Select dropdown -->
+                    <!-- Select dropdown -->
                     <select class="form-select form-select-lg" id="modalPurposeSelect">
                       <option value="" selected disabled>Select purpose...</option>
                       <option value="Household Use">Household</option>
@@ -191,7 +191,7 @@
               </div>
             </div>
 
-            <!-- ✅ Modal Footer -->
+            <!-- Modal Footer -->
             <div class="modal-footer">
               <button type="submit" class="btn btn-3d btn-primary btn-lg w-100 py-2"> Save</button>
             </div>
@@ -200,10 +200,143 @@
       </div>
     </div>
 
+    <!-- Edit Modal -->
+    <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+          <form id="editModalForm">
+            <!-- Modal Header -->
+            <div class="modal-header bg-warning text-dark">
+              <h5 class="modal-title" id="editModalLabel">Edit Water Inventory</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="modal-body">
+              <div class="row gy-3">
+                <input type="hidden" id="editIndex">
+                <!-- Year Conducted -->
+                <div class="col-12">
+                  <label for="editYearConducted" class="form-label fw-bold small">Year Conducted</label>
+                  <input type="number" class="form-control form-control-lg" id="editYearConducted" disabled>
+                </div>
+
+                <!-- Owner -->
+                <div class="col-12">
+                  <label for="editOwner" class="form-label fw-bold small">Owner</label>
+                  <input type="text" class="form-control form-control-lg" id="editOwner" placeholder="Enter owner name">
+                </div>
+
+                <!-- Location -->
+                <div class="col-12">
+                  <label for="editLocation" class="form-label fw-bold small">Location</label>
+                  <input type="text" class="form-control form-control-lg" id="editLocation" placeholder="Enter location">
+                </div>
+
+                <!-- City & Barangay -->
+                <div class="col-6">
+                  <label for="editCity" class="form-label fw-bold small">City</label>
+                  <input type="text" class="form-control form-control-lg" id="editCity" disabled>
+                </div>
+
+                <div class="col-6">
+                  <label for="editBarangay" class="form-label fw-bold small">Barangay</label>
+                  <input type="text" class="form-control form-control-lg" id="editBarangay" disabled>
+                </div>
+
+                <!-- Source of Water -->
+                <div class="col-12">
+                  <label for="editSourceWaterSelect" class="form-label fw-bold small">Source of Water</label>
+                  <select class="form-select form-select-lg" id="editSourceWaterSelect">
+                    <option value="" selected disabled>Choose source...</option>
+                    <option value="Deepwell">Deepwell</option>
+                    <option value="Deepwell (Handpump)">Deepwell (Handpump)</option>
+                    <option value="Deepwell (Jetmatic)">Deepwell (Jetmatic)</option>
+                    <option value="Dug Well">Dug Well</option>
+                    <option value="Spring">Spring</option>
+                    <option value="River">River</option>
+                    <option value="Stream / Creek">Stream / Creek</option>
+                    <option value="Lake">Lake</option>
+                    <option value="Others">Others</option>
+                  </select>
+                </div>
+
+                <!-- Latitude & Longitude -->
+                <div class="col-6">
+                  <label for="editLatitude" class="form-label fw-bold small">Latitude</label>
+                  <input type="text" class="form-control form-control-lg" id="editLatitude" placeholder="Enter latitude">
+                </div>
+
+                <div class="col-6">
+                  <label for="editLongitude" class="form-label fw-bold small">Longitude</label>
+                  <input type="text" class="form-control form-control-lg" id="editLongitude" placeholder="Enter longitude">
+                </div>
+
+                <!-- Checkbox -->
+                <div class="col-12">
+                  <div class="form-check mt-2">
+                    <input class="form-check-input" type="checkbox" id="editIsWaterSource">
+                    <label class="form-check-label" for="editIsWaterSource">
+                      Is Water Source?
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Purpose -->
+                <div class="col-12">
+                  <label for="editPurposeSelect" class="form-label fw-bold small">Purpose</label>
+                  <div class="input-group">
+                    <select class="form-select form-select-lg" id="editPurposeSelect">
+                      <option value="" selected disabled>Select purpose...</option>
+                      <option value="Household Use">Household</option>
+                      <option value="Community Use">Community</option>
+                      <option value="Municipal Use">Municipal</option>
+                      <option value="Industrial">Industrial</option>
+                      <option value="Commercial">Commercial</option>
+                      <option value="Irrigation">Irrigation</option>
+                      <option value="Recreation">Recreation</option>
+                      <option value="Others">Others</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Remarks -->
+                <div class="col-12">
+                  <label for="editRemarks" class="form-label fw-bold small">Remarks</label>
+                  <textarea class="form-control form-control-lg" id="editRemarks" rows="2" placeholder="Enter remarks"></textarea>
+                </div>
+
+                <!-- Representative & Signature -->
+                <div class="col-6">
+                  <label for="editRepresentative" class="form-label fw-bold small">Representative</label>
+                  <input type="text" class="form-control form-control-lg" id="editRepresentative" placeholder="Enter representative">
+                </div>
+
+                <div class="col-12">
+                  <label for="editSignature" class="form-label fw-bold small">Signature</label>
+                  <div class="border rounded bg-light" style="width: 100%; height: 150px;">
+                    <canvas id="editSignatureCanvas" style="width: 100%; height: 100%;"></canvas>
+                  </div>
+                  <button type="button" id="clearEditSignature" class="btn btn-sm btn-outline-secondary mt-2">Clear Signature</button>
+                  <input type="hidden" id="editSignature" name="editSignature">
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="modal-footer">
+              <button type="submit" class="btn btn-3d btn-warning btn-lg w-100 py-2"> Update</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
     </div>
   </div>
-  <script type="module" src="js/water-inventory/water-inventory-init.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+  <script type="module" src="js/water-inventory/water-inventory-init.js"></script>
 </body>
 </html>
