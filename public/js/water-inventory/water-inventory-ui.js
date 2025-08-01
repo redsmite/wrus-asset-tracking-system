@@ -12,6 +12,7 @@ export function initializePage() {
   initDynamicPlusButtons();
   initSignaturePad();
   finalizeButtonHandler();
+  clearAll();
   initEditWaterInventoryFormListener();
 }
 
@@ -42,50 +43,52 @@ function initDynamicPlusButtons() {
   const modalForm = document.getElementById('modalForm');
   const modalElement = document.getElementById('addModal');
 
-  // ✅ Always reuse same modal instance (no stacking)
   const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
 
-  // ✅ Initialize localStorage if empty
   if (!localStorage.getItem('waterInventory')) {
     localStorage.setItem('waterInventory', JSON.stringify([]));
   }
 
-  // ✅ Load saved data & count items
   let savedData = JSON.parse(localStorage.getItem('waterInventory'));
   itemCount = savedData.length;
 
-  // ✅ Clear container so we don’t double-render icons
+  // 🔄 Clear the container first
   itemContainer.innerHTML = '';
 
-  // ✅ Render all saved entries as file icons
+  // ✅ Render each entry
   savedData.forEach((item, index) => {
     const fileDiv = document.createElement('div');
+    fileDiv.classList.add('entry-wrapper', 'text-center');
+
     fileDiv.innerHTML = `
-      <a href="#" class="file-link" data-index="${index}" 
+      <!-- 📄 File Button -->
+      <a href="#" class="file-link mb-2" data-index="${index}" 
          data-bs-toggle="modal" data-bs-target="#editModal">
         <i class="bi bi-file-earmark"></i>
         <span class="file-number">${index + 1}</span>
       </a>
+      <!-- 🗑 Delete Button (NOW BELOW) -->
+      <button class="btn btn-danger btn-lg mt-2 delete-entry-btn" data-index="${index}">
+        <i class="bi bi-dash-circle"></i>
+      </button>
     `;
+
     itemContainer.appendChild(fileDiv);
   });
 
-  // ✅ Add the last “plus” button
   const plusDiv = document.createElement('div');
   plusDiv.innerHTML = `
-    <button id="addWaterBtn" class="btn btn-primary big-plus-btn" 
+    <button id="addWaterBtn" class="btn btn-primary big-plus-btn mt-3" 
             data-bs-toggle="modal" data-bs-target="#addModal">
       <i class="bi bi-file-earmark-plus"></i>
     </button>
   `;
   itemContainer.appendChild(plusDiv);
 
-  // ✅ Attach event listener to the + button
   document.getElementById('addWaterBtn').addEventListener('click', () => {
-    autoPopulateAddModal(); // 🔵 Populate modal when clicked
+    autoPopulateAddModal();
   });
 
-  // ✅ Attach edit listeners to each file icon
   const fileLinks = itemContainer.querySelectorAll('.file-link');
   fileLinks.forEach(link => {
     link.addEventListener('click', function () {
@@ -95,12 +98,45 @@ function initDynamicPlusButtons() {
     });
   });
 
-  // ✅ Prevent multiple submit listeners for the ADD form
+  const deleteBtns = itemContainer.querySelectorAll('.delete-entry-btn');
+  deleteBtns.forEach(btn => {
+    btn.addEventListener('click', function () {
+      const index = parseInt(this.dataset.index);
+
+      Confirmation.show(
+        `Are you sure you want to delete entry #${index + 1}?`,
+        (confirmed) => {
+          if (!confirmed) return;
+
+          Spinner.show();
+
+          setTimeout(() => { // ⏳ Simulate async feel
+            try {
+              let savedData = JSON.parse(localStorage.getItem('waterInventory')) || [];
+              savedData.splice(index, 1); // 🗑 Remove entry
+              localStorage.setItem('waterInventory', JSON.stringify(savedData));
+
+              // 🔄 Refresh UI
+              initDynamicPlusButtons();
+
+              console.log(`🗑 Entry #${index + 1} deleted.`);
+            } catch (err) {
+              console.error("❌ Error deleting entry:", err);
+              NotificationBox.show("Failed to delete entry. Please try again.","error");
+            } finally {
+              Spinner.hide();
+            }
+          }, 300); // small delay for spinner visibility
+        }
+      );
+    });
+  });
+
+  // 📝 Form submission (only attach once)
   if (!modalForm.dataset.listenerAttached) {
     modalForm.addEventListener('submit', function (e) {
       e.preventDefault();
 
-      // ✅ Gather form data
       const formData = {};
       for (let element of modalForm.elements) {
         if (element.id && element.type !== 'submit' && element.type !== 'button') {
@@ -112,7 +148,6 @@ function initDynamicPlusButtons() {
         }
       }
 
-      // 📦 Reload latest data
       let savedData = JSON.parse(localStorage.getItem('waterInventory'));
 
       if (editingIndex !== null) {
@@ -122,13 +157,10 @@ function initDynamicPlusButtons() {
         savedData.push(formData);
       }
 
-      // 💾 Save updated data
       localStorage.setItem('waterInventory', JSON.stringify(savedData));
 
-      // 🔁 Re-render icons
       initDynamicPlusButtons();
 
-      // ✅ Reset form & close modal (reused instance)
       modalForm.reset();
       modal.hide();
     });
@@ -138,31 +170,25 @@ function initDynamicPlusButtons() {
 }
 
 function autoPopulateAddModal() {
-  // 🎯 Grab values from info-box section
   const selectedCity = document.getElementById('citySelect')?.value || '';
   const barangay = document.getElementById('barangayInput')?.value || '';
   const yearConducted = document.getElementById('yearConducted')?.value || '';
 
-  // 🎯 Grab fields inside the Add Modal
   const modalYear = document.getElementById('modalYearConducted');
   const modalCity = document.getElementById('modalCity');
   const modalBarangay = document.getElementById('modalBarangay');
 
-  // ✅ Fill modal fields (disable or not depending on your design)
   if (modalYear) modalYear.value = yearConducted;
   if (modalCity) modalCity.value = selectedCity;
   if (modalBarangay) modalBarangay.value = barangay;
 }
 
-
 function populateEditModal(index) {
   const savedData = JSON.parse(localStorage.getItem('waterInventory'));
   const record = savedData[index];
 
-  // 🔢 Store the array index for later submission
   document.getElementById('editIndex').value = index;
 
-  // 🏷 Fill each field (check if it exists before assigning)
   document.getElementById('editYearConducted').value = record.modalYearConducted || '';
   document.getElementById('editOwner').value = record.modalOwner || '';
   document.getElementById('editLocation').value = record.modalLocation || '';
@@ -176,30 +202,24 @@ function populateEditModal(index) {
   document.getElementById('editRemarks').value = record.modalRemarks || '';
   document.getElementById('editRepresentative').value = record.modalRepresentative || '';
 
-  // 🖊️ Signature handling (if you saved signature image data)
   if (record.modalSignature) {
     document.getElementById('editSignature').value = record.modalSignature;
-    // ✅ Optional: draw signature on the canvas if needed
   }
 }
 
 function initEditWaterInventoryFormListener() {
-  const editForm = document.getElementById('editModalForm'); // ✅ FIXED ID
+  const editForm = document.getElementById('editModalForm');
   if (!editForm) return;
 
-  // ✅ Prevent duplicate listeners
   if (editForm.dataset.listenerAttached) return;
 
   editForm.addEventListener('submit', function (e) {
     e.preventDefault();
 
-    // 📦 Get saved data from localStorage
     let savedData = JSON.parse(localStorage.getItem('waterInventory')) || [];
 
-    // 🔢 Grab index from hidden input
     const index = parseInt(document.getElementById('editIndex').value, 10);
 
-    // ✅ Collect updated values from edit modal
     const updatedRecord = {
       modalYearConducted: document.getElementById('editYearConducted').value,
       modalOwner: document.getElementById('editOwner').value,
@@ -216,31 +236,54 @@ function initEditWaterInventoryFormListener() {
       modalSignature: document.getElementById('editSignature').value
     };
 
-    // 🔄 Update that specific record
     savedData[index] = updatedRecord;
 
-    // 💾 Save updated array back to localStorage
     localStorage.setItem('waterInventory', JSON.stringify(savedData));
 
-    // 🔁 Refresh your UI (re-renders icons and plus button)
     initDynamicPlusButtons();
 
-    // ✅ Close the edit modal (✅ FIXED ID)
     const editModal = bootstrap.Modal.getInstance(document.getElementById('editModal'));
     editModal.hide();
   });
 
-  // ✅ Mark listener attached so it won’t duplicate
   editForm.dataset.listenerAttached = "true";
+}
+
+function clearAll() {
+  const btn = document.getElementById('clearBtn');
+
+  btn.addEventListener('click', () => {
+    Confirmation.show(
+      "Are you sure you want to CLEAR all water inventory data from the cache? This action cannot be undone.",
+      (confirmed) => {
+        if (!confirmed) return;
+
+        Spinner.show();
+
+        try {
+          localStorage.removeItem('waterInventory');
+
+          initDynamicPlusButtons();
+
+          console.log("🧹 All water inventory data cleared.");
+          NotificationBox.show("All water inventory data has been cleared.");
+        } catch (err) {
+          console.error("❌ Error clearing water inventory:", err);
+          NotificationBox.show("Failed to clear water inventory. Please try again.","error");
+        } finally {
+          Spinner.hide();
+        }
+      }
+    );
+  });
 }
 
 function finalizeButtonHandler() {
   const btn = document.getElementById('finalizeButton');
 
   btn.addEventListener('click', () => {
-    // 🔔 Ask user before pushing data
     Confirmation.show(
-      "⚠️ Are you sure you want to send ALL water inventory data to the database?",
+      "Are you sure you want to send ALL water inventory data to the database?",
       async (confirmed) => {
         if (!confirmed) return;
 
@@ -251,12 +294,9 @@ function finalizeButtonHandler() {
           return;
         }
 
-        // 🚀 Show spinner
+        // Show spinner
         Spinner.show();
         btn.disabled = true;
-
-        console.log(`📦 Sending ${localData.length} records to Firestore...`);
-
         try {
           for (const item of localData) {
             const payload = {
@@ -275,19 +315,17 @@ function finalizeButtonHandler() {
             };
 
             await WUSData.add(payload);
-            console.log(`✅ Added: ${item.modalOwner} (${item.modalYearConducted})`);
           }
 
           // 🧹 Clear local storage
           localStorage.removeItem('waterInventory');
-          console.log("🧹 Local storage 'waterInventory' cleared.");
           NotificationBox.show("All water inventory data has been successfully sent!");
+          initDynamicPlusButtons();
 
         } catch (err) {
           console.error("❌ Error while sending data:", err);
           NotificationBox.show("An error occurred while sending the data. Please try again.");
         } finally {
-          // Hide spinner and re-enable button
           Spinner.hide();
           btn.disabled = false;
         }
@@ -296,12 +334,9 @@ function finalizeButtonHandler() {
   });
 }
 
-// 🔧 Helper for remarks (Purpose + Remarks combined)
 function combineRemarks(purpose, remarks) {
   if (purpose && remarks) return `${purpose}: ${remarks}`;
   if (purpose) return purpose;
   if (remarks) return remarks;
   return "";
 }
-
-

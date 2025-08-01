@@ -94,3 +94,21 @@
   padding: 4px 8px;
   border-radius: 50%;
 }
+
+.delete-entry-btn {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  font-size: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease-in-out;
+}
+
+.delete-entry-btn:hover {
+  transform: scale(1.1);
+  background-color: #c82333;
+  color: #fff;
+}
