@@ -1,16 +1,23 @@
 import { Permit } from "../data/cache/permit-data.js";
 import { Sidebar } from "../components/sidebar.js";
 import { NotificationBox } from "../components/notification.js";
+import { Spinner } from "../components/spinner.js";
 import { PortalBubble } from "../components/PortalBubble.js";
-import { initMap } from "./map-init.js";
+import { initMap, plotRouteOnMap, removePulseMarker } from "./map-init.js";
 
 export function initializePage(){
   Sidebar.render();
+  Spinner.render();
   setCurrentLocationInStartInput();
   enableEndLocationAutocomplete();
-  initMap("routingMap");
-  setupRouting("routingMap");
+  initMap("routingMap", false);
+  getRouteSubmitForm();
+  stopTrackingHandler();
 }
+
+let selectedPermitInfo = null;
+let geoWatchId = null;
+let trackingLogInterval = null
 
 function setCurrentLocationInStartInput() {
   const startInput = document.getElementById("startLocation");
@@ -45,6 +52,8 @@ function enableEndLocationAutocomplete() {
     if (term.length < 2) return;
 
     try {
+      Spinner.show(); 
+
       const permits = await Permit.getAll();
 
       const permitMatches = permits
@@ -53,10 +62,13 @@ function enableEndLocationAutocomplete() {
           p.permitNo?.toLowerCase().includes(term)
         )
         .map(p => ({
+          id: p.id,
           label: `${p.permittee} (${p.permitNo})`,
           lat: p.latitude || "",
           lng: p.longitude || "",
-          permitNo: p.permitNo
+          permitNo: p.permitNo,
+          permittee: p.permittee,
+          pdfUrl: p.pdfUrl || null
         }));
 
       let dropdown = document.querySelector("#endLocationDropdown");
@@ -73,80 +85,105 @@ function enableEndLocationAutocomplete() {
         option.type = "button";
         option.className = "list-group-item list-group-item-action";
         option.textContent = item.label;
+
         option.onclick = () => {
           input.value = `${item.lat}, ${item.lng}`;
           dropdown.innerHTML = "";
 
           document.querySelector("#endLat").value = item.lat;
           document.querySelector("#endLng").value = item.lng;
+
+          selectedPermitInfo = item;
+
+          document.getElementById("routeHeading").textContent =
+            `Route to: ${item.permittee} (Permit No. ${item.permitNo})`;
+
           PortalBubble.trigger();
         };
+
         dropdown.appendChild(option);
       });
 
     } catch (err) {
       console.error("❌ Autocomplete error:", err);
+    } finally {
+      Spinner.hide();
     }
   });
 }
 
-function setupRouting(mapDivId = "leafletMap") {
-  // ✅ Initialize your map first
-  initMap(mapDivId);
-
-  // ✅ Grab the same map reference used in initMap()
-  // (Assuming `map` is a global in map-init.js – which it looks like it is)
-  const mapInstance = window.map; 
-
-  let routingControl = null; // hold reference so we can clear it later
-
-  document.querySelector("#routingForm").addEventListener("submit", async function (e) {
+export function getRouteSubmitForm() {
+  document.getElementById("routingForm").addEventListener("submit", function (e) {
     e.preventDefault();
 
-    const startLocation = document.querySelector("#startLocation").value;
-    const endLat = parseFloat(document.querySelector("#endLat").value);
-    const endLng = parseFloat(document.querySelector("#endLng").value);
+    Spinner.show();
 
-    if (!startLocation || isNaN(endLat) || isNaN(endLng)) {
-      NotificationBox.show("Please enter a starting point and select a valid end location");
-      return;
+    const endLat = parseFloat(document.getElementById("endLat").value);
+    const endLng = parseFloat(document.getElementById("endLng").value);
+
+    // ✅ If already tracking, stop the old watch & interval first
+    if (geoWatchId !== null) {
+      navigator.geolocation.clearWatch(geoWatchId);
+      geoWatchId = null;
+    }
+    if (trackingLogInterval) {
+      clearInterval(trackingLogInterval);
+      trackingLogInterval = null;
     }
 
-    try {
-      // ✅ Geocode starting location using Nominatim
-      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(startLocation)}`);
-      const data = await response.json();
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(async (position) => {
+        const startLat = position.coords.latitude;
+        const startLng = position.coords.longitude;
 
-      if (data.length === 0) {
-        NotificationBox.show("Start location not found");
-        return;
-      }
+        // ✅ Initial plot with current location
+        plotRouteOnMap(startLat, startLng, endLat, endLng, selectedPermitInfo, true);
+        Spinner.hide();
 
-      const startLat = parseFloat(data[0].lat);
-      const startLng = parseFloat(data[0].lon);
+        // ✅ Notify user that tracking started
+        NotificationBox.show("Live tracking has started.", "success");
 
-      // ✅ Remove previous route if exists
-      if (routingControl) {
-        mapInstance.removeControl(routingControl);
-      }
+        // ✅ Start live tracking
+        geoWatchId = navigator.geolocation.watchPosition(
+          (pos) => {
+            const newLat = pos.coords.latitude;
+            const newLng = pos.coords.longitude;
 
-      // ✅ Add routing machine
-      routingControl = L.Routing.control({
-        waypoints: [
-          L.latLng(startLat, startLng),
-          L.latLng(endLat, endLng)
-        ],
-        routeWhileDragging: false
-      }).addTo(mapInstance);
+            plotRouteOnMap(newLat, newLng, endLat, endLng, selectedPermitInfo, false);
+          },
+          (err) => console.warn("⚠️ Tracking error:", err),
+          { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
+        );
 
-    } catch (err) {
-      console.error("❌ Geocoding error:", err);
-      NotificationBox.show("An error occurred while finding the route");
+        // ✅ Heartbeat interval (you can later use this for UI indicators)
+        trackingLogInterval = setInterval(() => {
+          // no logs here, but you could pulse an icon or update UI here
+        }, 1000);
+      });
+    } else {
+      console.warn("❌ Geolocation not supported.");
+      plotRouteOnMap(14.6091, 121.0223, endLat, endLng, selectedPermitInfo, true);
+      Spinner.hide();
     }
   });
 }
 
+function stopTrackingHandler() {
+  document.getElementById("stopTrackingBtn").addEventListener("click", () => {
+    if (geoWatchId !== null) {
+      navigator.geolocation.clearWatch(geoWatchId);
+      geoWatchId = null;
+      NotificationBox.show("🛑 Live tracking stopped.","error");
+    }
 
+    if (trackingLogInterval) {
+      clearInterval(trackingLogInterval);
+      trackingLogInterval = null;
+    }
+
+    removePulseMarker();
+  });
+}
 
 
 

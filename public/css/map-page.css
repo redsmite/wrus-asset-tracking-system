@@ -22,3 +22,80 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   z-index: 1000;
 }
+
+.route-indicator {
+  background: linear-gradient(135deg, #007bff, #00c6ff);
+  color: white;
+  font-weight: bold;
+  font-size: 1rem;
+  padding: 12px 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  width: fit-content;
+  margin: 10px auto;
+}
+
+.permit-popup {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #2c3e50;
+  padding: 6px 2px;
+}
+
+.permit-popup-row {
+  margin-bottom: 4px;
+}
+
+.permit-pdf-link {
+  color: #007bff;
+  text-decoration: none;
+  font-weight: bold;
+  display: inline-block;
+  margin-top: 4px;
+}
+
+.permit-pdf-link:hover {
+  color: #0056b3;
+  text-decoration: underline;
+}
+
+.pulse-marker {
+  background: rgba(0, 150, 255, 0.4);
+  border: 2px solid rgba(0, 150, 255, 0.8);
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  position: relative;
+}
+
+.pulse-marker::after {
+  content: "";
+  position: absolute;
+  left: -10px;
+  top: -10px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(0, 150, 255, 0.3);
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.8;
+  }
+  70% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+}
+
+#stopTrackingBtn{
+  width: 200px;
+  margin: auto;
+}

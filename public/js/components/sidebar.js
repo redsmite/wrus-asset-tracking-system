@@ -90,7 +90,7 @@ export const Sidebar = {
                 <ul class="nav flex-column">
                   <li><a class="nav-link text-white" href="permit.html">Water Permit</a></li>
                   <li><a class="nav-link text-white" href="water-user.html">Water Users and Sources</a></li>
-                  <li><a class="nav-link text-white" href="water-inventory.html">Water Inventory</a></li>
+                  <li><a class="nav-link text-white" href="water-inventory.html">Mobile Inventory Form</a></li>
                   <li><a class="nav-link text-white" href="map.html">Map Routing</a></li>
                 </ul>
               </div>

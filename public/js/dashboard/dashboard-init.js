@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
   filterPermitsByCity();
   initYearlyWaterUserSummary();
   initCityAccomplishmentSummary();
-  initMap();
+  initMap("leafletMap", true, false);
   setupMapModal("mapModal", "leafletMap");
   initMapPrint("printMapBtn", "leafletMap");
   checkForAppUpdate();

@@ -1,9 +1,13 @@
 let mapInitialized = false;
-let map;
+export let map;
 let marker;
 let extraMarkers = [];
+let geoWatchId = null;
+let liveStartMarker = null;
+let routeZoomed = false;
+let livePulseMarker = null;
 
-export function initMap(mapDivId = "leafletMap") {
+export function initMap(mapDivId = "leafletMap", showLegend = true, enableGeolocation = true) {
   if (mapInitialized) return;
 
   map = L.map(mapDivId).setView([14.6091, 121.0223], 12);
@@ -14,7 +18,8 @@ export function initMap(mapDivId = "leafletMap") {
     maxZoom: 19
   }).addTo(map);
 
-  if (navigator.geolocation) {
+  // ✅ Only run geolocation if enabled
+  if (enableGeolocation && navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const userLat = position.coords.latitude;
@@ -33,6 +38,11 @@ export function initMap(mapDivId = "leafletMap") {
           .openPopup();
       }
     );
+  } else if (!enableGeolocation) {
+    console.warn("📍 Geolocation is disabled. Using default location.");
+    marker = L.marker([14.6091, 121.0223]).addTo(map)
+      .bindPopup("National Capital Region")
+      .openPopup();
   } else {
     console.warn("Geolocation is not supported by this browser.");
     marker = L.marker([14.6091, 121.0223]).addTo(map)
@@ -40,11 +50,17 @@ export function initMap(mapDivId = "leafletMap") {
       .openPopup();
   }
 
-  legend.addTo(map);
+  // ✅ Only add legend if requested
+  if (showLegend) {
+    legend.addTo(map);
+  }
+
+  // Load barangay boundaries
   loadBarangayBoundaries("js/data/geojson/Barangays_NCR.geojson");
 
   mapInitialized = true;
 }
+
 
 export function setupMapModal(modalId = "mapModal", mapDivId = "leafletMap") {
   const mapModal = document.getElementById(modalId);
@@ -62,7 +78,6 @@ export function setupMapModal(modalId = "mapModal", mapDivId = "leafletMap") {
     }
   });
 }
-
 
 export function updateMapLocation(city, lat, lng) {
   if (!map) return;
@@ -256,6 +271,90 @@ function getPolygonCentroid(coords) {
   }
   area *= 0.5;
   return [y / (6 * area), x / (6 * area)];
+}
+
+export function plotRouteOnMap(startLat, startLng, endLat, endLng, permitInfo = null, resetRoute = true) {
+  if (!map) return;
+
+  if (resetRoute) {
+    clearExtraMarkers();
+    routeZoomed = false;
+  }
+
+  // ✅ START MARKER (Main Icon)
+  if (resetRoute) {
+    liveStartMarker = L.marker([startLat, startLng], { icon: greenIcon })
+      .addTo(map)
+      .bindPopup("📍 Starting Point")
+      .openPopup();
+    extraMarkers.push(liveStartMarker);
+
+    // ✅ Add pulsating effect overlay (only once)
+    livePulseMarker = L.marker([startLat, startLng], {
+      icon: L.divIcon({
+        className: "pulse-marker",
+        iconSize: [20, 20]
+      }),
+      interactive: false // no click events
+    }).addTo(map);
+    extraMarkers.push(livePulseMarker);
+
+  } else if (liveStartMarker) {
+    // ✅ Move both the icon marker and pulse smoothly
+    if (typeof liveStartMarker.slideTo === "function") {
+      liveStartMarker.slideTo([startLat, startLng], { duration: 800, keepAtCenter: false });
+    } else {
+      liveStartMarker.setLatLng([startLat, startLng]);
+    }
+
+    if (livePulseMarker) {
+      livePulseMarker.setLatLng([startLat, startLng]);
+    }
+  }
+
+  // ✅ END MARKER (only added once)
+  if (resetRoute) {
+    let popupContent = "🏁 Destination";
+
+    if (permitInfo) {
+      popupContent = `
+        <div class="permit-popup">
+          <div class="permit-popup-row"><strong>Permittee:</strong> ${permitInfo.permittee}</div>
+          <div class="permit-popup-row"><strong>Permit No:</strong> ${permitInfo.permitNo}</div>
+          <div class="permit-popup-row"><strong>Latitude:</strong> ${permitInfo.lat}</div>
+          <div class="permit-popup-row"><strong>Longitude:</strong> ${permitInfo.lng}</div>
+          ${
+            permitInfo.pdfUrl
+              ? `<div class="permit-popup-row">
+                  <a href="${permitInfo.pdfUrl}" target="_blank" class="permit-pdf-link">📄 View Permit PDF</a>
+                </div>`
+              : `<div class="permit-popup-row"><em>No PDF available</em></div>`
+          }
+        </div>
+      `;
+    }
+
+    const endMarker = L.marker([endLat, endLng], { icon: violetIcon })
+      .addTo(map)
+      .bindPopup(popupContent)
+      .openPopup();
+
+    extraMarkers.push(endMarker);
+
+    // ✅ Fit map only once
+    if (!routeZoomed) {
+      map.fitBounds(L.latLngBounds([[startLat, startLng], [endLat, endLng]]), { padding: [50, 50] });
+      routeZoomed = true;
+    }
+  }
+}
+
+export function removePulseMarker() {
+  if (livePulseMarker) {
+    map.removeLayer(livePulseMarker);
+    livePulseMarker = null;
+    console.log("🔵 Pulse marker removed (via cleanup function).");
+  }
 }
 
 
