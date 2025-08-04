@@ -152,7 +152,7 @@ function setupFileValidation() {
     fileInput.addEventListener('change', function () {
       const file = this.files[0];
       if (file && file.size > 1048576) {
-        NotificationBox.show("File exceeds 1MB limit.");
+        NotificationBox.show("File exceeds 1MB limit.","error");
         this.value = "";
       }
     });
@@ -404,7 +404,7 @@ function handleRefreshButton({
       startCooldown();
     } catch (err) {
       console.error("Refresh error:", err);
-      NotificationBox.show("Failed to refresh data.");
+      NotificationBox.show("Failed to refresh data.","error");
     }
   });
 }
@@ -510,7 +510,7 @@ async function handleEditICSSubmit(e) {
 
   const docId = document.getElementById('editDocId').value;
   if (!docId) {
-    NotificationBox.showt("Document ID missing. Please reload and try again.");
+    NotificationBox.showt("Document ID missing. Please reload and try again.","error");
     Spinner.hide();
     return;
   }
@@ -561,7 +561,7 @@ async function handleEditICSSubmit(e) {
     renderICSTable(null, currentPage, searchTerm);
   } catch (err) {
     console.error("❌ Failed to update ICS entry:", err);
-    NotificationBox.show("Update failed. Check console for details.");
+    NotificationBox.show("Update failed. Check console for details.","error");
   } finally {
     Spinner.hide();
     form.classList.remove('was-validated');
@@ -608,7 +608,7 @@ function initDeleteICSButton() {
           await renderICSTable();
         } catch (error) {
           console.error("Failed to delete ICS entry:", error);
-          NotificationBox.show("Failed to delete ICS entry.");
+          NotificationBox.show("Failed to delete ICS entry.","error");
         } finally {
           Spinner.hide();
         }

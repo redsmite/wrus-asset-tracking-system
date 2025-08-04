@@ -78,7 +78,7 @@ export function handleEncodedRefreshButton() {
   refreshBtn.addEventListener('click', async () => {
     const remaining = getRemainingCooldown();
     if (remaining > 0) {
-      NotificationBox.show(`Please wait ${remaining}s before refreshing again.`);
+      NotificationBox.show(`Please wait ${remaining}s before refreshing again.`,"error");
       return;
     }
 
@@ -92,7 +92,7 @@ export function handleEncodedRefreshButton() {
       refreshBtn.disabled = false;
       refreshBtn.innerHTML = `<i class="bi bi-arrow-clockwise"></i>`;
       console.error(err);
-      NotificationBox.show("Error during encoded refresh.");
+      NotificationBox.show("Error during encoded refresh.","error");
     }
   });
 }

@@ -1,11 +1,12 @@
 export function initSignaturePad({
-  canvasId = "signatureCanvas",
-  clearBtnId = "clearSignature",
-  hiddenInputId = "modalSignature",
-  formId = "modalForm"
+  canvasId,
+  clearBtnId,
+  hiddenInputId,
+  formId,
+  modalIds = []
 } = {}) {
   if (typeof SignaturePad === 'undefined') {
-    console.error("❌ SignaturePad library not loaded. Please include the CDN first.");
+    console.error("SignaturePad library not loaded. Please include the CDN first.");
     return;
   }
 
@@ -15,12 +16,12 @@ export function initSignaturePad({
   const form = document.getElementById(formId);
 
   if (!canvas || !clearBtn || !hiddenInput || !form) {
-    console.error("❌ Signature Pad: One or more required elements not found.");
+    console.error(`Signature Pad: Missing elements for canvasId: ${canvasId}`);
     return;
   }
 
   const signaturePad = new SignaturePad(canvas, {
-    backgroundColor: 'rgba(255, 255, 255, 0)',
+    backgroundColor: '#ffffff',
     penColor: 'black'
   });
 
@@ -32,19 +33,34 @@ export function initSignaturePad({
     signaturePad.clear();
   }
 
-  window.addEventListener("resize", resizeCanvas);
-  resizeCanvas();
-
-  clearBtn.addEventListener('click', () => {
-    signaturePad.clear();
+  modalIds.forEach(modalId => {
+    const modal = document.getElementById(modalId);
+    if (!modal) {
+      console.warn(`Modal with ID "${modalId}" not found.`);
+      return;
+    }
+    modal.addEventListener('shown.bs.modal', () => {
+      resizeCanvas();
+    });
   });
 
-  form.addEventListener('submit', () => {
-    if (!signaturePad.isEmpty()) {
-      hiddenInput.value = signaturePad.toDataURL();
-    } else {
-      hiddenInput.value = "";
+  window.addEventListener("resize", () => {
+    const anyModalOpen = modalIds.some(id => {
+      const modal = document.getElementById(id);
+      return modal && modal.classList.contains('show');
+    });
+
+    if (anyModalOpen) {
+      const data = signaturePad.toData();
+      resizeCanvas();
+      signaturePad.fromData(data);
     }
+  });
+
+  clearBtn.addEventListener('click', () => signaturePad.clear());
+
+  form.addEventListener('submit', () => {
+    hiddenInput.value = signaturePad.isEmpty() ? "" : signaturePad.toDataURL();
   });
 
   return signaturePad;

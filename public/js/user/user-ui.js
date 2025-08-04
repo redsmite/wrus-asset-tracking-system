@@ -84,7 +84,7 @@ function initializeAddUserModal() {
         (user) => user.username?.toLowerCase() === username.toLowerCase()
       );
       if (usernameExists) {
-        NotificationBox.show("Username already exists.");
+        NotificationBox.show("Username already exists.","error");
         return;
       }
 
@@ -94,7 +94,7 @@ function initializeAddUserModal() {
           (user) => user.duty === "Supervisor"
         );
         if (supervisorExists) {
-          NotificationBox.show("A user with 'Supervisor' duty already exists. Only one supervisor is allowed.");
+          NotificationBox.show("A user with 'Supervisor' duty already exists. Only one supervisor is allowed.","error");
           return;
         }
       }
@@ -125,7 +125,7 @@ function initializeAddUserModal() {
       modal.hide();
     } catch (err) {
       console.error("Error creating user:", err.message);
-      NotificationBox.show("Error creating user: " + err.message);
+      NotificationBox.show("Error creating user: " + err.message,"error");
     } finally {
       Spinner.hide();
     }
@@ -275,7 +275,7 @@ function handleRefreshButton({
       startCooldown();
     } catch (err) {
       console.error("Refresh error:", err);
-      NotificationBox.show("Failed to refresh data.");
+      NotificationBox.show("Failed to refresh data.","error");
     }
   });
 }
@@ -338,7 +338,7 @@ function initializeEditFunctionality() {
 
       // ✅ Basic Validation
       if (!username || !lastName || !firstName || !position || !duty || !type || !status) {
-        NotificationBox.show("Please fill in all required fields.");
+        NotificationBox.show("Please fill in all required fields.","warning");
         return;
       }
 
@@ -352,13 +352,13 @@ function initializeEditFunctionality() {
       );
 
       if (usernameExists) {
-        NotificationBox.show("Username already exists. Please choose another one.");
+        NotificationBox.show("Username already exists. Please choose another one.","error");
         return;
       }
 
       // ✅ Password confirmation
       if ((password || confirmPassword) && password !== confirmPassword) {
-        NotificationBox.show("Passwords do not match.");
+        NotificationBox.show("Passwords do not match.","error");
         return;
       }
 
@@ -367,7 +367,7 @@ function initializeEditFunctionality() {
           (user) => user.duty === "Supervisor" && user.id !== id
         );
         if (existingSupervisor) {
-          NotificationBox.show("A supervisor already exists. Only one supervisor is allowed.");
+          NotificationBox.show("A supervisor already exists. Only one supervisor is allowed.","error");
           return;
         }
       }
@@ -405,7 +405,7 @@ function initializeEditFunctionality() {
       await loadUsers();
     } catch (error) {
       console.error("Error submitting edit form:", error);
-      NotificationBox.show("An error occurred while updating the user.");
+      NotificationBox.show("An error occurred while updating the user.","error");
     } finally {
       Spinner.hide();
     }

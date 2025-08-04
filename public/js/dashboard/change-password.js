@@ -29,12 +29,12 @@ export function initializePasswordChange() {
       }
 
       if (pass.length < 6) {
-        NotificationBox.show("Password must be at least 6 characters.");
+        NotificationBox.show("Password must be at least 6 characters.","error");
         return;
       }
 
       if (pass !== confirm) {
-        NotificationBox.show("Passwords do not match.");
+        NotificationBox.show("Passwords do not match.","error");
         return;
       }
 
@@ -45,7 +45,7 @@ export function initializePasswordChange() {
       form.reset();
     } catch (error) {
       console.error("Error changing password:", error);
-      NotificationBox.show("An error occurred while updating the password.");
+      NotificationBox.show("An error occurred while updating the password.","error");
     } finally {
       Spinner.hide();
     }

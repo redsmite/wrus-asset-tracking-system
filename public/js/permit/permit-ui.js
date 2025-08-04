@@ -130,7 +130,7 @@ function handleAddFormSubmit() {
       const modal = bootstrap.Modal.getInstance(document.getElementById('addPermitModal'));
       modal.hide();
     } catch (error) {
-      NotificationBox.show(`❌ Error: ${error.message}`);
+      NotificationBox.show(`Error: ${error.message}`,'error');
       console.error('Error:', error);
     } finally {
       Spinner.hide();
@@ -448,7 +448,7 @@ function handleRefreshButton() {
   refreshBtn.addEventListener('click', async () => {
     const remaining = getRemainingCooldown();
     if (remaining > 0) {
-      NotificationBox.show(`Please wait ${remaining}s before refreshing again.`);
+      NotificationBox.show(`Please wait ${remaining}s before refreshing again.`,'error');
       return;
     }
 
@@ -463,7 +463,7 @@ function handleRefreshButton() {
       refreshBtn.disabled = false;
       refreshBtn.innerText = "🔁 Refresh";
       console.error(err);
-      NotificationBox.show("Error during refresh.");
+      NotificationBox.show("Error during refresh.","error");
     }
   });
 }
@@ -613,7 +613,7 @@ function initializePermitUpdate() {
 
     } catch (error) {
       console.error(' Error updating permit:', error);
-      NotificationBox.show('Failed to update permit. Please try again.');
+      NotificationBox.show('Failed to update permit. Please try again.','error');
     } finally {
       Spinner.hide();
     }
@@ -819,7 +819,7 @@ function setupImageUploadModal(permitId, geotaggedUrl = '', permitNo = '') {
           NotificationBox.show('Image deleted and permit updated.');
           
         } catch (err) {
-          NotificationBox.show(`Failed to delete image: ${err.message}`, 'danger');
+          NotificationBox.show(`Failed to delete image: ${err.message}`, 'error');
         } finally {
           deleteBtn.disabled = false;
           deleteBtn.innerHTML = '<i class="bi bi-trash me-1"></i> Delete Image';
@@ -848,12 +848,12 @@ async function handleGeotaggedUpload(permitId, permitNo) {
     const file = fileInput.files[0];
 
     if (!file) {
-      NotificationBox.show("No file selected.");
+      NotificationBox.show("No file selected.","error");
       return;
     }
 
     if (!permitId) {
-      NotificationBox.show("Permit ID is required.");
+      NotificationBox.show("Permit ID is required.","error");
       return;
     }
 
@@ -870,7 +870,7 @@ async function handleGeotaggedUpload(permitId, permitNo) {
 
     const newImageUrl = await GeotaggedFileService.upload(file);
     if (!newImageUrl) {
-      NotificationBox.show("Upload failed.");
+      NotificationBox.show("Upload failed.","error");
       return;
     }
 
@@ -899,7 +899,7 @@ async function handleGeotaggedUpload(permitId, permitNo) {
     if (modal) modal.hide();
   } catch (error) {
     console.error("Error during upload:", error.message);
-    NotificationBox.show("An error occurred: " + error.message, 'danger');
+    NotificationBox.show("An error occurred: " + error.message, 'error');
   } finally {
     Spinner.hide();
   }

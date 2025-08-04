@@ -240,7 +240,7 @@ function handleAddForm() {
       NotificationBox.show('Water User added successfully!');
     } catch (err) {
       console.error('Error adding Water User:', err);
-      NotificationBox.show('Could not add Water User. Please try again.');
+      NotificationBox.show('Could not add Water User. Please try again.','error');
     } finally {
       Spinner.hide();
       submitButton.disabled = false;
@@ -429,7 +429,7 @@ function handleRefreshButton({
   refreshBtn.addEventListener('click', async () => {
     const remaining = getRemainingCooldown();
     if (remaining > 0) {
-      NotificationBox.show(`Please wait ${remaining}s before refreshing again.`);
+      NotificationBox.show(`Please wait ${remaining}s before refreshing again.`,'warning');
       return;
     }
 
@@ -446,7 +446,7 @@ function handleRefreshButton({
       refreshBtn.disabled = false;
       refreshBtn.innerText = "🔁 Refresh";
       console.error(err);
-      NotificationBox.show("Error during refresh.");
+      NotificationBox.show("Error during refresh.","error");
     }
   });
 }
@@ -597,7 +597,7 @@ function handleEditForm() {
       NotificationBox.show('Water User updated successfully!');
     } catch (err) {
       console.error('Error updating Water User:', err);
-      NotificationBox.show('Failed to update. Please try again.');
+      NotificationBox.show('Failed to update. Please try again.','error');
     } finally {
       Spinner.hide();
       submitBtn.disabled = false;
@@ -795,7 +795,7 @@ function setupImageUploadModal(wusId, geotaggedUrl = '', permitNo = '') {
 
         NotificationBox.show('Image deleted and water user updated.');
       } catch (err) {
-        NotificationBox.show(`Failed to delete image: ${err.message}`, 'danger');
+        NotificationBox.show(`Failed to delete image: ${err.message}`, 'error');
       } finally {
         deleteBtn.disabled = false;
         deleteBtn.innerHTML = '<i class="bi bi-trash me-1"></i> Delete Image';
@@ -820,7 +820,7 @@ async function handleGeotaggedUpload(wusId, permitNo) {
     const file = fileInput.files[0];
 
     if (!file) {
-      NotificationBox.show("No file selected.");
+      NotificationBox.show("No file selected.","warning");
       return;
     }
 
@@ -834,7 +834,7 @@ async function handleGeotaggedUpload(wusId, permitNo) {
     // Upload new image
     const newImageUrl = await GeotaggedFileService.upload(file);
     if (!newImageUrl) {
-      NotificationBox.show("Upload failed.");
+      NotificationBox.show("Upload failed.","error");
       return;
     }
 
@@ -879,7 +879,7 @@ async function handleGeotaggedUpload(wusId, permitNo) {
     if (modal) modal.hide();
   } catch (error) {
     console.error("Error during upload:", error.message);
-    NotificationBox.show("An error occurred: " + error.message);
+    NotificationBox.show("An error occurred: " + error.message,"error");
   } finally {
     Spinner.hide();
   }

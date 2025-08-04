@@ -10,7 +10,20 @@ export function initializePage() {
   Spinner.render();
   initForm();
   initDynamicPlusButtons();
-  initSignaturePad();
+  initSignaturePad({
+    canvasId: "signatureCanvas",
+    clearBtnId: "clearSignature",
+    hiddenInputId: "modalSignature",
+    formId: "modalForm",
+    modalIds: ["addModal"]
+  });
+  initSignaturePad({
+    canvasId: "editSignatureCanvas",
+    clearBtnId: "clearEditSignature",
+    hiddenInputId: "editSignature",
+    formId: "editModalForm",
+    modalIds: ["editModal"]
+  });
   finalizeButtonHandler();
   clearAll();
   initEditWaterInventoryFormListener();
@@ -52,10 +65,8 @@ function initDynamicPlusButtons() {
   let savedData = JSON.parse(localStorage.getItem('waterInventory'));
   itemCount = savedData.length;
 
-  // 🔄 Clear the container first
   itemContainer.innerHTML = '';
 
-  // ✅ Render each entry
   savedData.forEach((item, index) => {
     const fileDiv = document.createElement('div');
     fileDiv.classList.add('entry-wrapper', 'text-center');
@@ -110,29 +121,27 @@ function initDynamicPlusButtons() {
 
           Spinner.show();
 
-          setTimeout(() => { // ⏳ Simulate async feel
+          setTimeout(() => {
             try {
               let savedData = JSON.parse(localStorage.getItem('waterInventory')) || [];
-              savedData.splice(index, 1); // 🗑 Remove entry
+              savedData.splice(index, 1);
               localStorage.setItem('waterInventory', JSON.stringify(savedData));
 
-              // 🔄 Refresh UI
               initDynamicPlusButtons();
 
               console.log(`🗑 Entry #${index + 1} deleted.`);
             } catch (err) {
-              console.error("❌ Error deleting entry:", err);
+              console.error("Error deleting entry:", err);
               NotificationBox.show("Failed to delete entry. Please try again.","error");
             } finally {
               Spinner.hide();
             }
-          }, 300); // small delay for spinner visibility
+          }, 300);
         }
       );
     });
   });
 
-  // 📝 Form submission (only attach once)
   if (!modalForm.dataset.listenerAttached) {
     modalForm.addEventListener('submit', function (e) {
       e.preventDefault();
@@ -268,7 +277,7 @@ function clearAll() {
           console.log("🧹 All water inventory data cleared.");
           NotificationBox.show("All water inventory data has been cleared.");
         } catch (err) {
-          console.error("❌ Error clearing water inventory:", err);
+          console.error("Error clearing water inventory:", err);
           NotificationBox.show("Failed to clear water inventory. Please try again.","error");
         } finally {
           Spinner.hide();
@@ -290,7 +299,7 @@ function finalizeButtonHandler() {
         const localData = JSON.parse(localStorage.getItem('waterInventory') || '[]');
 
         if (localData.length === 0) {
-          NotificationBox.show("📭 No water inventory data found in localStorage.");
+          NotificationBox.show("📭 No water inventory data found in localStorage.","error");
           return;
         }
 
@@ -324,7 +333,7 @@ function finalizeButtonHandler() {
 
         } catch (err) {
           console.error("❌ Error while sending data:", err);
-          NotificationBox.show("An error occurred while sending the data. Please try again.");
+          NotificationBox.show("An error occurred while sending the data. Please try again.","error");
         } finally {
           Spinner.hide();
           btn.disabled = false;

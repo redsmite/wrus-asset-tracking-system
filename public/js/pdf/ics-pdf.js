@@ -165,7 +165,7 @@ export async function generatePdfICS(userId) {
 
   } catch (err) {
     console.error("Failed to generate ICS PDF:", err);
-    NotificationBox.show("Failed to generate PDF. Please try again.");
+    NotificationBox.show("Failed to generate PDF. Please try again.","error");
   }
 }
 
