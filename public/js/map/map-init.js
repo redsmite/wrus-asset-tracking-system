@@ -273,7 +273,9 @@ function getPolygonCentroid(coords) {
   return [y / (6 * area), x / (6 * area)];
 }
 
-export function plotRouteOnMap(startLat, startLng, endLat, endLng, permitInfo = null, resetRoute = true) {
+let liveHeadingMarker = null; // 🔄 New global variable to track heading marker
+
+export function plotRouteOnMap(startLat, startLng, endLat, endLng, permitInfo = null, resetRoute = true, headingDeg = null) {
   if (!map) return;
 
   if (resetRoute) {
@@ -289,26 +291,47 @@ export function plotRouteOnMap(startLat, startLng, endLat, endLng, permitInfo = 
       .openPopup();
     extraMarkers.push(liveStartMarker);
 
-    // ✅ Add pulsating effect overlay (only once)
+    // ✅ Pulsating effect overlay
     livePulseMarker = L.marker([startLat, startLng], {
       icon: L.divIcon({
         className: "pulse-marker",
         iconSize: [20, 20]
       }),
-      interactive: false // no click events
+      interactive: false
     }).addTo(map);
     extraMarkers.push(livePulseMarker);
 
-  } else if (liveStartMarker) {
-    // ✅ Move both the icon marker and pulse smoothly
-    if (typeof liveStartMarker.slideTo === "function") {
+    // ✅ Heading arrow marker (NEW)
+    liveHeadingMarker = L.marker([startLat, startLng], {
+      icon: L.divIcon({
+        className: "heading-arrow",
+        html: `<div class="heading-icon" style="transform: rotate(${headingDeg || 0}deg);"></div>`,
+        iconSize: [30, 30],
+        iconAnchor: [15, 35],   // ⬅ push the arrow up
+      }),
+      interactive: false
+    }).addTo(map);
+    extraMarkers.push(liveHeadingMarker);
+
+  } else {
+    // ✅ Move start marker
+    if (liveStartMarker?.slideTo) {
       liveStartMarker.slideTo([startLat, startLng], { duration: 800, keepAtCenter: false });
-    } else {
+    } else if (liveStartMarker) {
       liveStartMarker.setLatLng([startLat, startLng]);
     }
 
+    // ✅ Move pulse marker
     if (livePulseMarker) {
       livePulseMarker.setLatLng([startLat, startLng]);
+    }
+
+    // ✅ Move heading marker & rotate it
+    if (liveHeadingMarker) {
+      liveHeadingMarker.setLatLng([startLat, startLng]);
+      if (headingDeg !== null) {
+        liveHeadingMarker._icon.querySelector(".heading-icon").style.transform = `rotate(${headingDeg}deg)`;
+      }
     }
   }
 

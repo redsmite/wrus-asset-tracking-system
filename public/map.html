@@ -30,26 +30,39 @@
         <!-- Map -->
         <div id="routingMap"></div>
 
-        <!-- Floating Form -->
-        <form id="routingForm" class="routing-form">
-          <input type="hidden" id="endLat">
-          <input type="hidden" id="endLng">
-          <div class="mb-2">
-            <label for="startLocation" class="form-label small mb-1">Starting Location</label>
-            <input type="text" class="form-control form-control-sm" id="startLocation" placeholder="Enter start point" disabled>
-          </div>
-          <div class="mb-2 position-relative">
-            <label for="endLocation" class="form-label small mb-1">End Location <small><i>(i.e., Permit No.)</i></small></label>
-            <input type="text" class="form-control form-control-sm" id="endLocation" placeholder="Enter destination">
-            <ul id="endLocationList" class="list-group position-absolute w-100" style="z-index: 1000; max-height: 200px; overflow-y: auto; display:none;"></ul>
-          </div>
-          <button type="submit" class="btn btn-primary btn-sm w-100">
-            <i class="bi bi-arrow-right-circle"></i> Get Route
+        <div class="form-button-wrapper">
+          <!-- Floating Form -->
+          <button id="toggleRoutingFormBtn" class="btn btn-outline-primary btn-sm mb-2">
+            <i class="bi bi-caret-down-fill"></i> Show Routing Form
           </button>
-        </form>
+
+          <!-- 🔽 Collapsible Form -->
+          <div id="routingFormContainer" style="display:none;">
+            <form id="routingForm" class="routing-form">
+              <input type="hidden" id="endLat">
+              <input type="hidden" id="endLng">
+              <div class="mb-2">
+                <label for="startLocation" class="form-label small mb-1">Starting Location</label>
+                <input type="text" class="form-control form-control-sm" id="startLocation" placeholder="Enter start point" disabled>
+              </div>
+              <div class="mb-2 position-relative">
+                <label for="endLocation" class="form-label small mb-1">
+                  End Location <small><i>(i.e., Permit No.)</i></small>
+                </label>
+                <input type="text" class="form-control form-control-sm" id="endLocation" placeholder="Enter destination">
+                <ul id="endLocationList" class="list-group position-absolute w-100" 
+                    style="z-index: 1000; max-height: 200px; overflow-y: auto; display:none;"></ul>
+              </div>
+              <button type="submit" class="btn btn-primary btn-sm w-100">
+                <i class="bi bi-arrow-right-circle"></i> Get Route
+              </button>
+            </form>
+          </div>
+        </div>
+        
       </div>
 
-      <button id="stopTrackingBtn" class="btn btn-danger mt-2">🛑 Stop Tracking</button>
+      <button id="stopTrackingBtn" class="btn btn-danger mt-2">Stop Tracking</button>
 
     </div>
   </div>

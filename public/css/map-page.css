@@ -23,6 +23,40 @@
   z-index: 1000;
 }
 
+.form-button-wrapper {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  flex-direction: column; 
+  align-items: flex-start;
+  gap: 8px;
+  z-index: 1100;
+}
+
+#toggleRoutingFormBtn {
+  background: #ffffff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+}
+
+#toggleRoutingFormBtn:hover {
+  background: #000;
+  color: #fff;
+}
+
+.routing-form {
+  position: static;
+  width: 250px;
+  background: #ffffff;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+}
+
+
+
 .route-indicator {
   background: linear-gradient(135deg, #007bff, #00c6ff);
   color: white;
@@ -61,23 +95,38 @@
 
 .pulse-marker {
   background: rgba(0, 150, 255, 0.4);
-  border: 2px solid rgba(0, 150, 255, 0.8);
+  border: 3px solid rgba(0, 150, 255, 0.8);
   border-radius: 50%;
-  width: 20px;
-  height: 20px;
+  width: 35px;   /* ⬆ bigger marker */
+  height: 35px;
   position: relative;
 }
 
 .pulse-marker::after {
   content: "";
   position: absolute;
-  left: -10px;
-  top: -10px;
-  width: 40px;
-  height: 40px;
+  left: -20px;   /* adjusted for new size */
+  top: -20px;
+  width: 75px;   /* ⬆ bigger pulse ring */
+  height: 75px;
   border-radius: 50%;
   background: rgba(0, 150, 255, 0.3);
   animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.8;
+  }
+  70% {
+    transform: scale(2.2); /* ⬆ bigger expansion */
+    opacity: 0;
+  }
+  100% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
 }
 
 @keyframes pulse {
@@ -98,4 +147,22 @@
 #stopTrackingBtn{
   width: 200px;
   margin: auto;
+}
+
+.heading-icon {
+  width: 0;
+  height: 0;
+  border-left: 20px solid transparent;
+  border-right: 20px solid transparent;
+  border-bottom: 40px solid rgba(255, 0, 0, 1); /* 🔴 bright red */
+  filter: drop-shadow(0 0 4px black) drop-shadow(0 0 4px white); /* double shadow for contrast */
+  transform-origin: 50% 90%; /* rotates from tip */
+  transition: transform 0.3s ease;
+  z-index: 99999 !important;
+}
+
+.leaflet-marker-icon[src*="marker-icon-green.png"],
+.leaflet-marker-icon[src*="marker-icon-blue.png"],
+.leaflet-marker-icon[src*="marker-icon-violet.png"] {
+  opacity: 0.7;
 }

@@ -8,6 +8,7 @@ import { initMap, plotRouteOnMap, removePulseMarker } from "./map-init.js";
 export function initializePage(){
   Sidebar.render();
   Spinner.render();
+  toggleFormShowHide();
   setCurrentLocationInStartInput();
   enableEndLocationAutocomplete();
   initMap("routingMap", false);
@@ -17,7 +18,22 @@ export function initializePage(){
 
 let selectedPermitInfo = null;
 let geoWatchId = null;
-let trackingLogInterval = null
+let trackingLogInterval = null;
+let lastLat = null;
+let lastLng = null;
+
+function toggleFormShowHide(){
+  const toggleBtn = document.getElementById('toggleRoutingFormBtn');
+  const formContainer = document.getElementById('routingFormContainer');
+
+  toggleBtn.addEventListener('click', () => {
+    const isVisible = formContainer.style.display === 'block';
+    formContainer.style.display = isVisible ? 'none' : 'block';
+    toggleBtn.innerHTML = isVisible 
+      ? '<i class="bi bi-caret-down-fill"></i> Show Routing Form' 
+      : '<i class="bi bi-caret-up-fill"></i> Hide Routing Form';
+  });
+}
 
 function setCurrentLocationInStartInput() {
   const startInput = document.getElementById("startLocation");
@@ -136,8 +152,12 @@ export function getRouteSubmitForm() {
         const startLat = position.coords.latitude;
         const startLng = position.coords.longitude;
 
+        // ✅ Reset last position for heading calculation
+        lastLat = startLat;
+        lastLng = startLng;
+
         // ✅ Initial plot with current location
-        plotRouteOnMap(startLat, startLng, endLat, endLng, selectedPermitInfo, true);
+        plotRouteOnMap(startLat, startLng, endLat, endLng, selectedPermitInfo, true, 0);
         Spinner.hide();
 
         // ✅ Notify user that tracking started
@@ -149,23 +169,48 @@ export function getRouteSubmitForm() {
             const newLat = pos.coords.latitude;
             const newLng = pos.coords.longitude;
 
-            plotRouteOnMap(newLat, newLng, endLat, endLng, selectedPermitInfo, false);
+            // ✅ Compute heading based on movement
+            let headingDeg = 0;
+            if (lastLat !== null && lastLng !== null) {
+              headingDeg = calculateBearing(lastLat, lastLng, newLat, newLng);
+            }
+
+            // ✅ Update map with heading
+            plotRouteOnMap(newLat, newLng, endLat, endLng, selectedPermitInfo, false, headingDeg);
+
+            // ✅ Update last position for next calculation
+            lastLat = newLat;
+            lastLng = newLng;
           },
           (err) => console.warn("⚠️ Tracking error:", err),
           { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
         );
 
-        // ✅ Heartbeat interval (you can later use this for UI indicators)
+        // ✅ Heartbeat interval (for UI indicators)
         trackingLogInterval = setInterval(() => {
-          // no logs here, but you could pulse an icon or update UI here
+          // Could be used for UI indicators or logs
         }, 1000);
       });
     } else {
       console.warn("❌ Geolocation not supported.");
-      plotRouteOnMap(14.6091, 121.0223, endLat, endLng, selectedPermitInfo, true);
+      plotRouteOnMap(14.6091, 121.0223, endLat, endLng, selectedPermitInfo, true, 0);
       Spinner.hide();
     }
   });
+}
+
+function calculateBearing(lat1, lng1, lat2, lng2) {
+  const φ1 = (lat1 * Math.PI) / 180;
+  const φ2 = (lat2 * Math.PI) / 180;
+  const Δλ = ((lng2 - lng1) * Math.PI) / 180;
+
+  const y = Math.sin(Δλ) * Math.cos(φ2);
+  const x = Math.cos(φ1) * Math.sin(φ2) -
+            Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+
+  let θ = Math.atan2(y, x);
+  θ = (θ * 180) / Math.PI;
+  return (θ + 360) % 360;
 }
 
 function stopTrackingHandler() {
