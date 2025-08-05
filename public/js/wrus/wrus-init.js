@@ -4,4 +4,6 @@ import { initializePage } from "./wrus-ui.js";
 document.addEventListener('DOMContentLoaded',()=>{
   SessionGuard.ensureLoggedIn();
   initializePage();
+  localStorage.removeItem('cachedWUSDesc');
+  localStorage.removeItem('cachedWUSAsc');
 })

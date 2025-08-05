@@ -251,7 +251,7 @@ function handleAddForm() {
 async function loadWaterUser() {
   Spinner.show();
   try {
-    allUsers = await WUSData.fetchAllDesc();
+    allUsers = await WUSData.fetchAll();
     await renderWaterUsers();
   } finally {
     Spinner.hide();
@@ -263,7 +263,7 @@ async function renderWaterUsers(term = '') {
   tableBody.innerHTML = '';
 
   if (allUsers.length === 0) {
-    allUsers = await WUSData.fetchAllDesc();
+    allUsers = await WUSData.fetchAll();
   }
 
   function normalizeText(str) {
@@ -337,6 +337,9 @@ async function renderWaterUsers(term = '') {
     if (user.isWaterSource) {
       badges.push(`<span class="badge-3d badge-water-source me-1">Water Source</span>`);
     }
+    if (user.geotaggedUrl && user.geotaggedUrl.trim() !== '') {
+      badges.push(`<span class="badge-3d badge-water-source-bw me-1">Geotagged</span>`);
+    }
 
     const badgesHTML = badges.length > 0 ? `<div class="mt-1">${badges.join(' ')}</div>` : '';
 
@@ -370,8 +373,9 @@ async function renderWaterUsers(term = '') {
     tableBody.appendChild(tr);
   });
 
-  attachEditListeners(filteredUsers);
-  renderPagination(totalPages);
+
+    attachEditListeners(filteredUsers);
+    renderPagination(totalPages);
 }
 
 function handleRefreshButton({
@@ -676,7 +680,6 @@ function setupImageUploadModal(wusId, geotaggedUrl = '', permitNo = '') {
     }
   };
 
-  // Drag-and-drop events
   ['dragenter', 'dragover'].forEach(eventName => {
     dropZone.addEventListener(eventName, e => {
       e.preventDefault();
@@ -696,13 +699,11 @@ function setupImageUploadModal(wusId, geotaggedUrl = '', permitNo = '') {
     if (file) handleFile(file);
   };
 
-  // Bootstrap modal show event
   modal.addEventListener('show.bs.modal', () => {
     setImage(placeholderURL, true);
     hiddenInput.value = geotaggedUrl || '';
     imageInput.value = '';
 
-    // Set permitNo into hidden input
     if (permitNoInput) {
       permitNoInput.value = permitNo || '';
       console.log('Permit No passed to modal:', permitNo);
@@ -735,7 +736,6 @@ function setupImageUploadModal(wusId, geotaggedUrl = '', permitNo = '') {
     uploadBtn.addEventListener('click', () => handleGeotaggedUpload(wusId, permitNo));
   };
 
-  // Image file input
   imageInput.onchange = () => {
     const file = imageInput.files[0];
     const uploadBtn = document.getElementById('uploadGeotaggedBtn');
@@ -765,15 +765,12 @@ function setupImageUploadModal(wusId, geotaggedUrl = '', permitNo = '') {
         deleteBtn.disabled = true;
         deleteBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Deleting...';
 
-        // Delete image from storage
         await GeotaggedFileService.delete(hiddenInput.value);
 
-        // Attempt to update Permit if permitNo exists
         if (permitNo) {
           try {
-            const permits = await Permit.getAll(); // cached
+            const permits = await Permit.getAll();
             const targetPermit = permits.find(p => p.permitNo === permitNo);
-
             if (targetPermit) {
               await Permit.update(targetPermit.id, { geotaggedUrl: '' });
             } else {
@@ -784,13 +781,22 @@ function setupImageUploadModal(wusId, geotaggedUrl = '', permitNo = '') {
           }
         }
 
-        // UI updates
+        try {
+          if (userId) {
+            await WUSData.update(userId, { geotaggedUrl: '' });
+          } else {
+            console.warn("No userId provided. Skipping WUSData update.");
+          }
+        } catch (wusErr) {
+          console.warn("Error updating WUS record:", wusErr);
+        }
+
         setImage(placeholderURL, true);
         hiddenInput.value = '';
         viewImageLink.classList.add('d-none');
         removeDeleteButton();
 
-        allUsers = await WUSData.fetchAllDesc();
+        allUsers = await WUSData.fetchAll();
         await renderWaterUsers(currentSearchTerm);
 
         NotificationBox.show('Image deleted and water user updated.');
@@ -802,6 +808,7 @@ function setupImageUploadModal(wusId, geotaggedUrl = '', permitNo = '') {
         Spinner.hide();
       }
     });
+
 
     viewImageLink.parentElement.appendChild(deleteBtn);
   }
@@ -864,7 +871,7 @@ async function handleGeotaggedUpload(wusId, permitNo) {
       geotaggedUrl: newImageUrl
     });
 
-    allUsers = await WUSData.fetchAllDesc();
+    allUsers = await WUSData.fetchAll();
     await renderWaterUsers(currentSearchTerm);
 
     NotificationBox.show(

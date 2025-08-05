@@ -1,4 +1,5 @@
 import { WUSData } from "../data/cache/wrus-data.js";
+import { Permit } from "../data/cache/permit-data.js";
 import { normalizeBarangay, normalizeCity } from "../utils/normalize.js"
 import { updateMapLocation, addMapMarker, clearExtraMarkers } from '../map/map-init.js';
 
@@ -295,10 +296,10 @@ function attachViewMapListener() {
       const clickedCity = e.target.getAttribute('data-city');
       const normalizedClickedCity = normalizeCity(clickedCity);
 
-      // ✅ Change modal header text dynamically
       document.getElementById('mapModalLabel').textContent = `${clickedCity} Map`;
 
       const allData = await WUSData.fetchAll();
+      const cachedPermits = await Permit.getAll();
       const cityEntries = allData.filter(entry => normalizeCity(entry.city) === normalizedClickedCity);
 
       clearExtraMarkers();
@@ -309,33 +310,47 @@ function attachViewMapListener() {
 
         updateMapLocation(clickedCity, avgLat, avgLng);
 
-        cityEntries.forEach(entry => {
+        for (const entry of cityEntries) {
           if (entry.latitude && entry.longitude) {
-
             const sourceStatus = (entry.isWaterSource === true || entry.isWaterSource === 'true')
               ? '<span style="color:blue; font-weight:bold;">Water Source</span>'
               : '<span style="color:green; font-weight:bold;">Not a Water Source</span>';
 
-            let popupText = `
-              <strong>${entry.permittee || entry.owner || 'Unknown Site'}</strong><br>
-              🔢 <strong>Permit No.:</strong> ${entry.permitNo || 'N/A'}<br>
-              🏠 ${entry.street || 'Street not specified'}<br>
-              📍 Lat: ${parseFloat(entry.latitude).toFixed(5)}, 
-              Lng: ${parseFloat(entry.longitude).toFixed(5)}<br>
-              📅 Year Conducted: ${entry.year_conducted || 'N/A'}<br>
-              ✅ Status: ${sourceStatus}<br>
-            `;
+              const matchedPermitMeta = cachedPermits.find(p => p.permitNo === entry.permitNo);
+              let pdfUrl = 'images/permitNotFound.png';
 
-            if (entry.geotaggedUrl) {
-              popupText += `
-                <div style="margin-top: 5px;">
-                  <a href="${entry.geotaggedUrl}" target="_blank">
-                    <img src="${entry.geotaggedUrl}" 
-                        alt="Geotagged Photo" 
-                        style="width: 120px; height: auto; border-radius: 6px; border: 1px solid #ccc;">
-                  </a>
-                </div>
+              if (matchedPermitMeta?.id) {
+                try {
+                  const fullPermit = await Permit.getById(matchedPermitMeta.id);
+                  if (fullPermit?.pdfUrl) {
+                    pdfUrl = fullPermit.pdfUrl;
+                  }
+                } catch (err) {
+                  console.warn(`Failed to fetch permit by ID: ${matchedPermitMeta.id}`, err.message);
+                }
+              }
+
+              let popupText = `
+                <strong>${entry.permittee || entry.owner || 'Unknown Site'}</strong><br>
+                🔢 <strong>Permit No.:</strong> 
+                <a href="${pdfUrl}" target="_blank">${entry.permitNo || 'N/A'}</a><br>
+                🏠 ${entry.street || 'Street not specified'}<br>
+                📍 Lat: ${parseFloat(entry.latitude).toFixed(5)}, 
+                Lng: ${parseFloat(entry.longitude).toFixed(5)}<br>
+                📅 Year Conducted: ${entry.year_conducted || 'N/A'}<br>
+                ✅ Status: ${sourceStatus}<br>
               `;
+
+              if (entry.geotaggedUrl) {
+                popupText += `
+                  <div style="margin-top: 5px;">
+                    <a href="${entry.geotaggedUrl}" target="_blank">
+                      <img src="${entry.geotaggedUrl}" 
+                          alt="Geotagged Photo" 
+                          style="width: 120px; height: auto; border-radius: 6px; border: 1px solid #ccc;">
+                    </a>
+                  </div>
+                `;
             }
 
             addMapMarker(
@@ -346,10 +361,9 @@ function attachViewMapListener() {
               entry.permitNo
             );
           }
-        });
-
+        }
       } else {
-        console.warn(`⚠️ No entries found for "${clickedCity}"`);
+        console.warn(`No entries found for "${clickedCity}"`);
       }
     });
   });
@@ -367,6 +381,7 @@ async function handleViewBarangayMapClick(event) {
   document.getElementById('mapModalLabel').textContent = `${clickedBarangay}, ${clickedCity} Map`;
 
   const allData = await WUSData.fetchAll();
+  const cachedPermits = await Permit.getAll(); // ✅ needed to find id
 
   const barangayEntries = allData.filter(entry => 
     normalizeCity(entry.city) === normalizedCity &&
@@ -381,16 +396,32 @@ async function handleViewBarangayMapClick(event) {
 
     updateMapLocation(`${normalizedBarangay}, ${normalizedCity}`, avgLat, avgLng);
 
-    barangayEntries.forEach(entry => {
+    for (const entry of barangayEntries) {
       if (entry.latitude && entry.longitude) {
 
         const sourceStatus = (entry.isWaterSource === true || entry.isWaterSource === 'true')
           ? '<span style="color:blue; font-weight:bold;">Water Source</span>'
           : '<span style="color:green; font-weight:bold;">Not a Water Source</span>';
 
+        // ✅ Lookup permit.id first, then fetch full doc
+        const matchedPermitMeta = cachedPermits.find(p => p.permitNo === entry.permitNo);
+        let pdfUrl = 'images/permitNotFound.png';
+
+        if (matchedPermitMeta?.id) {
+          try {
+            const fullPermit = await Permit.getById(matchedPermitMeta.id);
+            if (fullPermit?.pdfUrl) {
+              pdfUrl = fullPermit.pdfUrl;
+            }
+          } catch (err) {
+            console.warn(`Failed to fetch permit by ID: ${matchedPermitMeta.id}`, err.message);
+          }
+        }
+
         let popupText = `
           <strong>${entry.permittee || entry.owner || 'Unknown Site'}</strong><br>
-          🔢 <strong>Permit No.:</strong> ${entry.permitNo || 'N/A'}<br>
+          🔢 <strong>Permit No.:</strong> 
+          <a href="${pdfUrl}" target="_blank">${entry.permitNo || 'N/A'}</a><br>
           🏠 ${entry.street || 'Street not specified'}<br>
           📍 Lat: ${parseFloat(entry.latitude).toFixed(5)}, 
           Lng: ${parseFloat(entry.longitude).toFixed(5)}<br>
@@ -418,7 +449,7 @@ async function handleViewBarangayMapClick(event) {
           entry.permitNo
         );
       }
-    });
+    }
 
   } else {
     console.warn(`⚠️ No entries found for "${normalizedBarangay}, ${normalizedCity}"`);
@@ -434,6 +465,8 @@ async function handleViewUserMapClick(event) {
   const entryId = event.target.getAttribute('data-id');
 
   const allData = await WUSData.fetchAll();
+  const cachedPermits = await Permit.getAll(); // ✅ needed to find id
+
   const selectedEntry = allData.find(entry => entry.id === entryId);
 
   if (!selectedEntry) {
@@ -444,13 +477,13 @@ async function handleViewUserMapClick(event) {
   const lat = parseFloat(selectedEntry.latitude);
   const lng = parseFloat(selectedEntry.longitude);
 
-  document.getElementById('mapModalLabel').textContent = 
-    `${selectedEntry.owner || selectedEntry.owner || 'Unknown Site'} – ${selectedEntry.city || 'Unknown City'}`;
+  document.getElementById('mapModalLabel').textContent =
+    `${selectedEntry.owner || 'Unknown Site'} – ${selectedEntry.city || 'Unknown City'}`;
 
   clearExtraMarkers();
 
   updateMapLocation(
-    `${selectedEntry.owner || selectedEntry.owner || 'Unknown Site'} – ${selectedEntry.city || 'Unknown City'}`,
+    `${selectedEntry.owner || 'Unknown Site'} – ${selectedEntry.city || 'Unknown City'}`,
     lat,
     lng
   );
@@ -459,9 +492,25 @@ async function handleViewUserMapClick(event) {
     ? '<span style="color:blue; font-weight:bold;">Water Source</span>'
     : '<span style="color:green; font-weight:bold;">Not a Water Source</span>';
 
+  // ✅ Lookup permit.id first, then fetch full doc
+  const matchedPermitMeta = cachedPermits.find(p => p.permitNo === selectedEntry.permitNo);
+  let pdfUrl = 'images/permitNotFound.png';
+
+  if (matchedPermitMeta?.id) {
+    try {
+      const fullPermit = await Permit.getById(matchedPermitMeta.id);
+      if (fullPermit?.pdfUrl) {
+        pdfUrl = fullPermit.pdfUrl;
+      }
+    } catch (err) {
+      console.warn(`Failed to fetch permit by ID: ${matchedPermitMeta.id}`, err.message);
+    }
+  }
+
   let popupText = `
     <strong>${selectedEntry.permittee || selectedEntry.owner || 'Unknown Site'}</strong><br>
-    🔢 <strong>Permit No.:</strong> ${selectedEntry.permitNo || 'N/A'}<br>
+    🔢 <strong>Permit No.:</strong> 
+    <a href="${pdfUrl}" target="_blank">${selectedEntry.permitNo || 'N/A'}</a><br>
     🏠 ${selectedEntry.street || 'Street not specified'}<br>
     📍 Lat: ${lat.toFixed(5)}, Lng: ${lng.toFixed(5)}<br>
     📅 Year Conducted: ${selectedEntry.year_conducted || 'N/A'}<br>
@@ -485,15 +534,3 @@ async function handleViewUserMapClick(event) {
   const mapModalInstance = new bootstrap.Modal(document.getElementById('mapModal'));
   mapModalInstance.show();
 }
-
-
-
-
-
-
-
-
-
-
-
-

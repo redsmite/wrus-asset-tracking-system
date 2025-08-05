@@ -104,6 +104,11 @@ tr.table-info:hover > th {
   background: linear-gradient(to bottom, #007bff, #0062cc);
 }
 
+.badge-water-source-bw {
+  background: linear-gradient(to bottom, #000000, #333333);
+  color: white;
+}
+
 .badge-3d::after {
   content: "";
   position: absolute;
