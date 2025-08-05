@@ -50,13 +50,31 @@ export function initMap(mapDivId = "leafletMap", showLegend = true, enableGeoloc
       .openPopup();
   }
 
-  // ✅ Only add legend if requested
+  // Only add legend if requested
   if (showLegend) {
     legend.addTo(map);
   }
 
-  // Load barangay boundaries
+  // Load boundaries
   loadBarangayBoundaries("js/data/geojson/Barangays_NCR.geojson");
+  loadManilaBoundary("js/data/geojson/manila.geojson");
+  loadMandaluyongBoundary("js/data/geojson/mandaluyong.geojson");
+  loadMarikinaBoundary("js/data/geojson/marikina.geojson");
+  loadPasigBoundary("js/data/geojson/pasig.geojson");
+  loadQuezonCityBoundary("js/data/geojson/quezon_city.geojson");
+  loadSanJuanBoundary("js/data/geojson/san_juan.geojson");
+  loadCaloocanBoundary("js/data/geojson/caloocan.geojson");
+  loadMalabonBoundary("js/data/geojson/malabon.geojson");
+  loadNavotasBoundary("js/data/geojson/navotas.geojson");
+  loadValenzuelaBoundary("js/data/geojson/valenzuela.geojson");
+  loadLasPinasBoundary("js/data/geojson/las_piñas.geojson");
+  loadMakatiBoundary("js/data/geojson/makati.geojson");  
+  loadMuntinlupaBoundary("js/data/geojson/muntinlupa.geojson");
+  loadParanaqueBoundary("js/data/geojson/parañaque.geojson");  
+  loadPasayBoundary("js/data/geojson/pasay.geojson");
+  loadPaterosBoundary("js/data/geojson/pateros.geojson");
+  loadTaguigBoundary("js/data/geojson/taguig.geojson");
+
 
   mapInitialized = true;
 }
@@ -164,99 +182,650 @@ export function clearExtraMarkers() {
   extraMarkers = [];
 }
 
-export function loadBarangayBoundaries(geoJsonUrl = "Barangays_NCR.geojson") {
+function loadBarangayBoundaries(geoJsonUrl = "Barangays_NCR.geojson") {
   if (!map) return;
 
   fetch(geoJsonUrl)
     .then(response => response.json())
     .then(data => {
-      //  Define a color palette
-      const colors = [
-        "#e6194b", "#3cb44b", "#ffe119", "#4363d8",
-        "#f58231", "#911eb4", "#46f0f0", "#f032e6",
-        "#bcf60c", "#fabebe", "#008080", "#e6beff",
-        "#9a6324", "#fffac8", "#800000", "#aaffc3"
-      ];
-
-      //  Map each city to a unique color
-      const cityColors = {};
-      let colorIndex = 0;
-
-      data.features.forEach(feature => {
-        const city = feature.properties.ADM2_EN;
-        if (!cityColors[city]) {
-          cityColors[city] = colors[colorIndex % colors.length];
-          colorIndex++;
-        }
-      });
-
-      // 🏘 Add barangay boundaries with city-based colors
       L.geoJSON(data, {
-        style: feature => ({
-          color: cityColors[feature.properties.ADM2_EN],
-          weight: 2,
-          opacity: 0.9,
-          fillColor: "#FFD580",
-          fillOpacity: 0.2
-        }),
+        style: {
+          color: "#ffffff",
+          weight: 0.9,
+          opacity: 1,
+          fillOpacity: 0
+        },
         onEachFeature: (feature, layer) => {
-          if (feature.properties) {
-            const brgy = feature.properties.BRGY_NAME || "Unknown Barangay";
-            const city = feature.properties.ADM2_EN || "Unknown City";
-            layer.bindPopup(`<strong>${brgy}</strong><br><em>${city}</em>`);
+          const brgy = feature.properties.BRGY_NAME || "Unknown Barangay";
+          const city = feature.properties.ADM2_EN || "Unknown City";
+          layer.bindPopup(`<strong>${brgy}</strong><br><em>${city}</em>`);
+
+          // Add barangay label
+          const labelText = feature.properties.ADM4_EN;
+          const coords = feature.geometry.coordinates;
+          let latlng;
+
+          if (feature.geometry.type === "Polygon") {
+            latlng = getPolygonCentroid(coords[0]);
+          } else if (feature.geometry.type === "MultiPolygon") {
+            latlng = getPolygonCentroid(coords[0][0]);
           }
 
-          //  Add label markers for ADM4_EN but keep them hidden initially
-          if (feature.properties.ADM4_EN) {
-            const labelText = feature.properties.ADM4_EN;
+          if (latlng) {
+            const label = L.divIcon({
+              className: "barangay-label",
+              html: labelText,
+              iconSize: null
+            });
 
-            // Calculate centroid manually
-            const coords = feature.geometry.coordinates;
-            let latlng;
+            const marker = L.marker(latlng, { icon: label, interactive: false });
 
-            if (feature.geometry.type === "Polygon") {
-              latlng = getPolygonCentroid(coords[0]);
-            } else if (feature.geometry.type === "MultiPolygon") {
-              latlng = getPolygonCentroid(coords[0][0]); // take first polygon
-            }
+            if (map.getZoom() >= 14) marker.addTo(map);
 
-            if (latlng) {
-              const label = L.divIcon({
-                className: "barangay-label",
-                html: labelText,
-                iconSize: null
-              });
-
-              const marker = L.marker(latlng, { icon: label, interactive: false });
-
-              // Add marker but hide it if zoom < 14
-              if (map.getZoom() >= 14) {
-                marker.addTo(map);
-              }
-
-              // Store marker for later show/hide
-              if (!map._barangayLabels) map._barangayLabels = [];
-              map._barangayLabels.push(marker);
-            }
+            if (!map._barangayLabels) map._barangayLabels = [];
+            map._barangayLabels.push(marker);
           }
         }
       }).addTo(map);
 
-      //  Show/hide labels based on zoom level
+      // Show/hide labels based on zoom level
       map.on("zoomend", () => {
         if (!map._barangayLabels) return;
         const showLabels = map.getZoom() >= 14;
 
         map._barangayLabels.forEach(marker => {
-          if (showLabels) {
-            if (!map.hasLayer(marker)) marker.addTo(map);
-          } else {
-            if (map.hasLayer(marker)) map.removeLayer(marker);
+          if (showLabels && !map.hasLayer(marker)) {
+            marker.addTo(map);
+          } else if (!showLabels && map.hasLayer(marker)) {
+            map.removeLayer(marker);
           }
         });
       });
     })
     .catch(err => console.error("Error loading GeoJSON:", err));
+}
+
+function loadManilaBoundary(geoJsonUrl = "manila.geojson") {
+  if (!map) return;
+
+  fetch(geoJsonUrl)
+    .then(response => response.json())
+    .then(data => {
+      const boundaryLayer = L.geoJSON(data, {
+        style: {
+          color: "#ff0000",    // Red colored boundary
+          weight: 5,           // Thicker line (increased from 3 to 5)
+          opacity: 1,
+          fillOpacity: 0
+        },
+        onEachFeature: (feature, layer) => {
+          const brgy = feature.properties.BRGY_NAME || "Unknown Barangay";
+          const city = feature.properties.ADM2_EN || "Unknown City";
+          layer.bindPopup(`<strong>${brgy}</strong><br><em>${city}</em>`);
+        }
+      }).addTo(map);
+
+      // 📍 Add a "Manila" label at the center of the boundary
+      const bounds = boundaryLayer.getBounds();
+      const center = bounds.getCenter();
+
+      const manilaLabel = L.divIcon({
+        className: 'manila-label',
+        html: '<div style="font-size: 24px; font-weight: bold; color: red;">Manila</div>',
+        iconSize: [100, 40]
+      });
+
+      L.marker(center, { icon: manilaLabel }).addTo(map);
+    })
+    .catch(err => console.error("Error loading manila.geojson:", err));
+}
+
+function loadMandaluyongBoundary(geoJsonUrl = "mandaluyong.geojson") {
+  if (!map) return;
+
+  fetch(geoJsonUrl)
+    .then(response => response.json())
+    .then(data => {
+      const boundaryLayer = L.geoJSON(data, {
+        style: {
+          color: "#007bff",
+          weight: 5,
+          opacity: 1,
+          fillOpacity: 0
+        },
+        onEachFeature: (feature, layer) => {
+          const brgy = feature.properties.BRGY_NAME || "Unknown Barangay";
+          const city = feature.properties.ADM2_EN || "Unknown City";
+          layer.bindPopup(`<strong>${brgy}</strong><br><em>${city}</em>`);
+        }
+      }).addTo(map);
+
+      // 📍 Add a "Mandaluyong" label at the center of the boundary
+      const bounds = boundaryLayer.getBounds();
+      const center = bounds.getCenter();
+
+      const mandaluyongLabel = L.divIcon({
+        className: 'mandaluyong-label',
+        html: '<div style="font-size: 24px; font-weight: bold; color: #007bff;">Mandaluyong</div>',
+        iconSize: [120, 40]
+      });
+
+      L.marker(center, { icon: mandaluyongLabel }).addTo(map);
+    })
+    .catch(err => console.error("Error loading mandaluyong.geojson:", err));
+}
+
+function loadMarikinaBoundary(geoJsonUrl = "marikina.geojson") {
+  if (!map) return;
+
+  fetch(geoJsonUrl)
+    .then(response => response.json())
+    .then(data => {
+      const boundaryLayer = L.geoJSON(data, {
+        style: {
+          color: "#28a745", // ✅ Green color for Marikina
+          weight: 5,
+          opacity: 1,
+          fillOpacity: 0
+        },
+        onEachFeature: (feature, layer) => {
+          const brgy = feature.properties.BRGY_NAME || "Unknown Barangay";
+          const city = feature.properties.ADM2_EN || "Unknown City";
+          layer.bindPopup(`<strong>${brgy}</strong><br><em>${city}</em>`);
+        }
+      }).addTo(map);
+
+      // 📍 Add a "Marikina" label at the center of the boundary
+      const bounds = boundaryLayer.getBounds();
+      const center = bounds.getCenter();
+
+      const marikinaLabel = L.divIcon({
+        className: 'marikina-label',
+        html: '<div style="font-size: 24px; font-weight: bold; color: #28a745;">Marikina</div>',
+        iconSize: [120, 40]
+      });
+
+      L.marker(center, { icon: marikinaLabel }).addTo(map);
+    })
+    .catch(err => console.error("Error loading marikina.geojson:", err));
+}
+
+function loadPasigBoundary(geoJsonUrl = "pasig.geojson") {
+  if (!map) return;
+
+  fetch(geoJsonUrl)
+    .then(response => response.json())
+    .then(data => {
+      const boundaryLayer = L.geoJSON(data, {
+        style: {
+          color: '#800080', // ✅ Blue color for Pasig
+          weight: 5,
+          opacity: 1,
+          fillOpacity: 0
+        },
+        onEachFeature: (feature, layer) => {
+          const brgy = feature.properties.BRGY_NAME || "Unknown Barangay";
+          const city = feature.properties.ADM2_EN || "Unknown City";
+          layer.bindPopup(`<strong>${brgy}</strong><br><em>${city}</em>`);
+        }
+      }).addTo(map);
+
+      // 📍 Add a "Pasig" label at the center of the boundary
+      const bounds = boundaryLayer.getBounds();
+      const center = bounds.getCenter();
+
+      const pasigLabel = L.divIcon({
+        className: 'pasig-label',
+        html: '<div style="font-size: 24px; font-weight: bold; color: #800080;">Pasig</div>',
+        iconSize: [120, 40]
+      });
+
+      L.marker(center, { icon: pasigLabel }).addTo(map);
+    })
+    .catch(err => console.error("Error loading pasig.geojson:", err));
+}
+
+function loadQuezonCityBoundary(geoJsonUrl = "quezon_city.geojson") {
+  if (!map) return;
+
+  fetch(geoJsonUrl)
+    .then(response => response.json())
+    .then(data => {
+      const boundaryLayer = L.geoJSON(data, {
+        style: {
+          color: '#FFA500', // 🟧 Orange color for Quezon City
+          weight: 5,
+          opacity: 1,
+          fillOpacity: 0
+        },
+        onEachFeature: (feature, layer) => {
+          const brgy = feature.properties.BRGY_NAME || "Unknown Barangay";
+          const city = feature.properties.ADM2_EN || "Unknown City";
+          layer.bindPopup(`<strong>${brgy}</strong><br><em>${city}</em>`);
+        }
+      }).addTo(map);
+
+      // 📍 Add a "Quezon City" label at the center of the boundary
+      const bounds = boundaryLayer.getBounds();
+      const center = bounds.getCenter();
+
+      const qcLabel = L.divIcon({
+        className: 'qc-label',
+        html: '<div style="font-size: 24px; font-weight: bold; color: #FFA500;">Quezon City</div>',
+        iconSize: [140, 40]
+      });
+
+      L.marker(center, { icon: qcLabel }).addTo(map);
+    })
+    .catch(err => console.error("Error loading quezoncity.geojson:", err));
+}
+
+function loadSanJuanBoundary(geoJsonUrl = "san_juan.geojson") {
+  if (!map) return;
+
+  fetch(geoJsonUrl)
+    .then(response => response.json())
+    .then(data => {
+      const boundaryLayer = L.geoJSON(data, {
+        style: {
+          color: '#008080',
+          weight: 5,
+          opacity: 1,
+          fillOpacity: 0
+        },
+        onEachFeature: (feature, layer) => {
+          const brgy = feature.properties.BRGY_NAME || "Unknown Barangay";
+          const city = feature.properties.ADM2_EN || "Unknown City";
+          layer.bindPopup(`<strong>${brgy}</strong><br><em>${city}</em>`);
+        }
+      }).addTo(map);
+
+      const bounds = boundaryLayer.getBounds();
+      const center = bounds.getCenter();
+
+      const sjLabel = L.divIcon({
+        className: 'sj-label',
+        html: '<div style="font-size: 24px; font-weight: bold; color: #008080;">San Juan</div>',
+        iconSize: [140, 40]
+      });
+
+      L.marker(center, { icon: sjLabel }).addTo(map);
+    })
+    .catch(err => console.error("Error loading san_juan.geojson:", err));
+}
+
+function loadCaloocanBoundary(geoJsonUrl = "caloocan.geojson") {
+  if (!map) return;
+
+  fetch(geoJsonUrl)
+    .then(response => response.json())
+    .then(data => {
+      const boundaryLayer = L.geoJSON(data, {
+        style: {
+          color: '#9ACD32', // Yellow-green
+          weight: 5,
+          opacity: 1,
+          fillOpacity: 0
+        },
+        onEachFeature: (feature, layer) => {
+          const brgy = feature.properties.BRGY_NAME || "Unknown Barangay";
+          const city = feature.properties.ADM2_EN || "Unknown City";
+          layer.bindPopup(`<strong>${brgy}</strong><br><em>${city}</em>`);
+        }
+      }).addTo(map);
+
+      const bounds = boundaryLayer.getBounds();
+      const center = bounds.getCenter();
+
+      const caloocanLabel = L.divIcon({
+        className: 'caloocan-label',
+        html: '<div style="font-size: 24px; font-weight: bold; color: #9ACD32;">Caloocan</div>',
+        iconSize: [140, 40]
+      });
+
+      L.marker(center, { icon: caloocanLabel }).addTo(map);
+    })
+    .catch(err => console.error("Error loading caloocan.geojson:", err));
+}
+
+function loadMalabonBoundary(geoJsonUrl = "malabon.geojson") {
+  if (!map) return;
+
+  fetch(geoJsonUrl)
+    .then(response => response.json())
+    .then(data => {
+      const boundaryLayer = L.geoJSON(data, {
+        style: {
+          color: '#00FFFF', // Cyan
+          weight: 5,
+          opacity: 1,
+          fillOpacity: 0
+        },
+        onEachFeature: (feature, layer) => {
+          const brgy = feature.properties.BRGY_NAME || "Unknown Barangay";
+          const city = feature.properties.ADM2_EN || "Unknown City";
+          layer.bindPopup(`<strong>${brgy}</strong><br><em>${city}</em>`);
+        }
+      }).addTo(map);
+
+      const bounds = boundaryLayer.getBounds();
+      const center = bounds.getCenter();
+
+      const label = L.divIcon({
+        className: 'malabon-label',
+        html: '<div style="font-size: 24px; font-weight: bold; color: #00FFFF;">Malabon</div>',
+        iconSize: [140, 40]
+      });
+
+      L.marker(center, { icon: label }).addTo(map);
+    })
+    .catch(err => console.error("Error loading malabon.geojson:", err));
+}
+
+function loadNavotasBoundary(geoJsonUrl = "navotas.geojson") {
+  if (!map) return;
+
+  fetch(geoJsonUrl)
+    .then(response => response.json())
+    .then(data => {
+      const boundaryLayer = L.geoJSON(data, {
+        style: {
+          color: 'green',
+          weight: 5,
+          opacity: 1,
+          fillOpacity: 0
+        },
+        onEachFeature: (feature, layer) => {
+          const brgy = feature.properties.BRGY_NAME || "Unknown Barangay";
+          const city = feature.properties.ADM2_EN || "Unknown City";
+          layer.bindPopup(`<strong>${brgy}</strong><br><em>${city}</em>`);
+        }
+      }).addTo(map);
+
+      const bounds = boundaryLayer.getBounds();
+      const center = bounds.getCenter();
+
+      const navotasLabel = L.divIcon({
+        className: 'navotas-label',
+        html: '<div style="font-size: 24px; font-weight: bold; color: green;">Navotas</div>',
+        iconSize: [140, 40]
+      });
+
+      L.marker(center, { icon: navotasLabel }).addTo(map);
+    })
+    .catch(err => console.error("Error loading navotas.geojson:", err));
+}
+
+function loadValenzuelaBoundary(geoJsonUrl = "valenzuela.geojson") {
+  if (!map) return;
+
+  fetch(geoJsonUrl)
+    .then(response => response.json())
+    .then(data => {
+      const boundaryLayer = L.geoJSON(data, {
+        style: {
+          color: 'pink',
+          weight: 5,
+          opacity: 1,
+          fillOpacity: 0
+        },
+        onEachFeature: (feature, layer) => {
+          const brgy = feature.properties.BRGY_NAME || "Unknown Barangay";
+          const city = feature.properties.ADM2_EN || "Unknown City";
+          layer.bindPopup(`<strong>${brgy}</strong><br><em>${city}</em>`);
+        }
+      }).addTo(map);
+
+      const bounds = boundaryLayer.getBounds();
+      const center = bounds.getCenter();
+
+      const valenzuelaLabel = L.divIcon({
+        className: 'valenzuela-label',
+        html: '<div style="font-size: 24px; font-weight: bold; color: pink;">Valenzuela</div>',
+        iconSize: [180, 40]
+      });
+
+      L.marker(center, { icon: valenzuelaLabel }).addTo(map);
+    })
+    .catch(err => console.error("Error loading valenzuela.geojson:", err));
+}
+
+function loadLasPinasBoundary(geoJsonUrl = "las_piñas.geojson") {
+  if (!map) return;
+
+  fetch(geoJsonUrl)
+    .then(response => response.json())
+    .then(data => {
+      const boundaryLayer = L.geoJSON(data, {
+        style: {
+          color: 'teal',
+          weight: 5,
+          opacity: 1,
+          fillOpacity: 0
+        },
+        onEachFeature: (feature, layer) => {
+          const brgy = feature.properties.BRGY_NAME || "Unknown Barangay";
+          const city = feature.properties.ADM2_EN || "Unknown City";
+          layer.bindPopup(`<strong>${brgy}</strong><br><em>${city}</em>`);
+        }
+      }).addTo(map);
+
+      const bounds = boundaryLayer.getBounds();
+      const center = bounds.getCenter();
+
+      const lasPinasLabel = L.divIcon({
+        className: 'las-pinas-label',
+        html: '<div style="font-size: 24px; font-weight: bold; color: teal;">Las Piñas</div>',
+        iconSize: [180, 40]
+      });
+
+      L.marker(center, { icon: lasPinasLabel }).addTo(map);
+    })
+    .catch(err => console.error("Error loading las_piñas.geojson:", err));
+}
+
+function loadMuntinlupaBoundary(geoJsonUrl = "muntinlupa.geojson") {
+  if (!map) return;
+
+  fetch(geoJsonUrl)
+    .then(response => response.json())
+    .then(data => {
+      const boundaryLayer = L.geoJSON(data, {
+        style: {
+          color: 'brown',
+          weight: 5,
+          opacity: 1,
+          fillOpacity: 0
+        },
+        onEachFeature: (feature, layer) => {
+          const brgy = feature.properties.BRGY_NAME || "Unknown Barangay";
+          const city = feature.properties.ADM2_EN || "Unknown City";
+          layer.bindPopup(`<strong>${brgy}</strong><br><em>${city}</em>`);
+        }
+      }).addTo(map);
+
+      const bounds = boundaryLayer.getBounds();
+      const center = bounds.getCenter();
+
+      const muntinlupaLabel = L.divIcon({
+        className: 'muntinlupa-label',
+        html: '<div style="font-size: 24px; font-weight: bold; color: brown;">Muntinlupa</div>',
+        iconSize: [180, 40]
+      });
+
+      L.marker(center, { icon: muntinlupaLabel }).addTo(map);
+    })
+    .catch(err => console.error("Error loading muntinlupa.geojson:", err));
+}
+
+function loadParanaqueBoundary(geoJsonUrl = "paranaque.geojson") {
+  if (!map) return;
+
+  fetch(geoJsonUrl)
+    .then(response => response.json())
+    .then(data => {
+      const boundaryLayer = L.geoJSON(data, {
+        style: {
+          color: 'orange',
+          weight: 5,
+          opacity: 1,
+          fillOpacity: 0
+        },
+        onEachFeature: (feature, layer) => {
+          const brgy = feature.properties.BRGY_NAME || "Unknown Barangay";
+          const city = feature.properties.ADM2_EN || "Unknown City";
+          layer.bindPopup(`<strong>${brgy}</strong><br><em>${city}</em>`);
+        }
+      }).addTo(map);
+
+      const bounds = boundaryLayer.getBounds();
+      const center = bounds.getCenter();
+
+      const paranaqueLabel = L.divIcon({
+        className: 'paranaque-label',
+        html: '<div style="font-size: 24px; font-weight: bold; color: orange;">Parañaque</div>',
+        iconSize: [180, 40]
+      });
+
+      L.marker(center, { icon: paranaqueLabel }).addTo(map);
+    })
+    .catch(err => console.error("Error loading paranaque.geojson:", err));
+}
+
+function loadMakatiBoundary(geoJsonUrl = "makati.geojson") {
+  if (!map) return;
+
+  fetch(geoJsonUrl)
+    .then(response => response.json())
+    .then(data => {
+      const boundaryLayer = L.geoJSON(data, {
+        style: {
+          color: 'pink',
+          weight: 5,
+          opacity: 1,
+          fillOpacity: 0
+        },
+        onEachFeature: (feature, layer) => {
+          const brgy = feature.properties.BRGY_NAME || "Unknown Barangay";
+          const city = feature.properties.ADM2_EN || "Unknown City";
+          layer.bindPopup(`<strong>${brgy}</strong><br><em>${city}</em>`);
+        }
+      }).addTo(map);
+
+      const bounds = boundaryLayer.getBounds();
+      const center = bounds.getCenter();
+
+      const makatiLabel = L.divIcon({
+        className: 'makati-label',
+        html: '<div style="font-size: 24px; font-weight: bold; color: pink;">Makati</div>',
+        iconSize: [180, 40]
+      });
+
+      L.marker(center, { icon: makatiLabel }).addTo(map);
+    })
+    .catch(err => console.error("Error loading makati.geojson:", err));
+}
+
+function loadPasayBoundary(geoJsonUrl = "pasay.geojson") {
+  if (!map) return;
+
+  fetch(geoJsonUrl)
+    .then(response => response.json())
+    .then(data => {
+      const boundaryLayer = L.geoJSON(data, {
+        style: {
+          color: 'purple',
+          weight: 5,
+          opacity: 1,
+          fillOpacity: 0
+        },
+        onEachFeature: (feature, layer) => {
+          const brgy = feature.properties.BRGY_NAME || "Unknown Barangay";
+          const city = feature.properties.ADM2_EN || "Unknown City";
+          layer.bindPopup(`<strong>${brgy}</strong><br><em>${city}</em>`);
+        }
+      }).addTo(map);
+
+      const bounds = boundaryLayer.getBounds();
+      const center = bounds.getCenter();
+
+      const pasayLabel = L.divIcon({
+        className: 'pasay-label',
+        html: '<div style="font-size: 24px; font-weight: bold; color: purple;">Pasay</div>',
+        iconSize: [180, 40]
+      });
+
+      L.marker(center, { icon: pasayLabel }).addTo(map);
+    })
+    .catch(err => console.error("Error loading pasay.geojson:", err));
+}
+
+function loadTaguigBoundary(geoJsonUrl = "taguig.geojson") {
+  if (!map) return;
+
+  fetch(geoJsonUrl)
+    .then(response => response.json())
+    .then(data => {
+      const boundaryLayer = L.geoJSON(data, {
+        style: {
+          color: 'green',
+          weight: 5,
+          opacity: 1,
+          fillOpacity: 0
+        },
+        onEachFeature: (feature, layer) => {
+          const brgy = feature.properties.BRGY_NAME || "Unknown Barangay";
+          const city = feature.properties.ADM2_EN || "Unknown City";
+          layer.bindPopup(`<strong>${brgy}</strong><br><em>${city}</em>`);
+        }
+      }).addTo(map);
+
+      const bounds = boundaryLayer.getBounds();
+      const center = bounds.getCenter();
+
+      const taguigLabel = L.divIcon({
+        className: 'taguig-label',
+        html: '<div style="font-size: 24px; font-weight: bold; color: green;">Taguig</div>',
+        iconSize: [180, 40]
+      });
+
+      L.marker(center, { icon: taguigLabel }).addTo(map);
+    })
+    .catch(err => console.error("Error loading taguig.geojson:", err));
+}
+
+function loadPaterosBoundary(geoJsonUrl = "pateros.geojson") {
+  if (!map) return;
+
+  fetch(geoJsonUrl)
+    .then(response => response.json())
+    .then(data => {
+      const boundaryLayer = L.geoJSON(data, {
+        style: {
+          color: 'orange',
+          weight: 5,
+          opacity: 1,
+          fillOpacity: 0
+        },
+        onEachFeature: (feature, layer) => {
+          const brgy = feature.properties.BRGY_NAME || "Unknown Barangay";
+          const city = feature.properties.ADM2_EN || "Unknown City";
+          layer.bindPopup(`<strong>${brgy}</strong><br><em>${city}</em>`);
+        }
+      }).addTo(map);
+
+      const bounds = boundaryLayer.getBounds();
+      const center = bounds.getCenter();
+
+      const paterosLabel = L.divIcon({
+        className: 'pateros-label',
+        html: '<div style="font-size: 24px; font-weight: bold; color: orange;">Pateros</div>',
+        iconSize: [180, 40]
+      });
+
+      L.marker(center, { icon: paterosLabel }).addTo(map);
+    })
+    .catch(err => console.error("Error loading pateros.geojson:", err));
 }
 
 function getPolygonCentroid(coords) {
