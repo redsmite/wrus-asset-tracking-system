@@ -6,7 +6,7 @@ import { months } from "../data/constants/months.js";
 import { waterSources } from "../data/constants/waterSources.js";
 import { purpose } from "../data/constants/purpose.js";
 import { initSignaturePad } from "./signature-pad-module.js";
-import { saveSignatureToIndexedDB, getSignatureFromIndexedDB } from './indexeddb-signature.js';
+import { saveSignatureToIndexedDB, getSignatureFromIndexedDB, clearSignaturesFromIndexedDB, deleteSignatureFromIndexedDB } from './indexeddb-signature.js';
 import { NotificationBox,Confirmation } from "../components/notification.js";
 
 export function initializePage() {
@@ -27,13 +27,6 @@ export function initializePage() {
     hiddenInputId: "modalSignature",
     formId: "modalForm",
     modalIds: ["addModal"]
-  });
-  initSignaturePad({
-    canvasId: "editSignatureCanvas",
-    clearBtnId: "clearEditSignature",
-    hiddenInputId: "editSignature",
-    formId: "editModalForm",
-    modalIds: ["editModal"]
   });
   finalizeButtonHandler();
   clearAll();
@@ -84,7 +77,6 @@ function initDynamicPlusButtons() {
   const itemContainer = document.getElementById('itemContainer');
   const modalForm = document.getElementById('modalForm');
   const modalElement = document.getElementById('addModal');
-
   const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
 
   if (!localStorage.getItem('waterInventory')) {
@@ -101,14 +93,12 @@ function initDynamicPlusButtons() {
     fileDiv.classList.add('entry-wrapper', 'text-center');
 
     fileDiv.innerHTML = `
-      <!-- 📄 File Button -->
-      <a href="#" class="file-link mb-2" data-index="${index}" 
+      <a href="#" class="btn-3d file-link mb-2" data-index="${index}" 
          data-bs-toggle="modal" data-bs-target="#editModal">
         <i class="bi bi-file-earmark"></i>
         <span class="file-number">${index + 1}</span>
       </a>
-      <!-- 🗑 Delete Button (NOW BELOW) -->
-      <button class="btn btn-danger btn-lg mt-2 delete-entry-btn" data-index="${index}">
+      <button class="btn btn-3d btn-danger btn-lg mt-2 delete-entry-btn" data-id="${item.id}">
         <i class="bi bi-dash-circle"></i>
       </button>
     `;
@@ -126,6 +116,7 @@ function initDynamicPlusButtons() {
   itemContainer.appendChild(plusDiv);
 
   document.getElementById('addWaterBtn').addEventListener('click', () => {
+    editingIndex = null;
     autoPopulateAddModal();
   });
 
@@ -138,93 +129,113 @@ function initDynamicPlusButtons() {
     });
   });
 
-  const deleteBtns = itemContainer.querySelectorAll('.delete-entry-btn');
+  // ✅ Attach Delete Button Logic
+  attachDeleteButtonListeners();
+
+  // ✅ Attach Form Submit Listener (only once)
+  handleModalFormSubmit(modalForm, modal);
+}
+
+function handleModalFormSubmit(modalForm, modal) {
+  if (modalForm.dataset.listenerAttached) return;
+
+  modalForm.addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const formData = {};
+    let signatureDataURL = null;
+
+    // 🔄 Collect form data
+    for (let element of modalForm.elements) {
+      if (element.id && element.type !== 'submit' && element.type !== 'button') {
+        formData[element.id] = element.type === 'checkbox' ? element.checked : element.value;
+      }
+    }
+
+    // ✍️ Get signature from canvas
+    const canvas = document.getElementById('signatureCanvas');
+    if (canvas) {
+      signatureDataURL = canvas.toDataURL();
+    }
+
+    let savedData = JSON.parse(localStorage.getItem('waterInventory')) || [];
+    let recordId = null;
+
+    // 📝 Determine if editing or adding new
+    if (
+      typeof editingIndex === 'number' &&
+      editingIndex >= 0 &&
+      editingIndex < savedData.length
+    ) {
+      formData.id = savedData[editingIndex]?.id || generateUniqueId();
+      savedData[editingIndex] = formData;
+      recordId = formData.id;
+      editingIndex = null;
+    } else {
+      recordId = generateUniqueId();
+      formData.id = recordId;
+      savedData.push(formData);
+    }
+
+    // 💾 Save updated data to localStorage
+    localStorage.setItem('waterInventory', JSON.stringify(savedData));
+
+    // 💾 Save signature to IndexedDB
+    if (signatureDataURL) {
+      try {
+        await saveSignatureToIndexedDB(signatureDataURL, recordId);
+      } catch (err) {
+        console.error("Error saving signature:", err);
+      }
+    }
+
+    // 🔄 Refresh UI and reset modal
+    initDynamicPlusButtons();
+    modalForm.reset();
+    modal.hide();
+  });
+
+  modalForm.dataset.listenerAttached = "true";
+}
+
+function generateUniqueId() {
+  const now = new Date();
+  return 'id-' + now.toISOString().replace(/[-:.TZ]/g, '') + '-' + Math.random().toString(36).substr(2, 5);
+}
+
+function attachDeleteButtonListeners() {
+  const deleteBtns = document.querySelectorAll('.delete-entry-btn');
+
   deleteBtns.forEach(btn => {
     btn.addEventListener('click', function () {
-      const index = parseInt(this.dataset.index);
+      const id = this.dataset.id; // use unique id instead of index
 
       Confirmation.show(
-        `Are you sure you want to delete entry #${index + 1}?`,
-        (confirmed) => {
+        `Are you sure you want to delete this entry?`,
+        async (confirmed) => {
           if (!confirmed) return;
 
           Spinner.show();
 
-          setTimeout(() => {
-            try {
-              let savedData = JSON.parse(localStorage.getItem('waterInventory')) || [];
-              savedData.splice(index, 1);
-              localStorage.setItem('waterInventory', JSON.stringify(savedData));
+          try {
+            let savedData = JSON.parse(localStorage.getItem('waterInventory')) || [];
+            const newData = savedData.filter(entry => entry.id !== id);
+            localStorage.setItem('waterInventory', JSON.stringify(newData));
 
-              initDynamicPlusButtons();
+            await deleteSignatureFromIndexedDB(id);
 
-              console.log(`🗑 Entry #${index + 1} deleted.`);
-            } catch (err) {
-              console.error("Error deleting entry:", err);
-              NotificationBox.show("Failed to delete entry. Please try again.","error");
-            } finally {
-              Spinner.hide();
-            }
-          }, 300);
+            initDynamicPlusButtons();
+            console.log(`🗑 Entry with ID ${id} deleted.`);
+          } catch (err) {
+            console.error("Error deleting entry:", err);
+            NotificationBox.show("Failed to delete entry. Please try again.", "error");
+          } finally {
+            Spinner.hide();
+          }
         }
       );
     });
   });
-
-  if (!modalForm.dataset.listenerAttached) {
-modalForm.addEventListener('submit', async function (e) {
-  e.preventDefault();
-
-  const formData = {};
-  let signatureDataURL = null;
-
-  for (let element of modalForm.elements) {
-    if (element.id && element.type !== 'submit' && element.type !== 'button') {
-      if (element.type === 'checkbox') {
-        formData[element.id] = element.checked;
-      } else {
-        formData[element.id] = element.value;
-      }
-    }
-  }
-
-  // ✅ Get signature from canvas (adjust ID accordingly)
-  const canvas = document.getElementById('signatureCanvas');
-  if (canvas) {
-    signatureDataURL = canvas.toDataURL();
-  }
-
-  let savedData = JSON.parse(localStorage.getItem('waterInventory'));
-
-  let recordId = null;
-  if (editingIndex !== null) {
-    savedData[editingIndex] = formData;
-    recordId = editingIndex;
-    editingIndex = null;
-  } else {
-    savedData.push(formData);
-    recordId = savedData.length - 1;
-  }
-
-  localStorage.setItem('waterInventory', JSON.stringify(savedData));
-
-  // ✅ Save the signature to IndexedDB using the same index
-  if (signatureDataURL) {
-    try {
-      await saveSignatureToIndexedDB(signatureDataURL, recordId);
-    } catch (err) {
-      console.error("Error saving signature:", err);
-    }
-  }
-
-  initDynamicPlusButtons();
-  modalForm.reset();
-  modal.hide();
-});
-
-
-    modalForm.dataset.listenerAttached = "true";
-  }
 }
 
 function populateMonthSelect(selectID) {
@@ -265,9 +276,10 @@ function autoPopulateAddModal() {
   if (modalMonth) modalMonth.value = monthConducted;
 }
 
-function populateEditModal(index) {
+async function populateEditModal(index) {
   const savedData = JSON.parse(localStorage.getItem('waterInventory'));
   const record = savedData[index];
+  const id = record.id;
 
   document.getElementById('editIndex').value = index;
 
@@ -285,8 +297,23 @@ function populateEditModal(index) {
   document.getElementById('editRemarks').value = record.modalRemarks || '';
   document.getElementById('editRepresentative').value = record.modalRepresentative || '';
 
-  if (record.modalSignature) {
-    document.getElementById('editSignature').value = record.modalSignature;
+  // 🖼 Load and display the signature image
+  const imageSignature = document.getElementById('image-signature');
+  if (imageSignature && id) {
+    try {
+      const signatureDataURL = await getSignatureFromIndexedDB(id);
+      if (signatureDataURL) {
+        imageSignature.src = signatureDataURL;
+        imageSignature.style.display = "block"; // Ensure it's visible
+      } else {
+        imageSignature.src = '';
+        imageSignature.style.display = "none"; // Hide if not found
+      }
+    } catch (err) {
+      console.error("Error loading signature image:", err);
+      imageSignature.src = '';
+      imageSignature.style.display = "none";
+    }
   }
 }
 
@@ -346,7 +373,10 @@ function initEditWaterInventoryFormListener() {
 
     const index = parseInt(document.getElementById('editIndex').value, 10);
 
+    const existingId = savedData[index].id;
+
     const updatedRecord = {
+      id: existingId,
       modalYearConducted: document.getElementById('editYearConducted').value,
       monthConductedAddModal: document.getElementById('monthConductedEditModal').value,
       modalOwner: document.getElementById('editOwner').value,
@@ -360,7 +390,6 @@ function initEditWaterInventoryFormListener() {
       modalPurposeSelect: document.getElementById('editPurposeSelect').value,
       modalRemarks: document.getElementById('editRemarks').value,
       modalRepresentative: document.getElementById('editRepresentative').value,
-      modalSignature: document.getElementById('editSignature').value
     };
 
     savedData[index] = updatedRecord;
@@ -382,21 +411,25 @@ function clearAll() {
   btn.addEventListener('click', () => {
     Confirmation.show(
       "Are you sure you want to CLEAR all water inventory data from the cache? This action cannot be undone.",
-      (confirmed) => {
+      async (confirmed) => {
         if (!confirmed) return;
 
         Spinner.show();
 
         try {
+          // Clear local storage
           localStorage.removeItem('waterInventory');
+
+          // Clear IndexedDB
+          await clearSignaturesFromIndexedDB();
 
           initDynamicPlusButtons();
 
-          console.log("🧹 All water inventory data cleared.");
-          NotificationBox.show("All water inventory data has been cleared.");
+          console.log("🧹 All water inventory and signature data cleared.");
+          NotificationBox.show("All water inventory and signature data have been cleared.");
         } catch (err) {
-          console.error("Error clearing water inventory:", err);
-          NotificationBox.show("Failed to clear water inventory. Please try again.","error");
+          console.error("Error clearing data:", err);
+          NotificationBox.show("Failed to clear data. Please try again.", "error");
         } finally {
           Spinner.hide();
         }

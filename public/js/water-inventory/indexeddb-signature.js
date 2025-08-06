@@ -36,3 +36,19 @@ export async function getSignatureFromIndexedDB(id) {
     request.onerror = () => reject("Error getting signature");
   });
 }
+
+export async function clearSignaturesFromIndexedDB() {
+  const db = await openIndexedDB();
+  const tx = db.transaction(storeName, "readwrite");
+  const store = tx.objectStore(storeName);
+  await store.clear();
+  return tx.done;
+}
+
+export async function deleteSignatureFromIndexedDB(id) {
+  const db = await openIndexedDB();
+  const tx = db.transaction(storeName, "readwrite");
+  const store = tx.objectStore(storeName);
+  store.delete(id);
+  return tx.done;
+}

@@ -177,15 +177,21 @@
                   <input type="text" class="form-control form-control-lg" id="modalRepresentative" placeholder="Enter representative">
                 </div>
 
-                <div class="col-12">
+                <div class="col-12 d-flex flex-column align-items-center">
                   <label for="modalSignature" class="form-label fw-bold small">Signature</label>
-                  <div class="border rounded bg-light" style="width: 100%; height: 150px;">
+
+                  <div class="border rounded bg-light" style="width: 600px; height: 100px;">
                     <canvas id="signatureCanvas" style="width: 100%; height: 100%;"></canvas>
                   </div>
-                  <button type="button" id="clearSignature" class="btn btn-sm btn-outline-secondary mt-2">Clear Signature</button>
+
+                  <button type="button" id="clearSignature" class="btn btn-sm btn-outline-secondary mt-2">
+                    Clear Signature
+                  </button>
+
                   <!-- Hidden input to store signature image -->
                   <input type="hidden" id="modalSignature" name="modalSignature">
                 </div>
+
 
               </div>
             </div>
@@ -299,13 +305,9 @@
                   <input type="text" class="form-control form-control-lg" id="editRepresentative" placeholder="Enter representative">
                 </div>
 
-                <div class="col-12">
-                  <label for="editSignature" class="form-label fw-bold small">Signature</label>
-                  <div class="border rounded bg-light" style="width: 100%; height: 150px;">
-                    <canvas id="editSignatureCanvas" width="600" height="150" style="width: 100%; height: 100%;"></canvas>
-                  </div>
-                  <button type="button" id="clearEditSignature" class="btn btn-sm btn-outline-secondary mt-2">Clear Signature</button>
-                  <input type="hidden" id="editSignature" name="editSignature">
+                <div class="col-12 text-center">
+                  <img src="" alt="no signature" id="image-signature">
+                  <small class="text-muted d-block mt-1">Signature can't be edited</small>
                 </div>
 
               </div>

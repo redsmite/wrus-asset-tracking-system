@@ -112,3 +112,14 @@
   background-color: #c82333;
   color: #fff;
 }
+
+#signatureCanvas {
+  cursor: url('/public/images/pen-cursor.png') 0 32, auto;
+}
+
+#image-signature{
+  width: 600px;
+  height: 100px;
+  margin: 0 auto;
+  border: 1px solid #999;
+}
