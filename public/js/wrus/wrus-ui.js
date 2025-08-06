@@ -4,6 +4,7 @@ import { Sidebar } from "../components/sidebar.js";
 import { Spinner } from '../components/spinner.js';
 import { NotificationBox } from '../components/notification.js';
 import { METRO_MANILA_CITIES } from '../data/constants/metroManilaCities.js';
+import { months } from '../data/constants/months.js';
 import { GeotaggedFileService } from '../upload/uploadImg.js';
 import { PortalBubble } from '../components/PortalBubble.js';
 
@@ -15,6 +16,8 @@ export function initializePage(){
   setupWaterSourceFilterToggle();
   setupAddModalCities();
   setupEditModalCities();
+  setupModalMonth('monthConducted');
+  setupModalMonth('editMonthConducted');
   setupPermitAutoComplete('permitNoInput', 'permitSuggestions', 'nameOfWaterUser', 'city', 'wusGeotagUrl');
   setupPermitAutoComplete('permitNoInputEdit', 'permitSuggestionsEdit', 'editOwner', 'editCity', 'editWusGeotagUrl');
   handleAddForm();
@@ -85,6 +88,16 @@ function setupEditModalCities() {
     option.textContent = city;
     citySelect.appendChild(option);
   });
+}
+
+function setupModalMonth(selectID){
+  const monthSelect = document.getElementById(selectID);
+
+  monthSelect.innerHTML = '';
+  if (monthSelect) {
+    monthSelect.innerHTML = `<option value="">Select Month</option>` + 
+      months.map(month => `<option value="${month}">${month}</option>`).join('');
+  }
 }
 
 async function setupPermitAutoComplete(inputId, suggestionsId, ownerInputId = null, citySelectId = null, geotagUrlId = null) {
@@ -208,9 +221,22 @@ function handleAddForm() {
       longitude: form.longitude.value.trim(),
       type: form.type.value.trim(),
       remarks: form.remarks.value.trim(),
+      month_conducted: form.monthConducted.value.trim(),
       year_conducted: form.yearConducted.value.trim(),
+      representative: form.representative.value.trim(),
       isWaterSource: form.isWaterSource.checked,
       geotaggedUrl: form.wusGeotagUrl.value.trim()
+    };
+
+    const permitData = {
+      permitNo: form.permitNoInput.value.trim(),
+      permittee: form.nameOfWaterUser.value.trim(),
+      diversionPoint: form.city.value.trim(),
+      latitude: form.latitude.value.trim(),
+      longitude: form.longitude.value.trim(),
+      waterSource: form.type.value.trim(),
+      geotaggedUrl: form.wusGeotagUrl.value.trim(),
+      visited: true
     };
 
     Spinner.show();
@@ -225,9 +251,9 @@ function handleAddForm() {
 
       if (matchingPermit) {
         await Permit.update(matchingPermit.id, { visited: true });
-        console.log(`✅ Permit ${matchingPermit.id} updated with visited=true`);
       } else {
-        console.warn(`⚠️ No matching permit found for Permit No: ${data.permitNo}`);
+        await Permit.add(permitData);
+        console.log(permitData);
       }
 
       form.reset();
@@ -363,7 +389,6 @@ async function renderWaterUsers(term = '') {
     const geotagBtn = tr.querySelector('.geotag-btn');
     geotagBtn.addEventListener('click', () => {
       const geotaggedUrl = user?.geotaggedUrl || '';
-      console.log('GeoTag button clicked:', user);
 
       setupImageUploadModal(user.id, geotaggedUrl, user.permitNo);
       const modal = new bootstrap.Modal(document.getElementById('imageUploadModal'));
@@ -473,9 +498,10 @@ function attachEditListeners(filteredUsers) {
       document.getElementById('editLongitude').value = user.longitude || '';
       document.getElementById('editType').value = user.type || '';
       document.getElementById('editRemarks').value = user.remarks || '';
+      document.getElementById('editMonthConducted').value = user.month_conducted || '';
       document.getElementById('editYearConducted').value = user.year_conducted || '';
       document.getElementById('editIsWaterSource').checked = !!user.isWaterSource;
-
+      document.getElementById('editRepresentative').value = user.representative || '';
       document.getElementById('permitNoInputEdit').value = user.permitNo || '';
       document.getElementById('editWusGeotagUrl').value = user.geotaggedUrl || '';
 
@@ -567,11 +593,26 @@ function handleEditForm() {
       longitude: document.getElementById('editLongitude').value.trim(),
       type: document.getElementById('editType').value.trim(),
       remarks: document.getElementById('editRemarks').value.trim(),
+      month_conducted: document.getElementById('editMonthConducted').value.trim(),
       year_conducted: document.getElementById('editYearConducted').value.trim(),
+      representative: document.getElementById('editRepresentative').value.trim(),
       isWaterSource: document.getElementById('editIsWaterSource').checked,
       permitNo,
       geotaggedUrl: document.getElementById('editWusGeotagUrl').value.trim()
     };
+
+    const permitPayload = {
+      permittee: document.getElementById('editOwner').value.trim(),
+      diversionPoint: document.getElementById('editCity').value.trim(),
+      latitude: document.getElementById('editLatitude').value.trim(),
+      longitude: document.getElementById('editLongitude').value.trim(),
+      waterSource: document.getElementById('editType').value.trim(),
+      permitNo,
+      geotaggedUrl: document.getElementById('editWusGeotagUrl').value.trim(),
+      visited: true
+    };
+
+
 
     try {
       // ✅ Update the WUS entry first
@@ -583,9 +624,8 @@ function handleEditForm() {
 
       if (matchingPermit) {
         await Permit.update(matchingPermit.id, { visited: true });
-        console.log(`✅ Permit ${matchingPermit.id} marked as visited`);
       } else {
-        console.warn(`⚠️ No matching permit found for permitNo: ${permitNo}`);
+        await Permit.add(permitPayload)
       }
 
       // ✅ UI handling after success
@@ -595,7 +635,7 @@ function handleEditForm() {
       form.reset();
       form.classList.remove('was-validated');
 
-      allUsers = await WUSData.fetchAllDesc();
+      allUsers = await WUSData.fetchAll();
       await renderWaterUsers(currentSearchTerm);
 
       NotificationBox.show('Water User updated successfully!');
@@ -706,7 +746,6 @@ function setupImageUploadModal(wusId, geotaggedUrl = '', permitNo = '') {
 
     if (permitNoInput) {
       permitNoInput.value = permitNo || '';
-      console.log('Permit No passed to modal:', permitNo);
     }
 
     if (geotaggedUrl) {
@@ -782,8 +821,8 @@ function setupImageUploadModal(wusId, geotaggedUrl = '', permitNo = '') {
         }
 
         try {
-          if (userId) {
-            await WUSData.update(userId, { geotaggedUrl: '' });
+          if (wusId) {
+            await WUSData.update(wusId, { geotaggedUrl: '' });
           } else {
             console.warn("No userId provided. Skipping WUSData update.");
           }

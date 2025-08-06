@@ -200,6 +200,28 @@
                   </div>
                 </div>
 
+                <div class="row">
+                  <div class="col-md-6">
+                    <label for="monthConducted" class="form-label">Month Conducted</label>
+                    <div class="input-group">
+                      <span class="input-group-text"><i class="bi bi-calendar-month"></i></span>
+                      <select class="form-select" id="monthConducted">
+                        <!-- Options will be populated by JS -->
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="col-md-6">
+                    <label for="yearConducted" class="form-label">Year Conducted <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                      <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
+                      <input type="number" class="form-control" id="yearConducted" required min="1900" max="2099" placeholder="e.g., 2025">
+                      <div class="invalid-feedback">Please enter a valid year.</div>
+                    </div>
+                  </div>
+                </div>
+
+
                 <div class="col-md-6">
                   <label for="remarks" class="form-label">Remarks</label>
                   <div class="input-group">
@@ -209,16 +231,15 @@
                 </div>
 
                 <div class="col-md-6">
-                  <label for="yearConducted" class="form-label">Year Conducted <span class="text-danger">*</span></label>
+                  <label for="representative" class="form-label">Representative <span class="text-danger">*</span></label>
                   <div class="input-group">
-                    <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
-                    <input type="number" class="form-control" id="yearConducted" required min="1900" max="2099" placeholder="e.g., 2025">
-                    <div class="invalid-feedback">Please enter a valid year.</div>
+                    <span class="input-group-text"><i class="bi bi-people"></i></span>
+                    <input type="text" class="form-control" id="representative" name="representative" required>
                   </div>
                 </div>
 
                 <!-- Is Water Source -->
-                <div class="col-12">
+                <div class="col-6">
                   <div class="form-check">
                     <input class="form-check-input" type="checkbox" id="isWaterSource">
                     <label class="form-check-label" for="isWaterSource">
@@ -345,10 +366,12 @@
                   </div>
 
                   <div class="col-md-6">
-                    <label for="editRemarks" class="form-label">Remarks</label>
+                    <label for="editMonthConducted" class="form-label">Month Conducted</label>
                     <div class="input-group">
-                      <span class="input-group-text"><i class="bi bi-chat-left-text"></i></span>
-                      <textarea class="form-control" id="editRemarks" rows="2"></textarea>
+                      <span class="input-group-text"><i class="bi bi-calendar-month"></i></span>
+                      <select class="form-select" id="editMonthConducted">
+                        <!-- Options will be populated by JS -->
+                      </select>
                     </div>
                   </div>
 
@@ -362,8 +385,24 @@
                     </div>
                   </div>
 
+                  <div class="col-md-6">
+                    <label for="editRemarks" class="form-label">Remarks</label>
+                    <div class="input-group">
+                      <span class="input-group-text"><i class="bi bi-chat-left-text"></i></span>
+                      <textarea class="form-control" id="editRemarks" rows="2"></textarea>
+                    </div>
+                  </div>
+
+                  <div class="col-md-6">
+                    <label for="editRepresentative" class="form-label">Representative <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                      <span class="input-group-text"><i class="bi bi-people"></i></span>
+                      <input type="text" class="form-control" id="editRepresentative" name="editRepresentative" required>
+                    </div>
+                  </div>
+
                   <!-- Is Water Source -->
-                  <div class="col-12">
+                  <div class="col-6">
                     <div class="form-check">
                       <input class="form-check-input" type="checkbox" id="editIsWaterSource">
                       <label class="form-check-label" for="editIsWaterSource">

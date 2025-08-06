@@ -2,14 +2,25 @@ import { Sidebar } from "../components/sidebar.js";
 import { Spinner } from "../components/spinner.js";
 import { WUSData } from "../data/cache/wrus-data.js";
 import { METRO_MANILA_CITIES } from "../data/constants/metroManilaCities.js";
+import { months } from "../data/constants/months.js";
+import { waterSources } from "../data/constants/waterSources.js";
+import { purpose } from "../data/constants/purpose.js";
 import { initSignaturePad } from "./signature-pad-module.js";
+import { saveSignatureToIndexedDB, getSignatureFromIndexedDB } from './indexeddb-signature.js';
 import { NotificationBox,Confirmation } from "../components/notification.js";
 
 export function initializePage() {
   Sidebar.render();
   Spinner.render();
-  initForm();
   initDynamicPlusButtons();
+  populateMonthSelect('monthConducted');
+  populateMonthSelect('monthConductedAddModal');
+  populateMonthSelect('monthConductedEditModal');
+  initForm();
+  waterSourceSelectModal('modalSourceWaterSelect');
+  waterSourceSelectModal('editSourceWaterSelect');
+  populatePurposeSelect('modalPurposeSelect');
+  populatePurposeSelect('editPurposeSelect');
   initSignaturePad({
     canvasId: "signatureCanvas",
     clearBtnId: "clearSignature",
@@ -27,6 +38,7 @@ export function initializePage() {
   finalizeButtonHandler();
   clearAll();
   initEditWaterInventoryFormListener();
+  console.log(localStorage.getItem('waterInventory'));
 }
 
 let editingIndex = null;
@@ -35,7 +47,9 @@ let itemCount = 0;
 function initForm() {
   const citySelect = document.getElementById("citySelect");
   const yearInput = document.getElementById("yearConducted");
+  const monthSelect = document.getElementById("monthConducted");
 
+  // Populate cities
   if (citySelect) {
     METRO_MANILA_CITIES.forEach(city => {
       const option = document.createElement("option");
@@ -45,9 +59,24 @@ function initForm() {
     });
   }
 
+  // Set current year
   if (yearInput) {
     const currentYear = new Date().getFullYear();
     yearInput.value = currentYear;
+  }
+
+  // Populate months
+  if (monthSelect) {
+    const currentMonthIndex = new Date().getMonth();
+    months.forEach((month, index) => {
+      const option = document.createElement("option");
+      option.value = month;
+      option.textContent = month;
+      if (index === currentMonthIndex) {
+        option.selected = true;
+      }
+      monthSelect.appendChild(option);
+    });
   }
 }
 
@@ -143,53 +172,97 @@ function initDynamicPlusButtons() {
   });
 
   if (!modalForm.dataset.listenerAttached) {
-    modalForm.addEventListener('submit', function (e) {
-      e.preventDefault();
+modalForm.addEventListener('submit', async function (e) {
+  e.preventDefault();
 
-      const formData = {};
-      for (let element of modalForm.elements) {
-        if (element.id && element.type !== 'submit' && element.type !== 'button') {
-          if (element.type === 'checkbox') {
-            formData[element.id] = element.checked;
-          } else {
-            formData[element.id] = element.value;
-          }
-        }
-      }
+  const formData = {};
+  let signatureDataURL = null;
 
-      let savedData = JSON.parse(localStorage.getItem('waterInventory'));
-
-      if (editingIndex !== null) {
-        savedData[editingIndex] = formData;
-        editingIndex = null;
+  for (let element of modalForm.elements) {
+    if (element.id && element.type !== 'submit' && element.type !== 'button') {
+      if (element.type === 'checkbox') {
+        formData[element.id] = element.checked;
       } else {
-        savedData.push(formData);
+        formData[element.id] = element.value;
       }
+    }
+  }
 
-      localStorage.setItem('waterInventory', JSON.stringify(savedData));
+  // ✅ Get signature from canvas (adjust ID accordingly)
+  const canvas = document.getElementById('signatureCanvas');
+  if (canvas) {
+    signatureDataURL = canvas.toDataURL();
+  }
 
-      initDynamicPlusButtons();
+  let savedData = JSON.parse(localStorage.getItem('waterInventory'));
 
-      modalForm.reset();
-      modal.hide();
-    });
+  let recordId = null;
+  if (editingIndex !== null) {
+    savedData[editingIndex] = formData;
+    recordId = editingIndex;
+    editingIndex = null;
+  } else {
+    savedData.push(formData);
+    recordId = savedData.length - 1;
+  }
+
+  localStorage.setItem('waterInventory', JSON.stringify(savedData));
+
+  // ✅ Save the signature to IndexedDB using the same index
+  if (signatureDataURL) {
+    try {
+      await saveSignatureToIndexedDB(signatureDataURL, recordId);
+    } catch (err) {
+      console.error("Error saving signature:", err);
+    }
+  }
+
+  initDynamicPlusButtons();
+  modalForm.reset();
+  modal.hide();
+});
+
 
     modalForm.dataset.listenerAttached = "true";
   }
+}
+
+function populateMonthSelect(selectID) {
+  const selectEl = document.getElementById(selectID);
+
+  selectEl.innerHTML = '';
+
+  // Optional default
+  const defaultOption = document.createElement('option');
+  defaultOption.value = '';
+  defaultOption.textContent = 'Select month...';
+  defaultOption.disabled = true;
+  defaultOption.selected = true;
+  selectEl.appendChild(defaultOption);
+
+  months.forEach(purpose => {
+    const option = document.createElement('option');
+    option.value = purpose;
+    option.textContent = purpose.replace(' Use', ''); // Optional: remove ' Use' from label
+    selectEl.appendChild(option);
+  });
 }
 
 function autoPopulateAddModal() {
   const selectedCity = document.getElementById('citySelect')?.value || '';
   const barangay = document.getElementById('barangayInput')?.value || '';
   const yearConducted = document.getElementById('yearConducted')?.value || '';
+  const monthConducted = document.getElementById('monthConducted')?.value || '';
 
   const modalYear = document.getElementById('modalYearConducted');
   const modalCity = document.getElementById('modalCity');
   const modalBarangay = document.getElementById('modalBarangay');
+  const modalMonth = document.getElementById('monthConductedAddModal');
 
   if (modalYear) modalYear.value = yearConducted;
   if (modalCity) modalCity.value = selectedCity;
   if (modalBarangay) modalBarangay.value = barangay;
+  if (modalMonth) modalMonth.value = monthConducted;
 }
 
 function populateEditModal(index) {
@@ -199,6 +272,7 @@ function populateEditModal(index) {
   document.getElementById('editIndex').value = index;
 
   document.getElementById('editYearConducted').value = record.modalYearConducted || '';
+  document.getElementById('monthConductedEditModal').value = record.monthConductedAddModal || '';
   document.getElementById('editOwner').value = record.modalOwner || '';
   document.getElementById('editLocation').value = record.modalLocation || '';
   document.getElementById('editCity').value = record.modalCity || '';
@@ -216,6 +290,49 @@ function populateEditModal(index) {
   }
 }
 
+function waterSourceSelectModal(selectID){
+  const selectEl = document.getElementById(selectID);
+
+  selectEl.innerHTML = '';
+
+  // Optional default
+  const defaultOption = document.createElement('option');
+  defaultOption.value = '';
+  defaultOption.textContent = 'Choose source...';
+  defaultOption.disabled = true;
+  defaultOption.selected = true;
+  selectEl.appendChild(defaultOption);
+
+  // Dynamically add the options
+  waterSources.forEach(source => {
+    const option = document.createElement('option');
+    option.value = source;
+    option.textContent = source;
+    selectEl.appendChild(option);
+  });
+}
+
+function populatePurposeSelect(selectID) {
+  const selectEl = document.getElementById(selectID);
+
+  selectEl.innerHTML = '';
+
+  // Optional default
+  const defaultOption = document.createElement('option');
+  defaultOption.value = '';
+  defaultOption.textContent = 'Select purpose...';
+  defaultOption.disabled = true;
+  defaultOption.selected = true;
+  selectEl.appendChild(defaultOption);
+
+  purpose.forEach(purpose => {
+    const option = document.createElement('option');
+    option.value = purpose;
+    option.textContent = purpose.replace(' Use', ''); // Optional: remove ' Use' from label
+    selectEl.appendChild(option);
+  });
+}
+
 function initEditWaterInventoryFormListener() {
   const editForm = document.getElementById('editModalForm');
   if (!editForm) return;
@@ -231,6 +348,7 @@ function initEditWaterInventoryFormListener() {
 
     const updatedRecord = {
       modalYearConducted: document.getElementById('editYearConducted').value,
+      monthConductedAddModal: document.getElementById('monthConductedEditModal').value,
       modalOwner: document.getElementById('editOwner').value,
       modalLocation: document.getElementById('editLocation').value,
       modalCity: document.getElementById('editCity').value,
@@ -310,6 +428,7 @@ function finalizeButtonHandler() {
           for (const item of localData) {
             const payload = {
               year_conducted: item.modalYearConducted || "",
+              month_conducted: item.monthConductedAddModal || "",
               owner: item.modalOwner || "",
               street: item.modalLocation || "",
               city: item.modalCity || "",
