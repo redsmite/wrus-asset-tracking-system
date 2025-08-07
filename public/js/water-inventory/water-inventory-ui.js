@@ -6,7 +6,7 @@ import { months } from "../data/constants/months.js";
 import { waterSources } from "../data/constants/waterSources.js";
 import { purpose } from "../data/constants/purpose.js";
 import { initSignaturePad } from "./signature-pad-module.js";
-import { saveSignatureToIndexedDB, getSignatureFromIndexedDB, clearSignaturesFromIndexedDB, deleteSignatureFromIndexedDB } from './indexeddb-signature.js';
+import { SignatureDB } from "../data/indexedDB/signature-data.js";
 import { NotificationBox,Confirmation } from "../components/notification.js";
 import { uploadSignatureToSupabase } from "../upload/uploadImg.js";
 
@@ -37,6 +37,7 @@ export function initializePage() {
 
 let editingIndex = null;
 let itemCount = 0;
+const signatureDB = new SignatureDB();
 
 function initForm() {
   const citySelect = document.getElementById("citySelect");
@@ -184,7 +185,7 @@ function handleModalFormSubmit(modalForm, modal) {
     // 💾 Save signature to IndexedDB
     if (signatureDataURL) {
       try {
-        await saveSignatureToIndexedDB(signatureDataURL, recordId);
+        await signatureDB.saveSignature(signatureDataURL, recordId);
       } catch (err) {
         console.error("Error saving signature:", err);
       }
@@ -223,7 +224,7 @@ function attachDeleteButtonListeners() {
             const newData = savedData.filter(entry => entry.id !== id);
             localStorage.setItem('waterInventory', JSON.stringify(newData));
 
-            await deleteSignatureFromIndexedDB(id);
+            await signatureDB.deleteSignature(id);
 
             initDynamicPlusButtons();
             console.log(`🗑 Entry with ID ${id} deleted.`);
@@ -302,7 +303,7 @@ async function populateEditModal(index) {
   const imageSignature = document.getElementById('image-signature');
   if (imageSignature && id) {
     try {
-      const signatureDataURL = await getSignatureFromIndexedDB(id);
+      const signatureDataURL = await signatureDB.getSignature(id)
       if (signatureDataURL) {
         imageSignature.src = signatureDataURL;
         imageSignature.style.display = "block"; // Ensure it's visible
@@ -422,7 +423,7 @@ function clearAll() {
           localStorage.removeItem('waterInventory');
 
           // Clear IndexedDB
-          await clearSignaturesFromIndexedDB();
+          await signatureDB.clearSignatures();
 
           initDynamicPlusButtons();
 
@@ -462,7 +463,7 @@ function finalizeButtonHandler() {
             let signUrl = "";
 
             try {
-              const signatureDataURL = await getSignatureFromIndexedDB(item.id); // ✅ Match by ID
+              const signatureDataURL = await signatureDB.getSignature(item.id); // ✅ Match by ID
               if (signatureDataURL) {
                 const fileName = `signature-${item.modalOwner || "unknown"}-${Date.now()}.png`;
                 signUrl = await uploadSignatureToSupabase(signatureDataURL, fileName);
@@ -494,7 +495,7 @@ function finalizeButtonHandler() {
           localStorage.removeItem('waterInventory');
 
           // ✅ Clear all signatures from IndexedDB
-          await clearSignaturesFromIndexedDB();
+          await signatureDB.clearSignatures();
 
           NotificationBox.show("All water inventory data has been successfully sent!");
           initDynamicPlusButtons();
