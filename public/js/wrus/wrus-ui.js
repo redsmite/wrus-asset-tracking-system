@@ -7,6 +7,7 @@ import { METRO_MANILA_CITIES } from '../data/constants/metroManilaCities.js';
 import { months } from '../data/constants/months.js';
 import { GeotaggedFileService } from '../upload/uploadImg.js';
 import { PortalBubble } from '../components/PortalBubble.js';
+import { generateWaterUserPDF } from '../pdf/water-user-pdf.js';
 
 export function initializePage(){
   Sidebar.render();
@@ -29,6 +30,7 @@ export function initializePage(){
     cooldownKey: "lastWUSRefresh"
   });
   initializeExportButton();
+  showWaterUserPDF();
 }
 
 let currentPage = 1;
@@ -383,6 +385,9 @@ async function renderWaterUsers(term = '') {
         <button class="btn btn-3d btn-sm btn-info geotag-btn" data-id="${user.id}">
           <i class="bi bi-geo-alt-fill"></i>
         </button>
+        <button class="btn btn-3d btn-sm btn-danger" data-id="${user.id}">
+          <i class="bi bi-file-earmark-pdf-fill"></i>
+        </button>
       </td>
     `;
 
@@ -397,7 +402,6 @@ async function renderWaterUsers(term = '') {
 
     tableBody.appendChild(tr);
   });
-
 
     attachEditListeners(filteredUsers);
     renderPagination(totalPages);
@@ -930,4 +934,32 @@ async function handleGeotaggedUpload(wusId, permitNo) {
   } finally {
     Spinner.hide();
   }
+}
+
+export function showWaterUserPDF() {
+  document.getElementById('waterUserTableBody').addEventListener('click', async function (e) {
+    const pdfBtn = e.target.closest('.btn-danger');
+    if (pdfBtn && pdfBtn.querySelector('.bi-file-earmark-pdf-fill')) {
+      const userId = pdfBtn.getAttribute('data-id');
+
+      const cachedUsers = JSON.parse(localStorage.getItem('filteredWaterUsers') || '[]');
+      const user = cachedUsers.find(u => u.id === userId);
+
+      if (!user) {
+        NotificationBox.show('User data not found.','error');
+        return;
+      }
+
+      // ✅ Generate PDF blob
+      const blob = await generateWaterUserPDF(user, { returnBlob: true });
+      const blobUrl = URL.createObjectURL(blob);
+
+      // ✅ Show in modal
+      const iframe = document.getElementById('pdfViewer');
+      iframe.src = blobUrl;
+
+      const modal = new bootstrap.Modal(document.getElementById('pdfModal'));
+      modal.show();
+    }
+  });
 }

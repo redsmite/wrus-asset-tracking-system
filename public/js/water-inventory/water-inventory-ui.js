@@ -482,7 +482,8 @@ function finalizeButtonHandler() {
               latitude: item.modalLatitude || "",
               longitude: item.modalLongitude || "",
               isWaterSource: item.modalIsWaterSource || false,
-              remarks: combineRemarks(item.modalPurposeSelect, item.modalRemarks),
+              purpose: item.modalPurposeSelect || "",
+              remarks: item.modalRemarks,
               representative: item.modalRepresentative || "",
               signUrl
             };
@@ -508,11 +509,4 @@ function finalizeButtonHandler() {
       }
     );
   });
-}
-
-function combineRemarks(purpose, remarks) {
-  if (purpose && remarks) return `${purpose}: ${remarks}`;
-  if (purpose) return purpose;
-  if (remarks) return remarks;
-  return "";
 }
