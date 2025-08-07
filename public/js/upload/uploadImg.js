@@ -77,3 +77,20 @@ export const GeotaggedFileService = {
     }
   }
 };
+
+export async function uploadSignatureToSupabase(base64Data, fileName) {
+  const blob = await (await fetch(base64Data)).blob();
+
+  const { data, error } = await supabase.storage
+    .from('signature')
+    .upload(fileName, blob, {
+      contentType: 'image/png',
+      upsert: true
+    });
+
+  if (error) throw error;
+
+  // Get public URL
+  const { data: publicURLData } = supabase.storage.from('signature').getPublicUrl(fileName);
+  return publicURLData.publicUrl;
+}

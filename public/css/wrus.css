@@ -9,6 +9,12 @@
   box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
 }
 
+#image-signature{
+  width: 350px;
+  height: 100px;
+  margin: 0 auto
+}
+
 tr.table-info {
   position: relative;
   background-color: rgba(33, 150, 243, 0.12);

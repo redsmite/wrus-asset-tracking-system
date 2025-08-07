@@ -504,6 +504,7 @@ function attachEditListeners(filteredUsers) {
       document.getElementById('editRepresentative').value = user.representative || '';
       document.getElementById('permitNoInputEdit').value = user.permitNo || '';
       document.getElementById('editWusGeotagUrl').value = user.geotaggedUrl || '';
+      document.getElementById('image-signature').src = user.signUrl;
 
       const modal = new bootstrap.Modal(document.getElementById('editwusModal'));
       modal.show();

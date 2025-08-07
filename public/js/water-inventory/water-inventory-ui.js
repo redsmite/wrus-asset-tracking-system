@@ -8,6 +8,7 @@ import { purpose } from "../data/constants/purpose.js";
 import { initSignaturePad } from "./signature-pad-module.js";
 import { saveSignatureToIndexedDB, getSignatureFromIndexedDB, clearSignaturesFromIndexedDB, deleteSignatureFromIndexedDB } from './indexeddb-signature.js';
 import { NotificationBox,Confirmation } from "../components/notification.js";
+import { uploadSignatureToSupabase } from "../upload/uploadImg.js";
 
 export function initializePage() {
   Sidebar.render();
@@ -448,17 +449,28 @@ function finalizeButtonHandler() {
         if (!confirmed) return;
 
         const localData = JSON.parse(localStorage.getItem('waterInventory') || '[]');
-
         if (localData.length === 0) {
-          NotificationBox.show("📭 No water inventory data found in localStorage.","error");
+          NotificationBox.show("📭 No water inventory data found in localStorage.", "error");
           return;
         }
 
-        // Show spinner
         Spinner.show();
         btn.disabled = true;
+
         try {
           for (const item of localData) {
+            let signUrl = "";
+
+            try {
+              const signatureDataURL = await getSignatureFromIndexedDB(item.id); // ✅ Match by ID
+              if (signatureDataURL) {
+                const fileName = `signature-${item.modalOwner || "unknown"}-${Date.now()}.png`;
+                signUrl = await uploadSignatureToSupabase(signatureDataURL, fileName);
+              }
+            } catch (uploadErr) {
+              console.error("Failed to upload signature:", uploadErr);
+            }
+
             const payload = {
               year_conducted: item.modalYearConducted || "",
               month_conducted: item.monthConductedAddModal || "",
@@ -472,20 +484,23 @@ function finalizeButtonHandler() {
               isWaterSource: item.modalIsWaterSource || false,
               remarks: combineRemarks(item.modalPurposeSelect, item.modalRemarks),
               representative: item.modalRepresentative || "",
-              signUrl: item.modalSignature || ""
+              signUrl
             };
 
             await WUSData.add(payload);
           }
 
-          // 🧹 Clear local storage
           localStorage.removeItem('waterInventory');
+
+          // ✅ Clear all signatures from IndexedDB
+          await clearSignaturesFromIndexedDB();
+
           NotificationBox.show("All water inventory data has been successfully sent!");
           initDynamicPlusButtons();
 
         } catch (err) {
           console.error("❌ Error while sending data:", err);
-          NotificationBox.show("An error occurred while sending the data. Please try again.","error");
+          NotificationBox.show("An error occurred while sending the data. Please try again.", "error");
         } finally {
           Spinner.hide();
           btn.disabled = false;
