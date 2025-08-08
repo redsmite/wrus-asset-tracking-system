@@ -5,6 +5,7 @@ import { Spinner } from '../components/spinner.js';
 import { NotificationBox } from '../components/notification.js';
 import { METRO_MANILA_CITIES } from '../data/constants/metroManilaCities.js';
 import { months } from '../data/constants/months.js';
+import { sourceStatus } from '../data/constants/sourceStatus.js';
 import { GeotaggedFileService } from '../upload/uploadImg.js';
 import { PortalBubble } from '../components/PortalBubble.js';
 import { generateWaterUserPDF } from '../pdf/water-user-pdf.js';
@@ -19,6 +20,8 @@ export function initializePage(){
   setupEditModalCities();
   setupModalMonth('monthConducted');
   setupModalMonth('editMonthConducted');
+  populateWaterSourceStatus('status')
+  populateWaterSourceStatus('editStatus')
   setupPermitAutoComplete('permitNoInput', 'permitSuggestions', 'nameOfWaterUser', 'city', 'wusGeotagUrl');
   setupPermitAutoComplete('permitNoInputEdit', 'permitSuggestionsEdit', 'editOwner', 'editCity', 'editWusGeotagUrl');
   handleAddForm();
@@ -100,6 +103,27 @@ function setupModalMonth(selectID){
     monthSelect.innerHTML = `<option value="">Select Month</option>` + 
       months.map(month => `<option value="${month}">${month}</option>`).join('');
   }
+}
+
+function populateWaterSourceStatus(selectID) {
+  const selectEl = document.getElementById(selectID);
+
+  selectEl.innerHTML = '';
+
+  // Optional default
+  const defaultOption = document.createElement('option');
+  defaultOption.value = '';
+  defaultOption.textContent = 'Select status...';
+  defaultOption.disabled = true;
+  defaultOption.selected = true;
+  selectEl.appendChild(defaultOption);
+
+  sourceStatus.forEach(status => {
+    const option = document.createElement('option');
+    option.value = status;
+    option.textContent = status;
+    selectEl.appendChild(option);
+  });
 }
 
 async function setupPermitAutoComplete(inputId, suggestionsId, ownerInputId = null, citySelectId = null, geotagUrlId = null) {
@@ -222,10 +246,13 @@ function handleAddForm() {
       latitude: form.latitude.value.trim(),
       longitude: form.longitude.value.trim(),
       type: form.type.value.trim(),
+      status: form.status.value.trim(),
       remarks: form.remarks.value.trim(),
       month_conducted: form.monthConducted.value.trim(),
       year_conducted: form.yearConducted.value.trim(),
       representative: form.representative.value.trim(),
+      designation: form.designation.value.trim(),
+      phone: form.phone.value.trim(),
       isWaterSource: form.isWaterSource.checked,
       geotaggedUrl: form.wusGeotagUrl.value.trim()
     };
@@ -501,14 +528,17 @@ function attachEditListeners(filteredUsers) {
       document.getElementById('editLatitude').value = user.latitude || '';
       document.getElementById('editLongitude').value = user.longitude || '';
       document.getElementById('editType').value = user.type || '';
+      document.getElementById('editStatus').value = user.status || '';
       document.getElementById('editRemarks').value = user.remarks || '';
       document.getElementById('editMonthConducted').value = user.month_conducted || '';
       document.getElementById('editYearConducted').value = user.year_conducted || '';
       document.getElementById('editIsWaterSource').checked = !!user.isWaterSource;
       document.getElementById('editRepresentative').value = user.representative || '';
+      document.getElementById('editDesignation').value = user.designation || '';
+      document.getElementById('editPhone').value = user.phone || '';
       document.getElementById('permitNoInputEdit').value = user.permitNo || '';
       document.getElementById('editWusGeotagUrl').value = user.geotaggedUrl || '';
-      document.getElementById('image-signature').src = user.signUrl;
+      document.getElementById('image-signature').src = user.signUrl || './images/noSignatureFound.png';
 
       const modal = new bootstrap.Modal(document.getElementById('editwusModal'));
       modal.show();
@@ -597,10 +627,13 @@ function handleEditForm() {
       latitude: document.getElementById('editLatitude').value.trim(),
       longitude: document.getElementById('editLongitude').value.trim(),
       type: document.getElementById('editType').value.trim(),
+      status: document.getElementById('editStatus').value.trim(),
       remarks: document.getElementById('editRemarks').value.trim(),
       month_conducted: document.getElementById('editMonthConducted').value.trim(),
       year_conducted: document.getElementById('editYearConducted').value.trim(),
       representative: document.getElementById('editRepresentative').value.trim(),
+      designation: document.getElementById('editDesignation').value.trim(),
+      phone: document.getElementById('editPhone').value.trim(),
       isWaterSource: document.getElementById('editIsWaterSource').checked,
       permitNo,
       geotaggedUrl: document.getElementById('editWusGeotagUrl').value.trim()

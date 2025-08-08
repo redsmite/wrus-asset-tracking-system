@@ -126,37 +126,60 @@ lines.forEach(([label, value], index) => {
   // SOURCE OF WATER: => NO. OF SOURCES and PURPOSE
   if (label === "SOURCE OF WATER:") {
     const noOfSourcesLabel = "NO. OF SOURCES:";
-    const noOfSourcesText = `${noOfSourcesLabel} ________`;
+    const noOfSourcesValue = "________"; // fixed-width underline
+    const noOfSourcesText = `${noOfSourcesLabel} ${noOfSourcesValue}`;
     const noOfSourcesWidth = doc.getTextWidth(noOfSourcesText);
 
     const purposeLabel = "PURPOSE:";
     const purposeValue = user.purpose || "N/A";
     const purposeLabelWidth = doc.getTextWidth(purposeLabel);
     const purposeValueWidth = doc.getTextWidth(purposeValue);
+    const spacingBetween = 10;
+    const spacingAfterLabel = 2;
 
-    const totalWidth = noOfSourcesWidth + 10 + purposeLabelWidth + 2 + purposeValueWidth;
-    const x2 = pageWidth - pad - totalWidth;
+    // Total width of both parts
+    const totalWidth =
+      noOfSourcesWidth + spacingBetween + purposeLabelWidth + spacingAfterLabel + purposeValueWidth;
 
-    doc.text(noOfSourcesText, x2, y);
+    const startX = pageWidth - pad - totalWidth;
 
-    const purposeX = x2 + noOfSourcesWidth + 10;
+    // Draw NO. OF SOURCES
+    doc.text(noOfSourcesLabel, startX, y);
+    const underlineStartX = startX + doc.getTextWidth(noOfSourcesLabel + " ");
+    doc.text(noOfSourcesValue, underlineStartX, y);
+
+    // Draw PURPOSE
+    const purposeX = startX + noOfSourcesWidth + spacingBetween;
     doc.text(purposeLabel, purposeX, y);
-    doc.text(purposeValue, purposeX + purposeLabelWidth + 2, y);
+    const purposeValueX = purposeX + purposeLabelWidth + spacingAfterLabel;
+    doc.text(purposeValue, purposeValueX, y);
+
+    // Underline the value of PURPOSE
     doc.line(
-      purposeX + purposeLabelWidth + 2,
+      purposeValueX,
       underlineY,
-      purposeX + purposeLabelWidth + 2 + purposeValueWidth,
+      purposeValueX + purposeValueWidth,
       underlineY
     );
 
     y += lineSpacing;
 
-    // SOURCE STATUS checkboxes
-    doc.text(
-      "SOURCE STATUS:    [  ] Proposed   [  ] Operational     [  ] On-going Drilling/Construction",
-      pad,
-      y
-    );
+    // Determine checkbox states
+    const status = (user.status || "").toUpperCase();
+    const checked = "X";
+    const empty = " ";
+
+    // Checkboxes (fill based on user.status)
+    const proposed = `[ ${empty} ] Proposed`;
+    const operational = `[ ${status === "OPERATIONAL" ? checked : empty} ] Operational`;
+    const ongoing = `[ ${status === "ON-GOING CONSTRUCTION" ? checked : empty} ] On-going Drilling/Construction`;
+    const nonOperational = `[ ${status === "NON-OPERATIONAL" ? checked : empty} ] Non-Operational`;
+
+    // Combine the line
+    const sourceStatusLine = `SOURCE STATUS:    ${proposed}   ${operational}     ${ongoing}   ${nonOperational}`;
+
+    // Render on PDF
+    doc.text(sourceStatusLine, pad, y);
     y += lineSpacing;
 
     // NAME OF WELL DRILLER line (indented)
@@ -197,72 +220,82 @@ lines.forEach(([label, value], index) => {
     }
   }
 
-// Line 1: VERIFIED BY (left) and REPRESENTATIVE (right)
-const verifiedByLabel = "VERIFIED BY: ";
-const verifiedLine = "_".repeat(40); // Adjust as needed
-const verifiedByText = verifiedByLabel + verifiedLine;
-doc.text(verifiedByText, pad, y);
+  // Line 1: VERIFIED BY (left) and REPRESENTATIVE (right)
+  const verifiedByLabel = "VERIFIED BY: ";
+  const verifiedLine = "_".repeat(40); // Adjust as needed
+  const verifiedByText = verifiedByLabel + verifiedLine;
+  doc.text(verifiedByText, pad, y);
 
-const repLabel = "Representative: ";
-const repValue = user.representative || "N/A";
-const repLabelWidth = doc.getTextWidth(repLabel);
-const repValueWidth = doc.getTextWidth(repValue);
-const repTotalWidth = repLabelWidth + repValueWidth;
-const repX = pageWidth - pad - repTotalWidth;
+  const repLabel = "Representative: ";
+  const repValue = user.representative || "N/A";
+  const repLabelWidth = doc.getTextWidth(repLabel);
+  const repValueWidth = doc.getTextWidth(repValue);
+  const repTotalWidth = repLabelWidth + repValueWidth;
+  const repX = pageWidth - pad - repTotalWidth;
 
-doc.text(repLabel, repX, y);
-doc.text(repValue, repX + repLabelWidth, y);
+  doc.text(repLabel, repX, y);
+  doc.text(repValue, repX + repLabelWidth, y);
 
-// Underline only the representative value
-const underlineY = y + 1;
-doc.line(
-  repX + repLabelWidth,
-  underlineY,
-  repX + repLabelWidth + repValueWidth,
-  underlineY
-);
+  // Underline only the representative value
+  const underlineY = y + 1;
+  doc.line(
+    repX + repLabelWidth,
+    underlineY,
+    repX + repLabelWidth + repValueWidth,
+    underlineY
+  );
 
-y += lineSpacing;
+  y += lineSpacing;
 
-// Line 2: Signature labels (aligned under their respective fields)
-const verifiedSignatureText = "Signature Over Printed Name";
-doc.text(verifiedSignatureText, pad + 25, y); // indent slightly under left side
+  // Line 2: Signature labels (aligned under their respective fields)
+  const verifiedSignatureText = "Signature Over Printed Name";
+  doc.text(verifiedSignatureText, pad + 25, y); // indent slightly under left side
 
-const repSignatureText = "Signature Over Printed Name";
-const repSignatureWidth = doc.getTextWidth(repSignatureText);
-const repSignatureX = pageWidth - pad - repSignatureWidth;
-doc.text(repSignatureText, repSignatureX, y);
+  const repSignatureText = "Signature Over Printed Name";
+  const repSignatureWidth = doc.getTextWidth(repSignatureText);
+  const repSignatureX = pageWidth - pad - repSignatureWidth;
+  doc.text(repSignatureText, repSignatureX, y);
 
-y += lineSpacing;
+  y += lineSpacing;
 
-// Line 3: Position (right-aligned)
-const positionLabel = "Position: ";
-const positionLine = "_".repeat(20);
-const positionText = positionLabel + positionLine;
-const positionTextWidth = doc.getTextWidth(positionText);
-const positionX = pageWidth - pad - positionTextWidth;
-doc.text(positionText, positionX, y);
+  // Line 3: Position (right-aligned with underline)
+  const positionLabel = "Position: ";
+  const positionValue = user.designation || "";
+  const positionText = positionLabel + positionValue;
+  const positionTextWidth = doc.getTextWidth(positionText);
+  const positionX = pageWidth - pad - positionTextWidth;
+  doc.text(positionText, positionX, y);
 
-y += lineSpacing;
+  // Draw underline for value only
+  const labelWidth = doc.getTextWidth(positionLabel);
+  const valueX = positionX + labelWidth;
+  const valueWidth = doc.getTextWidth(positionValue);
+  doc.line(valueX, y + 1, valueX + valueWidth, y + 1); // y+1 to place the underline below text
 
-// Line 4: Mobile No. (right-aligned)
-const mobileLabel = "Mobile No: ";
-const mobileLine = "_".repeat(20);
-const mobileText = mobileLabel + mobileLine;
-const mobileTextWidth = doc.getTextWidth(mobileText);
-const mobileX = pageWidth - pad - mobileTextWidth;
-doc.text(mobileText, mobileX, y);
+  y += lineSpacing;
 
-y += lineSpacing;
+  // Line 4: Mobile No. (right-aligned with underline)
+  const mobileLabel = "Mobile No: ";
+  const mobileValue = user.phone || "";
+  const mobileText = mobileLabel + mobileValue;
+  const mobileTextWidth = doc.getTextWidth(mobileText);
+  const mobileX = pageWidth - pad - mobileTextWidth;
+  doc.text(mobileText, mobileX, y);
 
-// Final output
-if (options.returnBlob) {
-  return doc.output("blob");
-} else {
-  doc.save(`SiteVerification-${user.id || "unknown"}.pdf`);
-}
+  // Draw underline for value only
+  const mobileLabelWidth = doc.getTextWidth(mobileLabel);
+  const mobileValueX = mobileX + mobileLabelWidth;
+  const mobileValueWidth = doc.getTextWidth(mobileValue);
+  doc.line(mobileValueX, y + 1, mobileValueX + mobileValueWidth, y + 1);
 
+  y += lineSpacing;
 
+  // Final output
+  if (options.returnBlob) {
+    return doc.output("blob");
+  } else {
+    doc.save(`SiteVerification-${user.id || "unknown"}.pdf`);
+  }
 }
 
 // Helper to load image from URL

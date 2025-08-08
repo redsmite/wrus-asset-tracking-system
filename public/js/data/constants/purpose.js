@@ -1,10 +1,14 @@
 export const purpose = [
-  "Household Use",
-  "Community Use",
+  "Domestic Use - Household",
+  "Domestic Use - Community",
   "Municipal Use",
-  "Industrial",
-  "Commercial",
-  "Irrigation",
-  "Recreation",
+  "Industrial Use",
+  "Commercial Use",
+  "Irrigation Use",
+  "Power Generation Use",
+  "Fisheries Use",
+  "Livestock Use",
+  "Recreation Use",
+  "Bulk Supply",
   "Others"
 ];

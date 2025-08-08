@@ -4,6 +4,7 @@ import { WUSData } from "../data/cache/wrus-data.js";
 import { METRO_MANILA_CITIES } from "../data/constants/metroManilaCities.js";
 import { months } from "../data/constants/months.js";
 import { waterSources } from "../data/constants/waterSources.js";
+import { sourceStatus } from "../data/constants/sourceStatus.js";
 import { purpose } from "../data/constants/purpose.js";
 import { initSignaturePad } from "./signature-pad-module.js";
 import { SignatureDB } from "../data/indexedDB/signature-data.js";
@@ -20,6 +21,8 @@ export function initializePage() {
   initForm();
   waterSourceSelectModal('modalSourceWaterSelect');
   waterSourceSelectModal('editSourceWaterSelect');
+  populateWaterSourceStatus('modalSourceStatus');
+  populateWaterSourceStatus('editSourceStatus');
   populatePurposeSelect('modalPurposeSelect');
   populatePurposeSelect('editPurposeSelect');
   initSignaturePad({
@@ -131,10 +134,8 @@ function initDynamicPlusButtons() {
     });
   });
 
-  // ✅ Attach Delete Button Logic
   attachDeleteButtonListeners();
 
-  // ✅ Attach Form Submit Listener (only once)
   handleModalFormSubmit(modalForm, modal);
 }
 
@@ -147,14 +148,12 @@ function handleModalFormSubmit(modalForm, modal) {
     const formData = {};
     let signatureDataURL = null;
 
-    // 🔄 Collect form data
     for (let element of modalForm.elements) {
       if (element.id && element.type !== 'submit' && element.type !== 'button') {
         formData[element.id] = element.type === 'checkbox' ? element.checked : element.value;
       }
     }
 
-    // ✍️ Get signature from canvas
     const canvas = document.getElementById('signatureCanvas');
     if (canvas) {
       signatureDataURL = canvas.toDataURL();
@@ -163,7 +162,6 @@ function handleModalFormSubmit(modalForm, modal) {
     let savedData = JSON.parse(localStorage.getItem('waterInventory')) || [];
     let recordId = null;
 
-    // 📝 Determine if editing or adding new
     if (
       typeof editingIndex === 'number' &&
       editingIndex >= 0 &&
@@ -179,10 +177,8 @@ function handleModalFormSubmit(modalForm, modal) {
       savedData.push(formData);
     }
 
-    // 💾 Save updated data to localStorage
     localStorage.setItem('waterInventory', JSON.stringify(savedData));
 
-    // 💾 Save signature to IndexedDB
     if (signatureDataURL) {
       try {
         await signatureDB.saveSignature(signatureDataURL, recordId);
@@ -191,7 +187,6 @@ function handleModalFormSubmit(modalForm, modal) {
       }
     }
 
-    // 🔄 Refresh UI and reset modal
     initDynamicPlusButtons();
     modalForm.reset();
     modal.hide();
@@ -227,7 +222,6 @@ function attachDeleteButtonListeners() {
             await signatureDB.deleteSignature(id);
 
             initDynamicPlusButtons();
-            console.log(`🗑 Entry with ID ${id} deleted.`);
           } catch (err) {
             console.error("Error deleting entry:", err);
             NotificationBox.show("Failed to delete entry. Please try again.", "error");
@@ -257,6 +251,27 @@ function populateMonthSelect(selectID) {
     const option = document.createElement('option');
     option.value = purpose;
     option.textContent = purpose.replace(' Use', ''); // Optional: remove ' Use' from label
+    selectEl.appendChild(option);
+  });
+}
+
+function populateWaterSourceStatus(selectID) {
+  const selectEl = document.getElementById(selectID);
+
+  selectEl.innerHTML = '';
+
+  // Optional default
+  const defaultOption = document.createElement('option');
+  defaultOption.value = '';
+  defaultOption.textContent = 'Select status...';
+  defaultOption.disabled = true;
+  defaultOption.selected = true;
+  selectEl.appendChild(defaultOption);
+
+  sourceStatus.forEach(status => {
+    const option = document.createElement('option');
+    option.value = status;
+    option.textContent = status;
     selectEl.appendChild(option);
   });
 }
@@ -292,12 +307,14 @@ async function populateEditModal(index) {
   document.getElementById('editCity').value = record.modalCity || '';
   document.getElementById('editBarangay').value = record.modalBarangay || '';
   document.getElementById('editSourceWaterSelect').value = record.modalSourceWaterSelect || '';
+  document.getElementById('editSourceStatus').value = record.modalSourceStatus || '';
   document.getElementById('editLatitude').value = record.modalLatitude || '';
   document.getElementById('editLongitude').value = record.modalLongitude || '';
-  document.getElementById('editIsWaterSource').checked = record.modalIsWaterSource || false;
   document.getElementById('editPurposeSelect').value = record.modalPurposeSelect || '';
   document.getElementById('editRemarks').value = record.modalRemarks || '';
   document.getElementById('editRepresentative').value = record.modalRepresentative || '';
+  document.getElementById('editDesignation').value = record.modalDesignation || '';
+  document.getElementById('editPhone').value = record.modalPhone || '';
 
   // 🖼 Load and display the signature image
   const imageSignature = document.getElementById('image-signature');
@@ -388,7 +405,6 @@ function initEditWaterInventoryFormListener() {
       modalSourceWaterSelect: document.getElementById('editSourceWaterSelect').value,
       modalLatitude: document.getElementById('editLatitude').value,
       modalLongitude: document.getElementById('editLongitude').value,
-      modalIsWaterSource: document.getElementById('editIsWaterSource').checked,
       modalPurposeSelect: document.getElementById('editPurposeSelect').value,
       modalRemarks: document.getElementById('editRemarks').value,
       modalRepresentative: document.getElementById('editRepresentative').value,
@@ -427,7 +443,6 @@ function clearAll() {
 
           initDynamicPlusButtons();
 
-          console.log("🧹 All water inventory and signature data cleared.");
           NotificationBox.show("All water inventory and signature data have been cleared.");
         } catch (err) {
           console.error("Error clearing data:", err);
@@ -463,7 +478,7 @@ function finalizeButtonHandler() {
             let signUrl = "";
 
             try {
-              const signatureDataURL = await signatureDB.getSignature(item.id); // ✅ Match by ID
+              const signatureDataURL = await signatureDB.getSignature(item.id);
               if (signatureDataURL) {
                 const fileName = `signature-${item.modalOwner || "unknown"}-${Date.now()}.png`;
                 signUrl = await uploadSignatureToSupabase(signatureDataURL, fileName);
@@ -471,6 +486,10 @@ function finalizeButtonHandler() {
             } catch (uploadErr) {
               console.error("Failed to upload signature:", uploadErr);
             }
+
+            const statusValue = item.modalSourceStatus || "";
+            const isWaterSource =
+              statusValue === "OPERATIONAL" || statusValue === "ON-GOING CONSTRUCTION";
 
             const payload = {
               year_conducted: item.modalYearConducted || "",
@@ -480,13 +499,16 @@ function finalizeButtonHandler() {
               city: item.modalCity || "",
               barangay: item.modalBarangay || "",
               type: item.modalSourceWaterSelect || "",
+              status: statusValue,
               latitude: item.modalLatitude || "",
               longitude: item.modalLongitude || "",
-              isWaterSource: item.modalIsWaterSource || false,
               purpose: item.modalPurposeSelect || "",
               remarks: item.modalRemarks,
               representative: item.modalRepresentative || "",
-              signUrl
+              designation: item.modalDesignation || "",
+              phone: item.modalPhone || "",
+              signUrl,
+              isWaterSource // ✅ Added field
             };
 
             await WUSData.add(payload);
