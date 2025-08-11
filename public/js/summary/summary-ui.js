@@ -40,9 +40,11 @@ export function initUI() {
   hideSearchIfNotAdmin();
   setupSearchHandler();
   setupGenerateICSHandler();
+  renderLatestLedger();
+  renderCriticalLowSupplyChart("lowSupplyChartContainer");
+  renderLedgerCharts();
 }
 
-// DATA LOADING
 export async function loadData() {
   Spinner.show();
   try {
@@ -53,7 +55,6 @@ export async function loadData() {
   }
 }
 
-// SEARCH & FILTER
 function setupSearchHandler() {
   searchInput?.addEventListener("input", () => {
     const query = searchInput.value.trim().toLowerCase();
@@ -73,7 +74,6 @@ function hideSearchIfNotAdmin() {
   }
 }
 
-// TABLE RENDER
 export function renderTable() {
   Spinner.show();
   try {
@@ -105,7 +105,6 @@ export function renderTable() {
   }
 }
 
-// TABLE CELLS
 function createNameCell(user) {
   const cell = document.createElement("td");
   cell.textContent = `${user.lastName}, ${user.firstName} ${user.middleInitial}.`;
@@ -168,8 +167,13 @@ function createICSCell(user) {
   return cell;
 }
 
-// PAGINATION
 function renderPagination(totalPages) {
+  const paginationNav = document.getElementById("paginationNav");
+  if (!paginationNav) {
+    console.warn("Pagination container #paginationNav not found");
+    return;
+  }
+
   paginationNav.innerHTML = "";
   const ul = document.createElement("ul");
   ul.className = "pagination";
@@ -187,7 +191,6 @@ function renderPagination(totalPages) {
     ul.appendChild(li);
   };
 
-  // Previous button
   addItem("Previous", currentPage === 1, () => {
     if (currentPage > 1) {
       currentPage--;
@@ -195,7 +198,6 @@ function renderPagination(totalPages) {
     }
   });
 
-  // Calculate page range (max 5 at a time)
   let startPage = Math.max(1, currentPage - 2);
   let endPage = startPage + 4;
 
@@ -204,7 +206,6 @@ function renderPagination(totalPages) {
     startPage = Math.max(1, endPage - 4);
   }
 
-  // Numbered buttons (limited to 5)
   for (let i = startPage; i <= endPage; i++) {
     addItem(i, false, () => {
       currentPage = i;
@@ -212,7 +213,6 @@ function renderPagination(totalPages) {
     }, i === currentPage);
   }
 
-  // Next button
   addItem("Next", currentPage === totalPages, () => {
     if (currentPage < totalPages) {
       currentPage++;
@@ -223,7 +223,6 @@ function renderPagination(totalPages) {
   paginationNav.appendChild(ul);
 }
 
-//  PROPERTY MODAL FOR ICS
 async function showPropertyModal(userFullName, userId) {
   document.getElementById("fullName").textContent =
     `${userFullName.lastName}, ${userFullName.firstName} ${userFullName.middleInitial}.`;
@@ -270,7 +269,6 @@ async function showPropertyModal(userFullName, userId) {
   modal.show();
 }
 
-// PDF GENERATION
 function setupGenerateICSHandler() {
   document.getElementById("generatePdfBtn")?.addEventListener("click", () => {
     const userId = document.getElementById("generatePdfBtn").dataset.userid;
@@ -279,3 +277,268 @@ function setupGenerateICSHandler() {
     }
   });
 }
+
+async function renderLatestLedger(containerId = "ledgerContainer") {
+  const container = document.getElementById(containerId);
+  if (!container) {
+    console.error(`Container with ID "${containerId}" not found.`);
+    return;
+  }
+
+  Spinner.show();
+
+  try {
+    container.innerHTML = "<p>Loading latest ledger entries...</p>";
+
+    let ledgerEntries = await Ledger.fetchAll();
+    ledgerEntries = ledgerEntries.slice(0, 10);
+
+    if (ledgerEntries.length === 0) {
+      container.innerHTML = "<p>No ledger entries found.</p>";
+      return;
+    }
+
+    const consumableMap = await Consumable.fetchConsumablesMap();
+    const usersMap = await Users.getUsersMap();
+
+    container.innerHTML = "";
+
+    // Header
+    const header = document.createElement("h5");
+    header.textContent = "Latest Ledger Report";
+    header.className = "mb-4";
+    container.appendChild(header);
+
+    // Responsive wrapper
+    const responsiveWrapper = document.createElement("div");
+    responsiveWrapper.className = "table-responsive";
+    container.appendChild(responsiveWrapper);
+
+    // Table
+    const table = document.createElement("table");
+    table.className = "table table-striped table-bordered table-hover align-middle";
+
+    // Table header
+    const thead = document.createElement("thead");
+    thead.innerHTML = `
+      <tr class="text-center align-middle">
+        <th scope="col">Date Modified</th>
+        <th scope="col">Consumable</th>
+        <th scope="col">Action</th>
+        <th scope="col" class="text-end">Amount</th>
+        <th scope="col">Remarks</th>
+        <th scope="col">Assigned To</th>
+      </tr>
+    `;
+    table.appendChild(thead);
+
+    // Table body
+    const tbody = document.createElement("tbody");
+
+    for (const entry of ledgerEntries) {
+      const consumableSpec = consumableMap[entry.cid]?.specification || entry.cid;
+
+      let dateStr = "N/A";
+      if (entry.dateModified) {
+        if (entry.dateModified.seconds) {
+          dateStr = new Date(entry.dateModified.seconds * 1000).toLocaleString();
+        } else if (entry.dateModified.toDate) {
+          dateStr = entry.dateModified.toDate().toLocaleString();
+        } else if (entry.dateModified instanceof Date) {
+          dateStr = entry.dateModified.toLocaleString();
+        } else {
+          dateStr = String(entry.dateModified);
+        }
+      }
+
+      const assignedToUsername = entry.assignedTo && usersMap[entry.assignedTo]
+        ? usersMap[entry.assignedTo]
+        : entry.assignedTo || "—";
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td class="text-center">${dateStr}</td>
+        <td>${consumableSpec}</td>
+        <td class="text-center">${entry.action || ""}</td>
+        <td class="text-end">${entry.amount ?? ""}</td>
+        <td>${entry.remarks || ""}</td>
+        <td>${assignedToUsername}</td>
+      `;
+      tbody.appendChild(tr);
+    }
+
+    table.appendChild(tbody);
+    responsiveWrapper.appendChild(table);
+
+  } catch (error) {
+    console.error("Error rendering latest ledger:", error);
+    if (container) container.innerHTML = "<p>Error loading ledger data.</p>";
+  } finally {
+    Spinner.hide();
+  }
+}
+
+async function renderCriticalLowSupplyChart(containerId = "chartsContainer") {
+  const container = document.getElementById(containerId);
+  if (!container) {
+    console.error(`Container with ID "${containerId}" not found.`);
+    return;
+  }
+
+  Spinner.show();
+
+  try {
+    const consumables = await Consumable.fetchAll();
+
+    // Filter all consumables with qty <= 10, sorted ascending
+    const criticalItems = consumables
+      .filter(item => item.qty <= 10)
+      .sort((a, b) => a.qty - b.qty);
+
+    if (criticalItems.length === 0) {
+      container.innerHTML = "<p>No critically low supply items found.</p>";
+      return;
+    }
+
+    const labels = criticalItems.map(item => item.specification || item.id);
+    const data = criticalItems.map(item => item.qty);
+
+    // Clear previous canvas and list if exists
+    let oldCanvas = document.getElementById("chartCriticalLowSupply");
+    if (oldCanvas) container.removeChild(oldCanvas);
+    let oldList = document.getElementById("criticalLowSupplyList");
+    if (oldList) container.removeChild(oldList);
+
+    // Create canvas for chart
+    const canvas = document.createElement("canvas");
+    canvas.id = "chartCriticalLowSupply";
+    canvas.style.marginBottom = "1rem";
+    container.appendChild(canvas);
+
+    // Create horizontal bar chart
+    new Chart(canvas, {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [{
+          label: "Qty",
+          data,
+          backgroundColor: "rgba(255, 99, 132, 0.6)",
+          borderColor: "rgba(255, 99, 132, 1)",
+          borderWidth: 1,
+        }],
+      },
+      options: {
+        indexAxis: 'y', // horizontal bar chart
+        scales: {
+          x: {
+            beginAtZero: true,
+            ticks: { precision: 0 }
+          }
+        },
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          title: { display: true, text: "Critically Low Consumable Supplies (Qty <= 10)" },
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Error rendering critical low supply chart:", error);
+  } finally {
+    Spinner.hide();
+  }
+}
+
+async function renderLedgerCharts() {
+  const chartContainer = document.getElementById('chartsContainer');
+  if (!chartContainer) {
+    console.error('Container with ID "chartsContainer" not found.');
+    return;
+  }
+
+  Spinner.show();
+
+  try {
+    const ledgerEntries = await Ledger.fetchAll();
+    const consumableMap = await Consumable.fetchConsumablesMap();
+
+    // Helper to group by CID
+    const groupByCID = (entries) => {
+      const grouped = {};
+      for (const entry of entries) {
+        const name = consumableMap[entry.cid]?.specification || entry.cid;
+        grouped[name] = (grouped[name] || 0) + (entry.amount || 0);
+      }
+      return grouped;
+    };
+
+    const entriesByYear = {};
+    for (const entry of ledgerEntries) {
+      if (!entry.dateModified) continue;
+      const year = new Date(entry.dateModified.seconds * 1000).getFullYear();
+      if (!entriesByYear[year]) entriesByYear[year] = [];
+      entriesByYear[year].push(entry);
+    }
+
+    chartContainer.innerHTML = '';
+
+    const createBarChart = (ctx, label, labels, data) => {
+      return new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label,
+            data,
+            backgroundColor: 'rgba(54, 162, 235, 0.6)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { precision: 0 }
+            }
+          },
+          responsive: true,
+          plugins: {
+            legend: { display: true, position: 'top' },
+            title: { display: true, text: label }
+          }
+        }
+      });
+    };
+
+    for (const year of Object.keys(entriesByYear).sort((a, b) => b - a)) {
+      const assignItemEntries = entriesByYear[year].filter(
+        e => e.action?.toLowerCase() === 'assign item'
+      );
+
+      const grouped = groupByCID(assignItemEntries);
+      const sortedEntries = Object.entries(grouped)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 15);
+
+      const labels = sortedEntries.map(([name]) => name);
+      const data = sortedEntries.map(([, amount]) => amount);
+
+      const canvas = document.createElement('canvas');
+      canvas.id = `chartAssignItem_${year}`;
+      canvas.style.marginBottom = '2rem';
+      chartContainer.appendChild(canvas);
+
+      createBarChart(canvas, `Most Used Consumables - ${year}`, labels, data);
+    }
+  } catch (error) {
+    console.error("Error rendering ledger charts:", error);
+  } finally {
+    Spinner.hide();
+  }
+}
+
+
+
+

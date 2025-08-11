@@ -24,13 +24,11 @@
   min-width: 1000px;
 }
 
-/* Wider modal */
 .modal-xl-custom {
   max-width: 95% !important;
   width: 95%;
 }
 
-/* Make modal almost full-screen */
 .modal-fullscreen-custom {
   max-width: 98% !important;
   width: 98%;
@@ -43,26 +41,25 @@
 
 .modal-body embed {
   width: 100%;
-  height: 95vh; /* Almost full screen height */
+  height: 95vh;
   display: block;
 }
 
-/* Water-themed hint for Inventory Summary search input */
 #searchInput.form-control {
-  background-color: #f9fcff;             /* very light water blue */
-  border: 1px solid #64b5f6;             /* medium water blue */
-  color: #1565c0;                        /* deep readable blue */
+  background-color: #f9fcff;
+  border: 1px solid #64b5f6;
+  color: #1565c0;
   font-weight: 500;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 #searchInput::placeholder {
-  color: #90caf9;                        /* subtle placeholder blue */
+  color: #90caf9;
 }
 
 #searchInput:focus {
-  border-color: #42a5f5;                 /* brighter blue on focus */
-  box-shadow: 0 0 6px rgba(100, 181, 246, 0.3);  /* soft glow */
+  border-color: #42a5f5;
+  box-shadow: 0 0 6px rgba(100, 181, 246, 0.3);
   outline: none;
 }
 
@@ -89,3 +86,19 @@
   background-color: #0d6efd;
   color: #ffffff;
 }
+
+#chartAssignItem{
+  width: 500px;
+  height: 500px;
+}
+
+.chart-container {
+  margin: 0 auto;
+  overflow: visible;
+  position: relative; 
+}
+
+.chart-container canvas {
+  display: block;
+}
+

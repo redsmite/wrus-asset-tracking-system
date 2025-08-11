@@ -77,7 +77,7 @@ export const Sidebar = {
                 <ul class="nav flex-column">
                   <li><a class="nav-link text-white" href="consumable.html">Consumable</a></li>
                   <li><a class="nav-link text-white" href="ics.html">ICS</a></li>
-                  <li><a class="nav-link text-white" href="inventory-summary.html">Inventory Summary</a></li>
+                  <li><a class="nav-link text-white" href="inventory-summary.html">Ledger/ICS Summary</a></li>
                 </ul>
               </div>
             </li>

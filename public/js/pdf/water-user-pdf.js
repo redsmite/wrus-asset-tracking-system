@@ -169,11 +169,23 @@ lines.forEach(([label, value], index) => {
     const checked = "X";
     const empty = " ";
 
-    // Checkboxes (fill based on user.status)
-    const proposed = `[ ${empty} ] Proposed`;
-    const operational = `[ ${status === "OPERATIONAL" ? checked : empty} ] Operational`;
-    const ongoing = `[ ${status === "ON-GOING CONSTRUCTION" ? checked : empty} ] On-going Drilling/Construction`;
-    const nonOperational = `[ ${status === "NON-OPERATIONAL" ? checked : empty} ] Non-Operational`;
+    // Default: Non-Operational is checked
+    let proposed = `[ ${empty} ] Proposed`;
+    let operational = `[ ${empty} ] Operational`;
+    let ongoing = `[ ${empty} ] On-going Drilling/Construction`;
+    let nonOperational = `[ ${checked} ] Non-Operational`;
+
+    // Override defaults if status matches
+    if (status === "PROPOSED") {
+      proposed = `[ ${checked} ] Proposed`;
+      nonOperational = `[ ${empty} ] Non-Operational`;
+    } else if (status === "OPERATIONAL") {
+      operational = `[ ${checked} ] Operational`;
+      nonOperational = `[ ${empty} ] Non-Operational`;
+    } else if (status === "ON-GOING CONSTRUCTION") {
+      ongoing = `[ ${checked} ] On-going Drilling/Construction`;
+      nonOperational = `[ ${empty} ] Non-Operational`;
+    }
 
     // Combine the line
     const sourceStatusLine = `SOURCE STATUS:    ${proposed}   ${operational}     ${ongoing}   ${nonOperational}`;
