@@ -86,19 +86,3 @@
   background-color: #0d6efd;
   color: #ffffff;
 }
-
-#chartAssignItem{
-  width: 500px;
-  height: 500px;
-}
-
-.chart-container {
-  margin: 0 auto;
-  overflow: visible;
-  position: relative; 
-}
-
-.chart-container canvas {
-  display: block;
-}
-

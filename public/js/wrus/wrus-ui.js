@@ -367,7 +367,8 @@ async function renderWaterUsers(term = '') {
       normalizeText(u.city || '').includes(normalizedSearch) ||
       normalizeText(u.permitNo || '').includes(normalizedSearch) ||
       (u.latitude || '').toString().includes(normalizedSearch) ||
-      (u.longitude || '').toString().includes(normalizedSearch)
+      (u.longitude || '').toString().includes(normalizedSearch) ||
+      (u.year_conducted || '').includes(normalizedSearch)
     );
   }
 
@@ -405,6 +406,7 @@ async function renderWaterUsers(term = '') {
       <td>${highlightMatch(user.city || '', searchTerm)}</td>
       <td>${highlightMatch(user.latitude ? Number(user.latitude).toFixed(5) : '', searchTerm)}</td>
       <td>${highlightMatch(user.longitude ? Number(user.longitude).toFixed(5) : '', searchTerm)}</td>
+      <td>${highlightMatch(user.year_conducted || '', searchTerm)}</td>
       <td>
         <button class="btn btn-3d btn-sm btn-warning edit-btn" data-id="${user.id}">
           <i class="bi bi-pencil-square"></i>
@@ -721,13 +723,20 @@ function initializeExportButton() {
       City: user.city || '',
       Latitude: user.latitude || '',
       Longitude: user.longitude || '',
+      Source: user.waterSource || '',
+      Status: user.status || '',
+      Representative: user.representative || '',
+      Designation: user.designation || '',
+      Phone: user.phone || '',
+      Year_Inspected: user.year_conducted || '',
+      Month_Inspected: user.month_conducted || '',
       IsWaterSource: user.isWaterSource ? 'Yes' : 'No'
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(dataForExcel);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'FilteredUsers');
-    XLSX.writeFile(workbook, 'FilteredWaterUsers.xlsx');
+    XLSX.writeFile(workbook, 'WaterUsersAndSources.xlsx');
   });
 }
 

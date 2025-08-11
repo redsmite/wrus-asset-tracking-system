@@ -337,6 +337,7 @@ function attachViewMapListener() {
                 🏠 ${entry.street || 'Street not specified'}<br>
                 📍 Lat: ${parseFloat(entry.latitude).toFixed(5)}, 
                 Lng: ${parseFloat(entry.longitude).toFixed(5)}<br>
+                💧Source: ${entry.type}<br>
                 📅 Year Inspected: ${entry.year_conducted || 'N/A'}<br>
                 ✅ Status: ${sourceStatus}<br>
               `;
@@ -425,6 +426,7 @@ async function handleViewBarangayMapClick(event) {
           🏠 ${entry.street || 'Street not specified'}<br>
           📍 Lat: ${parseFloat(entry.latitude).toFixed(5)}, 
           Lng: ${parseFloat(entry.longitude).toFixed(5)}<br>
+          💧Source: ${entry.type}<br>
           📅 Year Inspected: ${entry.year_conducted || 'N/A'}<br>
           ✅ Status: ${sourceStatus}<br>
         `;
@@ -513,6 +515,7 @@ async function handleViewUserMapClick(event) {
     <a href="${pdfUrl}" target="_blank">${selectedEntry.permitNo || 'N/A'}</a><br>
     🏠 ${selectedEntry.street || 'Street not specified'}<br>
     📍 Lat: ${lat.toFixed(5)}, Lng: ${lng.toFixed(5)}<br>
+    💧Source: ${selectedEntry.type}<br>
     📅 Year Inspected: ${selectedEntry.year_conducted || 'N/A'}<br>
     ✅ Status: ${sourceStatus}<br>
   `;

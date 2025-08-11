@@ -1,5 +1,5 @@
 export const sourceStatus = [
   "OPERATIONAL",
-  "NON-OPERATIONAL",
+  "NON OPERATIONAL",
   "ON-GOING CONSTRUCTION"
 ];

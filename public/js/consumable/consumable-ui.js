@@ -120,13 +120,14 @@ function initEditItemHandler() {
       const cid = document.getElementById("editCID").value;
       const spec = document.getElementById("editSpec").value.trim();
       const unit = document.getElementById("editUnit").value.trim();
+      const priority = document.getElementById("priorityCheckbox").checked;
 
       if (!spec || !unit) {
         NotificationBox.show("Specification and Unit are required.");
         return;
       }
 
-      await Consumable.update(cid, { specification: spec, unit });
+      await Consumable.update(cid, { specification: spec, unit, priority });
       NotificationBox.show("Items description updated succesfully.");
       editModal.hide();
       const searchTerm = document.getElementById("searchInput").value.trim();
@@ -596,7 +597,8 @@ function renderTablePage() {
         <button class="btn btn-3d btn-warning btn-sm edit-btn" 
           data-id="${item.id}" 
           data-spec="${item.specification}" 
-          data-unit="${item.unit}" 
+          data-unit="${item.unit}"
+          data-priority="${item.priority}" 
           data-bs-toggle="modal" 
           data-bs-target="#editModal">
           <i class="bi bi-pencil-square"></i>
@@ -605,7 +607,7 @@ function renderTablePage() {
       <td>
         <button class="btn btn-3d btn-secondary btn-sm action-btn" 
           data-id="${item.id}" 
-          data-qty="${item.qty}" 
+          data-qty="${item.qty}"
           data-bs-toggle="modal" 
           data-bs-target="#actionModal"
           title="Perform Action">
@@ -627,11 +629,13 @@ function handleEditButtons() {
       const id = button.getAttribute("data-id");
       const spec = button.getAttribute("data-spec");
       const unit = button.getAttribute("data-unit");
+      const priority = button.getAttribute("data-priority");
 
       // Populate the modal fields
       document.getElementById("editCID").value = id;
       document.getElementById("editSpec").value = spec;
       document.getElementById("editUnit").value = unit;
+      document.getElementById("priorityCheckbox").checked = priority === "true";
     });
   });
 }

@@ -6,6 +6,7 @@ import { ICS } from "../data/cache/ics-data.js";
 import { Users } from "../data/cache/user-data.js";
 import { Sidebar } from '../components/sidebar.js';
 import { Spinner } from '../components/spinner.js';
+import { updateReportTimestamp } from "../utils/dateFormat.js";
 
 // Global variables
 let users = [];
@@ -42,7 +43,7 @@ export function initUI() {
   setupGenerateICSHandler();
   renderLatestLedger();
   renderCriticalLowSupplyChart("lowSupplyChartContainer");
-  renderLedgerCharts();
+  renderPriorityTable();
 }
 
 export async function loadData() {
@@ -303,12 +304,6 @@ async function renderLatestLedger(containerId = "ledgerContainer") {
 
     container.innerHTML = "";
 
-    // Header
-    const header = document.createElement("h5");
-    header.textContent = "Latest Ledger Report";
-    header.className = "mb-4";
-    container.appendChild(header);
-
     // Responsive wrapper
     const responsiveWrapper = document.createElement("div");
     responsiveWrapper.className = "table-responsive";
@@ -338,18 +333,33 @@ async function renderLatestLedger(containerId = "ledgerContainer") {
     for (const entry of ledgerEntries) {
       const consumableSpec = consumableMap[entry.cid]?.specification || entry.cid;
 
+      // --- Refactored date formatting (MMMM dd, YYYY + hh:mm:ss AM/PM) ---
       let dateStr = "N/A";
       if (entry.dateModified) {
+        let dateObj;
         if (entry.dateModified.seconds) {
-          dateStr = new Date(entry.dateModified.seconds * 1000).toLocaleString();
+          dateObj = new Date(entry.dateModified.seconds * 1000);
         } else if (entry.dateModified.toDate) {
-          dateStr = entry.dateModified.toDate().toLocaleString();
+          dateObj = entry.dateModified.toDate();
         } else if (entry.dateModified instanceof Date) {
-          dateStr = entry.dateModified.toLocaleString();
+          dateObj = entry.dateModified;
         } else {
-          dateStr = String(entry.dateModified);
+          dateObj = new Date(entry.dateModified);
+        }
+
+        if (!isNaN(dateObj)) {
+          dateStr = dateObj.toLocaleString("en-US", {
+            month: "long",   // MMMM
+            day: "2-digit",  // dd
+            year: "numeric", // YYYY
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: true     // AM/PM
+          });
         }
       }
+      // -------------------------------------------------------------------
 
       const assignedToUsername = entry.assignedTo && usersMap[entry.assignedTo]
         ? usersMap[entry.assignedTo]
@@ -450,95 +460,96 @@ async function renderCriticalLowSupplyChart(containerId = "chartsContainer") {
   }
 }
 
-async function renderLedgerCharts() {
-  const chartContainer = document.getElementById('chartsContainer');
-  if (!chartContainer) {
-    console.error('Container with ID "chartsContainer" not found.');
-    return;
-  }
+async function renderPriorityTable() {
+  const tbody = document.getElementById("priorityBody");
+  tbody.innerHTML = `<tr><td colspan="9">Loading...</td></tr>`; // now 9 columns
 
-  Spinner.show();
+  const consumables = await Consumable.fetchAll();
+  const ledgerEntries = await Ledger.fetchAll();
 
-  try {
-    const ledgerEntries = await Ledger.fetchAll();
-    const consumableMap = await Consumable.fetchConsumablesMap();
+  // Filter only priority items
+  const priorityItems = consumables.filter(c => c.priority === true);
 
-    // Helper to group by CID
-    const groupByCID = (entries) => {
-      const grouped = {};
-      for (const entry of entries) {
-        const name = consumableMap[entry.cid]?.specification || entry.cid;
-        grouped[name] = (grouped[name] || 0) + (entry.amount || 0);
+  // Rolling 12-month window
+  const today = new Date();
+  const oneYearAgo = new Date();
+  oneYearAgo.setFullYear(today.getFullYear() - 1);
+
+  const leadTimeMonths = 2; // reorder threshold lead time
+
+  // Build rows with extra 'daysLeft' for sorting
+  const data = priorityItems.map(item => {
+    // Filter ledger entries for this CID within last 12 months
+    const totalConsumed = ledgerEntries
+      .filter(l => {
+        const date = l.dateModified instanceof Date
+          ? l.dateModified
+          : (l.dateModified?.seconds ? new Date(l.dateModified.seconds * 1000) : new Date(l.dateModified));
+
+        return (
+          l.cid === item.id &&
+          l.action === "Assign Item" &&
+          date >= oneYearAgo &&
+          date <= today
+        );
+      })
+      .reduce((sum, l) => sum + (l.amount || 0), 0);
+
+    // Calculate lifespan in years/months
+    let lifespanText = "";
+    if (totalConsumed > 0) {
+      const years = item.qty / totalConsumed;
+      const wholeYears = Math.floor(years);
+      const months = Math.round((years - wholeYears) * 12);
+
+      if (wholeYears > 0 && months > 0) {
+        lifespanText = `${wholeYears} yr ${months} mo`;
+      } else if (wholeYears > 0) {
+        lifespanText = `${wholeYears} yr`;
+      } else {
+        lifespanText = `${months} mo`;
       }
-      return grouped;
-    };
-
-    const entriesByYear = {};
-    for (const entry of ledgerEntries) {
-      if (!entry.dateModified) continue;
-      const year = new Date(entry.dateModified.seconds * 1000).getFullYear();
-      if (!entriesByYear[year]) entriesByYear[year] = [];
-      entriesByYear[year].push(entry);
     }
 
-    chartContainer.innerHTML = '';
+    // New analytics
+    const avgMonthly = totalConsumed / 12;
+    const daysLeft = avgMonthly > 0 ? (item.qty / avgMonthly) * 30 : Infinity;
+    const reorderPoint = avgMonthly * leadTimeMonths;
+    const needsReorder = item.qty < reorderPoint;
 
-    const createBarChart = (ctx, label, labels, data) => {
-      return new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels,
-          datasets: [{
-            label,
-            data,
-            backgroundColor: 'rgba(54, 162, 235, 0.6)',
-            borderColor: 'rgba(54, 162, 235, 1)',
-            borderWidth: 1
-          }]
-        },
-        options: {
-          scales: {
-            y: {
-              beginAtZero: true,
-              ticks: { precision: 0 }
-            }
-          },
-          responsive: true,
-          plugins: {
-            legend: { display: true, position: 'top' },
-            title: { display: true, text: label }
-          }
-        }
-      });
+    return {
+      item,
+      totalConsumed,
+      lifespanText,
+      avgMonthly,
+      daysLeft,
+      needsReorder
     };
+  });
 
-    for (const year of Object.keys(entriesByYear).sort((a, b) => b - a)) {
-      const assignItemEntries = entriesByYear[year].filter(
-        e => e.action?.toLowerCase() === 'assign item'
-      );
+  // Sort by daysLeft ascending (lowest first, Infinity last)
+  data.sort((a, b) => {
+    if (a.daysLeft === Infinity && b.daysLeft === Infinity) return 0;
+    if (a.daysLeft === Infinity) return 1;
+    if (b.daysLeft === Infinity) return -1;
+    return a.daysLeft - b.daysLeft;
+  });
 
-      const grouped = groupByCID(assignItemEntries);
-      const sortedEntries = Object.entries(grouped)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 15);
+  // Render sorted rows
+  const rows = data.map(d => `
+    <tr style="${d.needsReorder ? 'background-color:#ffcccc;' : ''}">
+      <td>${d.item.id}</td>
+      <td>${d.item.specification}</td>
+      <td>${d.item.unit}</td>
+      <td>${d.item.qty}</td>
+      <td>${d.totalConsumed}</td>
+      <td>${d.lifespanText || ""}</td>
+      <td>${d.avgMonthly.toFixed(1)}</td>
+      <td>${d.daysLeft === Infinity ? "" : d.daysLeft.toFixed(0) + " days"}</td>
+      <td>${d.needsReorder ? "⚠ Yes" : "No"}</td>
+    </tr>
+  `).join("");
 
-      const labels = sortedEntries.map(([name]) => name);
-      const data = sortedEntries.map(([, amount]) => amount);
-
-      const canvas = document.createElement('canvas');
-      canvas.id = `chartAssignItem_${year}`;
-      canvas.style.marginBottom = '2rem';
-      chartContainer.appendChild(canvas);
-
-      createBarChart(canvas, `Most Used Consumables - ${year}`, labels, data);
-    }
-  } catch (error) {
-    console.error("Error rendering ledger charts:", error);
-  } finally {
-    Spinner.hide();
-  }
+  tbody.innerHTML = rows || `<tr><td colspan="9">No priority items found.</td></tr>`;
 }
-
-
-
 

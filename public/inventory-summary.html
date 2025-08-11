@@ -63,13 +63,44 @@
           role="tabpanel"
           aria-labelledby="chart-tab"
         >
+          <h3>Latest Ledger Report</h3>
           <div id="ledgerContainer"></div>
 
-          <h5>Critically Low Consumable Supplies</h5>
+          <h3>Consumable Item Analytics (Priority Items Only)</h3>
+          <table class="table table-responsive table-striped">
+            <thead>
+              <tr>
+                <th>CID</th>
+                <th>Specification</th>
+                <th>Unit</th>
+                <th>Stock</th>
+                <th>Consumed (12 mo)</th>
+                <th>Lifespan</th>
+                <th>Avg/Month</th>
+                <th>Days Left</th>
+                <th>Reorder?</th>
+              </tr>
+            </thead>
+            <tbody id="priorityBody"></tbody>
+            <tfoot>
+              <tr>
+                <td colspan="9" class="text-muted small">
+                  <strong>Notes:</strong>  
+                  <ul class="mb-0">
+                    <li><strong>Consumed (12 mo)</strong> is calculated based on total quantity used over the past rolling 12 months.</li>
+                    <li><strong>Lifespan</strong> is estimated from historical usage rates and current stock levels.</li>
+                    <li><strong>Avg/Month</strong> = Consumed (12 mo) ÷ 12 months.</li>
+                    <li><strong>Days Left</strong> is projected from current stock ÷ average daily consumption.</li>
+                    <li><strong>Reorder?</strong> flags items with an estimated remaining stock of less than two months based on their average monthly consumption, indicating they may run out before the next procurement cycle.</li>
+                  </ul>
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+          
+          <h3>Critically Low Consumable Supplies</h3>
           <div id="lowSupplyChartContainer"></div>
           
-          <h5>Most Used Consumables (per year)</h5>
-          <div id="chartsContainer"></div>
         </div>
 
         <!-- Inventory Summary Tab -->
@@ -206,7 +237,6 @@
         </div>
       </div>
 
-      
       <!-- ICS PDF Viewer Modal -->
       <div class="modal fade" id="ICS-pdfModal" tabindex="-1">
         <div class="modal-dialog modal-fullscreen modal-dialog-centered modal-dialog-scrollable">

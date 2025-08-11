@@ -173,18 +173,18 @@ lines.forEach(([label, value], index) => {
     let proposed = `[ ${empty} ] Proposed`;
     let operational = `[ ${empty} ] Operational`;
     let ongoing = `[ ${empty} ] On-going Drilling/Construction`;
-    let nonOperational = `[ ${checked} ] Non-Operational`;
+    let nonOperational = `[ ${checked} ] Non Operational`;
 
     // Override defaults if status matches
     if (status === "PROPOSED") {
       proposed = `[ ${checked} ] Proposed`;
-      nonOperational = `[ ${empty} ] Non-Operational`;
+      nonOperational = `[ ${empty} ] Non Operational`;
     } else if (status === "OPERATIONAL") {
       operational = `[ ${checked} ] Operational`;
-      nonOperational = `[ ${empty} ] Non-Operational`;
+      nonOperational = `[ ${empty} ] Non Operational`;
     } else if (status === "ON-GOING CONSTRUCTION") {
       ongoing = `[ ${checked} ] On-going Drilling/Construction`;
-      nonOperational = `[ ${empty} ] Non-Operational`;
+      nonOperational = `[ ${empty} ] Non Operational`;
     }
 
     // Combine the line
