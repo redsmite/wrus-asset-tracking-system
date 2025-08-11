@@ -92,6 +92,12 @@ export const Sidebar = {
                   <li><a class="nav-link text-white" href="water-user.html">Water Users and Sources</a></li>
                   <li><a class="nav-link text-white" href="water-inventory.html">Mobile Inventory Form</a></li>
                   <li><a class="nav-link text-white" href="map.html">Map Routing</a></li>
+                  ${isAdmin ? `
+                  <li class="nav-item mb-2">
+                    <a href="excel.html" class="nav-link text-white">MEMIS to Database
+                    </a>
+                  </li>
+                  ` : ''}
                 </ul>
               </div>
             </li>

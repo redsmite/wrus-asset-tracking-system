@@ -232,7 +232,7 @@ function attachViewUsersListener() {
                   <th>Longitude</th>
                   <th>Permit No.</th>
                   <th>Type</th>
-                  <th>Year Conducted</th>
+                  <th>Year Inspected</th>
                   <th>Is Water Source?</th>
                   <th>Geotagged Image</th>
                   <th>View Map</th>
@@ -337,7 +337,7 @@ function attachViewMapListener() {
                 🏠 ${entry.street || 'Street not specified'}<br>
                 📍 Lat: ${parseFloat(entry.latitude).toFixed(5)}, 
                 Lng: ${parseFloat(entry.longitude).toFixed(5)}<br>
-                📅 Year Conducted: ${entry.year_conducted || 'N/A'}<br>
+                📅 Year Inspected: ${entry.year_conducted || 'N/A'}<br>
                 ✅ Status: ${sourceStatus}<br>
               `;
 
@@ -425,7 +425,7 @@ async function handleViewBarangayMapClick(event) {
           🏠 ${entry.street || 'Street not specified'}<br>
           📍 Lat: ${parseFloat(entry.latitude).toFixed(5)}, 
           Lng: ${parseFloat(entry.longitude).toFixed(5)}<br>
-          📅 Year Conducted: ${entry.year_conducted || 'N/A'}<br>
+          📅 Year Inspected: ${entry.year_conducted || 'N/A'}<br>
           ✅ Status: ${sourceStatus}<br>
         `;
 
@@ -513,7 +513,7 @@ async function handleViewUserMapClick(event) {
     <a href="${pdfUrl}" target="_blank">${selectedEntry.permitNo || 'N/A'}</a><br>
     🏠 ${selectedEntry.street || 'Street not specified'}<br>
     📍 Lat: ${lat.toFixed(5)}, Lng: ${lng.toFixed(5)}<br>
-    📅 Year Conducted: ${selectedEntry.year_conducted || 'N/A'}<br>
+    📅 Year Inspected: ${selectedEntry.year_conducted || 'N/A'}<br>
     ✅ Status: ${sourceStatus}<br>
   `;
 

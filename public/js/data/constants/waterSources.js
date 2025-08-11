@@ -1,8 +1,8 @@
 export const waterSources = [
-  "Groundwater (Deep Well)",
-  "Groundwater (Deep Well - Handpump)",
-  "Groundwater (Deep Well - Motor Pump)",
-  "Groundwater (Dug Well / Shallow Well)",
+  "Deep Well",
+  "Deep Well - Handpump",
+  "Deep Well - Motor Pump",
+  "Dug Well / Shallow Well",
   "Spring",
   "River",
   "Stream / Creek",
