@@ -470,16 +470,36 @@ async function renderPriorityTable() {
   // Filter only priority items
   const priorityItems = consumables.filter(c => c.priority === true);
 
-  // Rolling 12-month window
+  // Determine rolling window based on earliest ledger entry date
+  let earliestDate = new Date();
+  ledgerEntries.forEach(l => {
+    const date = l.dateModified instanceof Date
+      ? l.dateModified
+      : (l.dateModified?.seconds ? new Date(l.dateModified.seconds * 1000) : new Date(l.dateModified));
+
+    if (date < earliestDate) {
+      earliestDate = date;
+    }
+  });
+
   const today = new Date();
-  const oneYearAgo = new Date();
+  const oneYearAgo = new Date(today);
   oneYearAgo.setFullYear(today.getFullYear() - 1);
 
-  const leadTimeMonths = 2; // reorder threshold lead time
+  // Window starts from earliest data OR 12 months ago, whichever is later
+  const windowStart = earliestDate > oneYearAgo ? earliestDate : oneYearAgo;
+
+  // Calculate number of months in the window (avoid zero)
+  const monthDiff = (today.getFullYear() - windowStart.getFullYear()) * 12 +
+                    (today.getMonth() - windowStart.getMonth());
+  const monthsInWindow = Math.max(1, monthDiff || 1);
+
+  // Lead time threshold in months
+  const leadTimeMonths = 12;
 
   // Build rows with extra 'daysLeft' for sorting
   const data = priorityItems.map(item => {
-    // Filter ledger entries for this CID within last 12 months
+    // Filter ledger entries for this CID within the rolling window
     const totalConsumed = ledgerEntries
       .filter(l => {
         const date = l.dateModified instanceof Date
@@ -489,7 +509,7 @@ async function renderPriorityTable() {
         return (
           l.cid === item.id &&
           l.action === "Assign Item" &&
-          date >= oneYearAgo &&
+          date >= windowStart &&
           date <= today
         );
       })
@@ -498,7 +518,7 @@ async function renderPriorityTable() {
     // Calculate lifespan in years/months
     let lifespanText = "";
     if (totalConsumed > 0) {
-      const years = item.qty / totalConsumed;
+      const years = item.qty / (totalConsumed / monthsInWindow * 12); // normalized to yearly rate
       const wholeYears = Math.floor(years);
       const months = Math.round((years - wholeYears) * 12);
 
@@ -511,8 +531,8 @@ async function renderPriorityTable() {
       }
     }
 
-    // New analytics
-    const avgMonthly = totalConsumed / 12;
+    // Analytics
+    const avgMonthly = totalConsumed / monthsInWindow;
     const daysLeft = avgMonthly > 0 ? (item.qty / avgMonthly) * 30 : Infinity;
     const reorderPoint = avgMonthly * leadTimeMonths;
     const needsReorder = item.qty < reorderPoint;
@@ -537,7 +557,7 @@ async function renderPriorityTable() {
 
   // Render sorted rows
   const rows = data.map(d => `
-    <tr style="${d.needsReorder ? 'background-color:#ffcccc;' : ''}">
+    <tr class="${d.needsReorder ? 'reorder-warning' : ''}">
       <td>${d.item.id}</td>
       <td>${d.item.specification}</td>
       <td>${d.item.unit}</td>

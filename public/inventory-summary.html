@@ -63,43 +63,66 @@
           role="tabpanel"
           aria-labelledby="chart-tab"
         >
-          <h3>Latest Ledger Report</h3>
-          <div id="ledgerContainer"></div>
+        <!-- Latest Ledger Report -->
+        <div class="card mb-4 shadow-sm">
+          <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Latest Ledger Report</h5>
+          </div>
+          <div class="card-body">
+            <div id="ledgerContainer"></div>
+          </div>
+        </div>
 
-          <h3>Consumable Item Analytics (Priority Items Only)</h3>
-          <table class="table table-responsive table-striped">
-            <thead>
-              <tr>
-                <th>CID</th>
-                <th>Specification</th>
-                <th>Unit</th>
-                <th>Stock</th>
-                <th>Consumed (12 mo)</th>
-                <th>Lifespan</th>
-                <th>Avg/Month</th>
-                <th>Days Left</th>
-                <th>Reorder?</th>
-              </tr>
-            </thead>
-            <tbody id="priorityBody"></tbody>
-            <tfoot>
-              <tr>
-                <td colspan="9" class="text-muted small">
-                  <strong>Notes:</strong>  
-                  <ul class="mb-0">
-                    <li><strong>Consumed (12 mo)</strong> is calculated based on total quantity used over the past rolling 12 months.</li>
-                    <li><strong>Lifespan</strong> is estimated from historical usage rates and current stock levels.</li>
-                    <li><strong>Avg/Month</strong> = Consumed (12 mo) ÷ 12 months.</li>
-                    <li><strong>Days Left</strong> is projected from current stock ÷ average daily consumption.</li>
-                    <li><strong>Reorder?</strong> flags items with an estimated remaining stock of less than two months based on their average monthly consumption, indicating they may run out before the next procurement cycle.</li>
-                  </ul>
-                </td>
-              </tr>
-            </tfoot>
-          </table>
-          
-          <h3>Critically Low Consumable Supplies</h3>
-          <div id="lowSupplyChartContainer"></div>
+        <!-- Priority Items Analytics -->
+        <div class="card mb-4 shadow-sm">
+          <div class="card-header bg-success text-dark">
+            <h5 class="mb-0">Consumable Item Analytics (Priority Items Only)</h5>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover table-striped table-bordered mb-0">
+                <thead class="table-dark">
+                  <tr>
+                    <th>CID</th>
+                    <th>Specification</th>
+                    <th>Unit</th>
+                    <th>Stock</th>
+                    <th>Consumed (12 mo)</th>
+                    <th>Lifespan</th>
+                    <th>Avg/Month</th>
+                    <th>Days Left</th>
+                    <th>Resupply?</th>
+                  </tr>
+                </thead>
+                <tbody id="priorityBody"></tbody>
+                <tfoot class="table-light">
+                  <tr>
+                    <td colspan="9" class="text-muted small">
+                      <strong>Notes:</strong>  
+                      <ul class="mb-0 ps-3">
+                        <li><strong>Consumed (12 mo)</strong> = total quantity used in the past rolling 12 months.</li>
+                        <li><strong>Lifespan</strong> = estimated from usage rates and current stock.</li>
+                        <li><strong>Avg/Month</strong> = Consumed (12 mo) ÷ 12 months.</li>
+                        <li><strong>Days Left</strong> = stock ÷ average daily consumption.</li>
+                        <li><strong>Resupply?</strong> flags items projected to run out within a year.</li>
+                      </ul>
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Critically Low Supplies -->
+        <div class="card shadow-sm">
+          <div class="card-header bg-danger text-white">
+            <h5 class="mb-0">Critically Low Consumable Supplies</h5>
+          </div>
+          <div class="card-body">
+            <div id="lowSupplyChartContainer"></div>
+          </div>
+        </div>
           
         </div>
 

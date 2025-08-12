@@ -216,6 +216,7 @@ export const Consumable = {
         specification: d.specification,
         qty: d.qty,
         unit: d.unit,
+        priority: d.priority || false,
         addedBy: d.addedBy,
         timestamp: d.timestamp?.toDate().toLocaleString() || "N/A",
       };
