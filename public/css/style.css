@@ -140,34 +140,15 @@ nav.navbar {
   z-index: 1045;
 }
 
-/* Dripping Water Droplet Animation */
-@keyframes drip {
-  0% {
-    transform: translateY(0) scale(1);
-    opacity: 1;
-  }
-  70% {
-    transform: translateY(10px) scale(0.9);
-    opacity: 0.6;
-  }
-  100% {
-    transform: translateY(20px) scale(0.8);
-    opacity: 0;
-  }
-}
-
-.droplet-icon {
-  font-size: 1.75rem;
-  color: #00bfff; /* Light blue for water */
-  animation: drip 1.5s ease-in-out infinite;
-}
-
 .logo-container {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
+.wrus-water-title{
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
 
 /* WRUS Portal Title – Large & White */
 .text-3d {

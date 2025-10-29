@@ -653,7 +653,6 @@ function handleEditForm() {
     };
 
 
-
     try {
       // ✅ Update the WUS entry first
       await WUSData.update(id, payload);
@@ -663,9 +662,9 @@ function handleEditForm() {
       const matchingPermit = permits.find(p => p.permitNo === permitNo);
 
       if (matchingPermit) {
-        await Permit.update(matchingPermit.id, { visited: true });
+        //await Permit.update(matchingPermit.id, { visited: true });
       } else {
-        await Permit.add(permitPayload)
+        //await Permit.add(permitPayload)
       }
 
       // ✅ UI handling after success

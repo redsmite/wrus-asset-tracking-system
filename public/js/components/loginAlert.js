@@ -11,7 +11,7 @@ export const PortalAlert = {
   }
 };
 
-// ✅ Attach the OK button event after DOM is ready
+// Attach the OK button event after DOM is ready
 document.addEventListener("DOMContentLoaded", () => {
   const okButton = document.getElementById("portal-alert-ok");
   if (okButton) {

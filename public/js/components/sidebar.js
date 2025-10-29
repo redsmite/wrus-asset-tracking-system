@@ -34,16 +34,14 @@ export const Sidebar = {
 
         <div class="offcanvas-header d-md-none">
           <div class="logo-container">
-            <i class="bi bi-droplet-fill droplet-icon"></i>
-            <h4 class="wrus-water-title m-0">WRUS Portal</h4>
+            <h4 class="wrus-water-title m-0"> WRUS Portal</h4>
           </div>
         </div>
 
         <div class="offcanvas-body d-flex flex-column">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <div class="logo-container d-none d-md-flex align-items-center gap-2">
-              <i class="bi bi-droplet-fill droplet-icon"></i>
-              <h4 class="wrus-water-title m-0">WRUS Portal</h4>
+              <h4 class="wrus-water-title m-0"> WRUS Portal</h4>
             </div>
             <button id="sidebarToggle" class="btn btn-3d water-btn-outline d-none d-md-block">
               <i class="bi bi-chevron-left"></i>

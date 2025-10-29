@@ -462,7 +462,7 @@ async function renderCriticalLowSupplyChart(containerId = "chartsContainer") {
 
 async function renderPriorityTable() {
   const tbody = document.getElementById("priorityBody");
-  tbody.innerHTML = `<tr><td colspan="9">Loading...</td></tr>`; // now 9 columns
+  tbody.innerHTML = `<tr><td colspan="10">Loading...</td></tr>`; // now 10 columns
 
   const consumables = await Consumable.fetchAll();
   const ledgerEntries = await Ledger.fetchAll();
@@ -537,13 +537,20 @@ async function renderPriorityTable() {
     const reorderPoint = avgMonthly * leadTimeMonths;
     const needsReorder = item.qty < reorderPoint;
 
+    // Recommended reorder qty (rounded up, min 0)
+    let recommended = Math.max(0, Math.ceil(12 * avgMonthly - item.qty));
+    const recommndedAddUp = Math.ceil(recommended*(0.1));
+    recommended = recommended + recommndedAddUp;
+    recommended = `${recommended} ${item.unit}`;
+
     return {
       item,
       totalConsumed,
       lifespanText,
       avgMonthly,
       daysLeft,
-      needsReorder
+      needsReorder,
+      recommended
     };
   });
 
@@ -567,9 +574,10 @@ async function renderPriorityTable() {
       <td>${d.avgMonthly.toFixed(1)}</td>
       <td>${d.daysLeft === Infinity ? "" : d.daysLeft.toFixed(0) + " days"}</td>
       <td>${d.needsReorder ? "⚠ Yes" : "No"}</td>
+      <td>${d.recommended}</td>
     </tr>
   `).join("");
 
-  tbody.innerHTML = rows || `<tr><td colspan="9">No priority items found.</td></tr>`;
+  tbody.innerHTML = rows || `<tr><td colspan="10">No priority items found.</td></tr>`;
 }
 
