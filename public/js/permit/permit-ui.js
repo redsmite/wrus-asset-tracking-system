@@ -249,13 +249,13 @@ async function renderPermitTable() {
           <td>${highlightMatch(longitude, searchTerm)}</td>
           <td>
             <div class="action-buttons">
-              <button class="btn btn-3d btn-sm btn-warning edit-btn" data-id="${permit.id}">
+              <button class="btn btn-3d btn-sm btn-warning edit-btn" data-id="${permit._id}">
                 <i class="bi bi-pencil-square"></i>
               </button>
               <a href="${permit.pdfUrl}" target="_blank" class="btn btn-3d btn-sm btn-info">
                 <i class="bi bi-eye-fill"></i>
               </a>
-              <button class="btn btn-3d btn-sm ${isVisited ? 'btn-secondary' : 'btn-success'} visit-btn" data-id="${permit.id}">
+              <button class="btn btn-3d btn-sm ${isVisited ? 'btn-secondary' : 'btn-success'} visit-btn" data-id="${permit._id}">
                 <i class="bi ${isVisited ? 'bi-check-circle-fill' : 'bi-geo-alt-fill'}"></i>
               </button>
             </div>
@@ -269,7 +269,7 @@ async function renderPermitTable() {
 
         editButton.addEventListener('click', () => {
           const permitId = editButton.getAttribute('data-id');
-          const permitData = permits.find((p) => p.id === permitId);
+          const permitData = permits.find((p) => p._id === permitId);
           if (permitData) {
             populateEditModal(permitData);
             const editModal = new bootstrap.Modal(document.getElementById('editPermitModal'));
@@ -478,7 +478,7 @@ async function loadPermit(){
 }
 
 function populateEditModal(permit) {
-  document.getElementById('editPermitForm').setAttribute('data-id', permit.id);
+  document.getElementById('editPermitForm').setAttribute('data-id', permit._id);
   // Basic Info
   document.getElementById('editPermitNo').value = permit.permitNo || '';
   document.getElementById('editPermittee').value = permit.permittee || '';
@@ -781,7 +781,7 @@ function setupImageUploadModal(permitId, geotaggedUrl = '', permitNo = '') {
     if (document.getElementById('deleteGeotaggedBtn')) return;
 
     const deleteBtn = document.createElement('button');
-    deleteBtn.id = 'deleteGeotaggedBtn';
+    deleteBtn._id = 'deleteGeotaggedBtn';
     deleteBtn.className = 'btn btn-3d btn-outline-danger';
     deleteBtn.innerHTML = '<i class="bi bi-trash me-1"></i> Delete Image';
 
@@ -804,7 +804,7 @@ function setupImageUploadModal(permitId, geotaggedUrl = '', permitNo = '') {
           const matchingEntry = wusEntries.find(entry => entry.permitNo === permitNo);
 
           if (matchingEntry) {
-            await WUSData.update(matchingEntry.id, {
+            await WUSData.update(matchingEntry._id, {
               geotaggedUrl: ''
             });
           }
@@ -885,7 +885,7 @@ async function handleGeotaggedUpload(permitId, permitNo) {
     const matchingEntry = wusEntries.find(entry => entry.permitNo === permitNo);
 
     if (matchingEntry) {
-      await WUSData.update(matchingEntry.id, {
+      await WUSData.update(matchingEntry._id, {
         geotaggedUrl: newImageUrl
       });
     }

@@ -225,7 +225,7 @@ function initAssignHandler() {
         if (user.status === 'active') {
           const fullName = `${user.lastName}, ${user.firstName} ${user.middleInitial || ''}.`;
           const option = document.createElement("option");
-          option.value = user.id;
+          option.value = user._id;
           option.textContent = fullName.trim();
           userSelect.appendChild(option);
         }
@@ -358,7 +358,7 @@ function initReassignItemModal() {
             <td>${entry.assignedTo}</td>
             <td>${entry.remarks || "—"}</td>
             <td>
-              <button class="btn btn-3d btn-sm btn-outline-danger reassign-btn" data-entry-id="${entry.id}">
+              <button class="btn btn-3d btn-sm btn-outline-danger reassign-btn" data-entry-id="${entry._id}">
                 Reassign Item
               </button>
             </td>
@@ -389,7 +389,7 @@ function initReassignItemModal() {
     try {
       Spinner.show();
       const { ledgerEntries } = await Ledger.fetchLedgerDataByCID(cid);
-      const entry = ledgerEntries.find(e => e.id === entryId);
+      const entry = ledgerEntries.find(e => e._id === entryId);
 
       if (!entry) {
         NotificationBox.show("Ledger entry not found.", "danger");
@@ -457,7 +457,7 @@ function initSearchHandler() {
 
     filteredItems = currentItems.filter(item =>
       normalizeText(item.specification || '').includes(normalizedTerm) ||
-      normalizeText(item.id || '').includes(normalizedTerm)
+      normalizeText(item._id || '').includes(normalizedTerm)
     );
 
     localStorage.setItem("filteredConsumables", JSON.stringify(filteredItems));
@@ -555,7 +555,7 @@ async function renderConsumableTable(searchTerm = '') {
     filteredItems = searchTerm
       ? currentItems.filter(item =>
           normalizeText(item.specification || '').includes(normalizedTerm) ||
-          normalizeText(item.id || '').includes(normalizedTerm)
+          normalizeText(item._id || '').includes(normalizedTerm)
         )
       : [...currentItems];
 
@@ -586,16 +586,15 @@ function renderTablePage() {
   pageItems.forEach(item => {
     const row = document.createElement("tr");
     const highlightedSpec = highlightMatch(item.specification || '', currentSearchTerm);
-    const highlightedId = highlightMatch(item.id || '', currentSearchTerm);
+    const highlightedId = highlightMatch(item._id || '', currentSearchTerm);
 
     row.innerHTML = `
-      <td>${highlightedId}</td>
       <td>${highlightedSpec}</td>
       <td>${item.qty}</td>
       <td>${item.unit}</td>
       <td>
         <button class="btn btn-3d btn-warning btn-sm edit-btn" 
-          data-id="${item.id}" 
+          data-id="${item._id}" 
           data-spec="${item.specification}" 
           data-unit="${item.unit}"
           data-priority="${item.priority}" 
@@ -606,7 +605,7 @@ function renderTablePage() {
       </td>
       <td>
         <button class="btn btn-3d btn-secondary btn-sm action-btn" 
-          data-id="${item.id}" 
+          data-id="${item._id}" 
           data-qty="${item.qty}"
           data-bs-toggle="modal" 
           data-bs-target="#actionModal"
@@ -749,7 +748,7 @@ function setupExportFilteredConsumablesToExcel() {
     }
 
     const exportData = data.map(item => ({
-      ID: item.id,
+      ID: item._id,
       Specification: item.specification,
       Quantity: item.qty,
       Unit: item.unit

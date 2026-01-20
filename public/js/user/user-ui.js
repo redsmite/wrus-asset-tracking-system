@@ -191,7 +191,7 @@ function renderUsersTable(page = 1, searchQuery = "") {
       <td>${position}</td>
       <td>${type}</td>
       <td>
-        <button class="btn btn-3d btn-sm btn-outline-primary edit-btn" data-id="${user.id}">
+        <button class="btn btn-3d btn-sm btn-outline-primary edit-btn" data-id="${user._id}">
           <i class="bi bi-pencil-square me-1"></i> Edit
         </button>
       </td>
@@ -286,11 +286,11 @@ function initializeEditFunctionality() {
     button.addEventListener("click", async () => {
       const userId = button.getAttribute("data-id");
       const users = await Users.fetchAllDesc();
-      const user = users.find(u => u.id === userId);
+      const user = users.find(u => u._id === userId);
       if (!user) return;
 
       // Populate form
-      document.getElementById("editUserId").value = user.id;
+      document.getElementById("editUserId").value = user._id;
       document.getElementById("editUsername").value = user.username || '';
       document.getElementById("editLastName").value = user.lastName || '';
       document.getElementById("editFirstName").value = user.firstName || '';
@@ -348,7 +348,7 @@ function initializeEditFunctionality() {
       const usernameExists = users.some(
         (user) => 
           (user.username || '').toLowerCase() === username.toLowerCase() && 
-          user.id !== id
+          user._id !== id
       );
 
       if (usernameExists) {
@@ -364,7 +364,7 @@ function initializeEditFunctionality() {
 
       if (duty === "Supervisor") {
         const existingSupervisor = users.find(
-          (user) => user.duty === "Supervisor" && user.id !== id
+          (user) => user.duty === "Supervisor" && user._id !== id
         );
         if (existingSupervisor) {
           NotificationBox.show("A supervisor already exists. Only one supervisor is allowed.","error");

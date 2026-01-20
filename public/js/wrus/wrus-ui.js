@@ -360,7 +360,7 @@ async function renderWaterUsers(term = '') {
 
   if (normalizedSearch) {
     filteredUsers = filteredUsers.filter(u =>
-      normalizeText(u.id || '').includes(normalizedSearch) ||
+      normalizeText(u._id || '').includes(normalizedSearch) ||
       normalizeText(u.owner || '').includes(normalizedSearch) ||
       normalizeText(u.street || '').includes(normalizedSearch) ||
       normalizeText(u.barangay || '').includes(normalizedSearch) ||
@@ -408,13 +408,13 @@ async function renderWaterUsers(term = '') {
       <td>${highlightMatch(user.longitude ? Number(user.longitude).toFixed(5) : '', searchTerm)}</td>
       <td>${highlightMatch(user.year_conducted || '', searchTerm)}</td>
       <td>
-        <button class="btn btn-3d btn-sm btn-warning edit-btn" data-id="${user.id}">
+        <button class="btn btn-3d btn-sm btn-warning edit-btn" data-id="${user._id}">
           <i class="bi bi-pencil-square"></i>
         </button>
-        <button class="btn btn-3d btn-sm btn-info geotag-btn" data-id="${user.id}">
+        <button class="btn btn-3d btn-sm btn-info geotag-btn" data-id="${user._id}">
           <i class="bi bi-geo-alt-fill"></i>
         </button>
-        <button class="btn btn-3d btn-sm btn-danger" data-id="${user.id}">
+        <button class="btn btn-3d btn-sm btn-danger" data-id="${user._id}">
           <i class="bi bi-file-earmark-pdf-fill"></i>
         </button>
       </td>
@@ -424,7 +424,7 @@ async function renderWaterUsers(term = '') {
     geotagBtn.addEventListener('click', () => {
       const geotaggedUrl = user?.geotaggedUrl || '';
 
-      setupImageUploadModal(user.id, geotaggedUrl, user.permitNo);
+      setupImageUploadModal(user._id, geotaggedUrl, user.permitNo);
       const modal = new bootstrap.Modal(document.getElementById('imageUploadModal'));
       modal.show();
     });
@@ -518,11 +518,11 @@ function attachEditListeners(filteredUsers) {
   tableBody.querySelectorAll('.edit-btn').forEach(button => {
     button.addEventListener('click', () => {
       const id = button.getAttribute('data-id');
-      const user = filteredUsers.find(u => u.id === id);
-      if (!user) return;
+      const user = filteredUsers.find(u => u._id === id);
+      if (!user) console.log(user);
 
       // Populate form fields
-      document.getElementById('editWusId').value = user.id || '';
+      document.getElementById('editWusId').value = user._id || '';
       document.getElementById('editOwner').value = user.owner || '';
       document.getElementById('editStreet').value = user.street || '';
       document.getElementById('editBarangay').value = user.barangay || '';
@@ -984,7 +984,7 @@ export function showWaterUserPDF() {
       const userId = pdfBtn.getAttribute('data-id');
 
       const cachedUsers = JSON.parse(localStorage.getItem('filteredWaterUsers') || '[]');
-      const user = cachedUsers.find(u => u.id === userId);
+      const user = cachedUsers.find(u => u._id === userId);
 
       if (!user) {
         NotificationBox.show('User data not found.','error');

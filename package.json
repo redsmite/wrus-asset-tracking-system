@@ -7,7 +7,9 @@
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.21.2"
+    "cors": "^2.8.5",
+    "express": "^4.22.1",
+    "mongodb": "^7.0.0"
   },
   "repository": {
     "type": "git",

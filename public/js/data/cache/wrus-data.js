@@ -1,99 +1,146 @@
-import { db } from '../../firebaseConfig.js';
-import {
-  collection,
-  addDoc,
-  getDocs,
-  updateDoc,
-  deleteDoc,
-  doc,
-  serverTimestamp
-} from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
-
-const WUSCollection = collection(db, 'water_users');
-const CACHE_KEY = 'cachedWUS';
-
 export const WUSData = {
+  baseUrl: "/api/wus",
+  localStorageKey: "cachedWUS",
+
+  // --------------------------
+  // FETCH ALL
+  // --------------------------
   async fetchAll() {
-    const cached = localStorage.getItem(CACHE_KEY);
-    const data = cached ? JSON.parse(cached) : await this.refreshCache();
+    const cached = localStorage.getItem(this.localStorageKey);
+    if (cached) return JSON.parse(cached);
 
-    return [...data].sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
-  },
+    const res = await fetch(this.baseUrl);
+    if (!res.ok) throw new Error("Failed to fetch WUS data");
 
-  async refreshCache() {
-    const snapshot = await getDocs(WUSCollection);
-    const data = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
+    const data = await res.json();
+
+    // 🔒 normalize: ensure _id is always string
+    const normalized = data.map(d => ({
+      ...d,
+      _id: d._id?.toString()
     }));
 
-    localStorage.setItem(CACHE_KEY, JSON.stringify(data));
-    return data;
+    localStorage.setItem(this.localStorageKey, JSON.stringify(normalized));
+    return normalized.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
   },
 
-  async add(data) {
-    const newData = {
-      ...data,
-      timestamp: serverTimestamp()
-    };
+  // --------------------------
+  // FORCE REFRESH CACHE
+  // --------------------------
+  async refreshCache() {
+    const res = await fetch(this.baseUrl);
+    if (!res.ok) throw new Error("Failed to refresh WUS cache");
 
-    const docRef = await addDoc(WUSCollection, newData);
-    const newId = docRef.id;
+    const data = await res.json();
+    const normalized = data.map(d => ({
+      ...d,
+      _id: d._id?.toString()
+    }));
 
-    const entry = {
-      id: newId,
-      ...data,
-      timestamp: { seconds: Date.now() / 1000 } // fallback for now
-    };
-
-    const existing = JSON.parse(localStorage.getItem(CACHE_KEY) || '[]');
-    existing.push(entry);
-    localStorage.setItem(CACHE_KEY, JSON.stringify(existing));
-
-    return { id: newId, ...newData };
+    localStorage.setItem(this.localStorageKey, JSON.stringify(normalized));
+    return normalized;
   },
 
-  async update(id, data) {
-    const docRef = doc(db, 'water_users', id);
-    await updateDoc(docRef, { ...data });
+  // --------------------------
+  // ADD (NO _id REQUIRED)
+  // --------------------------
+  async add(payload) {
+    // 🚫 Prevent client from sending _id or Firestore id
+    const { _id, id, ...safePayload } = payload;
 
-    const existing = JSON.parse(localStorage.getItem(CACHE_KEY) || '[]');
-    const updated = existing.map(entry =>
-      entry.id === id ? { ...entry, ...data } : entry
+    const res = await fetch(this.baseUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(safePayload)
+    });
+
+    if (!res.ok) throw await res.json();
+
+    const newEntry = await res.json();
+    newEntry._id = newEntry._id.toString();
+
+    const cached = JSON.parse(localStorage.getItem(this.localStorageKey) || "[]");
+    cached.unshift(newEntry);
+    localStorage.setItem(this.localStorageKey, JSON.stringify(cached));
+
+    return newEntry;
+  },
+
+  // --------------------------
+  // UPDATE (Mongo _id ONLY)
+  // --------------------------
+  async update(_id, payload) {
+    if (!_id) throw new Error("MongoDB _id is required");
+
+    // 🚫 Never send _id or firestore id in body
+    const { _id: ignore1, id: ignore2, ...safePayload } = payload;
+
+    const res = await fetch(`${this.baseUrl}/${_id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(safePayload)
+    });
+
+    if (!res.ok) throw await res.json();
+
+    const updated = await res.json();
+    updated._id = updated._id.toString();
+
+    const cached = JSON.parse(localStorage.getItem(this.localStorageKey) || "[]");
+    const index = cached.findIndex(e => e._id === _id);
+    if (index !== -1) cached[index] = updated;
+
+    localStorage.setItem(this.localStorageKey, JSON.stringify(cached));
+    return updated;
+  },
+
+  // --------------------------
+  // DELETE (Mongo _id ONLY)
+  // --------------------------
+  async delete(_id) {
+    if (!_id) throw new Error("MongoDB _id is required");
+
+    const res = await fetch(`${this.baseUrl}/${_id}`, {
+      method: "DELETE"
+    });
+
+    if (!res.ok) throw await res.json();
+
+    const cached = JSON.parse(localStorage.getItem(this.localStorageKey) || "[]");
+    localStorage.setItem(
+      this.localStorageKey,
+      JSON.stringify(cached.filter(e => e._id !== _id))
     );
-    localStorage.setItem(CACHE_KEY, JSON.stringify(updated));
+
+    return { success: true };
   },
 
-  async delete(id) {
-    const docRef = doc(db, 'water_users', id);
-    await deleteDoc(docRef);
-
-    const existing = JSON.parse(localStorage.getItem(CACHE_KEY) || '[]');
-    const updated = existing.filter(entry => entry.id !== id);
-    localStorage.setItem(CACHE_KEY, JSON.stringify(updated));
-  },
-
+  // --------------------------
+  // AUTO REFRESH (DAILY)
+  // --------------------------
   async autoRefreshDaily() {
-    const dateKey = 'cachedWUS_lastRefreshDate';
+    const dateKey = `${this.localStorageKey}_lastRefreshDate`;
     const today = new Date().toISOString().split("T")[0];
 
-    const lastRefresh = localStorage.getItem(dateKey);
-    if (lastRefresh !== today) {
+    if (localStorage.getItem(dateKey) !== today) {
       await this.refreshCache();
       localStorage.setItem(dateKey, today);
-      console.log("[WUS] Cache auto-refreshed for the day.");
+      console.log("[WUS] Cache auto-refreshed (daily)");
     }
   },
 
+  // --------------------------
+  // AUTO REFRESH (8 HOURS)
+  // --------------------------
   async autoRefreshEvery8Hours() {
-    const key = 'cachedWUS_lastRefresh';
+    const key = `${this.localStorageKey}_lastRefresh`;
     const now = Date.now();
     const last = localStorage.getItem(key);
 
-    if (!last || now - parseInt(last, 10) > 8 * 60 * 60 * 1000) {
+    if (!last || now - Number(last) > 8 * 60 * 60 * 1000) {
       await this.refreshCache();
       localStorage.setItem(key, now.toString());
-      console.log("[WUS] Cache refreshed (8-hour interval).");
+      console.log("[WUS] Cache refreshed (8-hour interval)");
     }
   }
 };
