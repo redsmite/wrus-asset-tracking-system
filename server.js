@@ -3,6 +3,8 @@ import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
 
+
+import authRouter from "./routes/auth-route.js";
 import usersRouter from "./routes/users-route.js";
 import permitRouter from "./routes/permit-route.js";
 import wusRouter from "./routes/wus-route.js";
@@ -19,6 +21,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
 // API routes
+app.use("/api/auth", authRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/permits", permitRouter);
 app.use("/api/wus", wusRouter);

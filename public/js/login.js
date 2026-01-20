@@ -1,13 +1,4 @@
 import { AuthHandler } from "./auth/auth.js";
-import { db } from "./firebaseConfig.js";
-import {
-  collection,
-  query,
-  where,
-  getDocs
-} from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
-import bcrypt from "https://esm.sh/bcryptjs@2.4.3";
-
 import { PortalLoader } from './components/portalLoader.js';
 import { PortalAlert } from './components/loginAlert.js';
 import { LoginSuccess } from './components/loginSuccess.js';
@@ -21,67 +12,56 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const loginForm = document.getElementById('loginForm');
 
-  if (loginForm) {
-    loginForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
+  if (!loginForm) return;
 
-      const username = document.getElementById('username').value.trim();
-      const password = document.getElementById('password').value.trim();
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
 
-      PortalLoader.show();
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value.trim();
 
-      try {
-        const q = query(collection(db, "users"), where("username", "==", username));
-        const querySnapshot = await getDocs(q);
+    PortalLoader.show();
 
-        if (!querySnapshot.empty) {
-          const docSnap = querySnapshot.docs[0];
-          const userData = docSnap.data();
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
 
-          const userRole = userData.role?.toLowerCase();
-          const userStatus = userData.status?.toLowerCase();
-          const userType = userData.type || '';
+      const data = await res.json();
 
-          if (userRole !== "admin" && userStatus === "inactive") {
-            PortalLoader.hide();
-            PortalAlert.show("Your account is inactive. Please contact the administrator.");
-            return;
-          }
-
-          const hashedPassword = userData.password;
-          const isMatch = bcrypt.compareSync(password, hashedPassword);
-
-        if (isMatch) {
-          const fullName = `${userData.firstName} ${userData.middleInitial}. ${userData.lastName}`;
-
-          localStorage.setItem("userFullName", fullName);
-          localStorage.setItem("loggedInUser", docSnap.id);
-          localStorage.setItem("userRole", userRole);
-          localStorage.setItem("wrusUserId", docSnap.id);
-          localStorage.setItem("userType", userType);
-
-          PortalLoader.hide();
-          LoginSuccess.show();
-          //PortalLight.trigger();
-
-          // ✅ Add delay before redirecting so the overlay is visible
-          setTimeout(() => {
-            window.location.href = userRole === "admin" ? "admin-dashboard.html" : "dashboard.html";
-          }, 1500); // 4 seconds
-        } else {
-            PortalLoader.hide();
-            PortalAlert.show("Incorrect password.");
-          }
-        } else {
-          PortalLoader.hide();
-          PortalAlert.show("User not found.");
-        }
-
-      } catch (error) {
+      if (!res.ok) {
         PortalLoader.hide();
-        console.error("Login error:", error);
-        PortalAlert.show("Something went wrong. Please try again.");
+        PortalAlert.show(data.message || "Login failed.");
+        return;
       }
-    });
-  }
+
+      const {
+        userId,
+        fullName,
+        role,
+        type
+      } = data;
+
+      localStorage.setItem("userFullName", fullName);
+      localStorage.setItem("loggedInUser", userId);
+      localStorage.setItem("userRole", role);
+      localStorage.setItem("wrusUserId", userId);
+      localStorage.setItem("userType", type);
+
+      PortalLoader.hide();
+      LoginSuccess.show();
+
+      setTimeout(() => {
+        window.location.href =
+          role === "admin" ? "admin-dashboard.html" : "dashboard.html";
+      }, 1500);
+
+    } catch (err) {
+      PortalLoader.hide();
+      console.error("Login error:", err);
+      PortalAlert.show("Server error. Please try again.");
+    }
+  });
 });
